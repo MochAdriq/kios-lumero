@@ -70,6 +70,13 @@ $router->get('/central-settings/wizard', [CentralSettingsController::class,'wiza
 $router->post('/central-settings/wizard', [CentralSettingsController::class,'processWizard']);
 $router->get('/central-settings/api/items', [CentralSettingsController::class,'apiItems']);
 
+if (class_exists('LoyaltyController')) {
+    $router->get('/loyalty/members', [LoyaltyController::class, 'members']);
+    $router->get('/loyalty/rewards', [LoyaltyController::class, 'rewards']);
+    $router->get('/loyalty/redemptions', [LoyaltyController::class, 'redemptions']);
+    $router->post('/loyalty/settings/update', [LoyaltyController::class, 'updateSettings']);
+}
+
 if (class_exists('POSController')) {
     $router->get('/pos', [POSController::class,'index']);
     $router->post('/pos/checkout', [POSController::class,'checkout']);

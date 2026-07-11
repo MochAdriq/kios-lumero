@@ -103,16 +103,18 @@ class ProductModel extends Model
 
         $this->db->beginTransaction();
         try {
-            $margin=(float)$d['selling_price']-(float)$d['hpp'];
-            $mp=((float)$d['selling_price']>0)?($margin/(float)$d['selling_price']*100):0;
+            $catId = (int)($d['category_id'] ?? $v['category_id'] ?? 1);
+            $name = trim((string)($d['name'] ?? $d['variant_name'] ?? $v['product_name']));
+            $hpp = isset($d['hpp']) ? (float)$d['hpp'] : (float)($v['hpp'] ?? 0);
+            $selling = isset($d['selling_price']) ? (float)$d['selling_price'] : (float)($v['selling_price'] ?? 0);
+            $margin = $selling - $hpp;
+            $mp = ($selling > 0) ? ($margin / $selling * 100) : 0;
             
-            // Update product (since this is a single variant system, we update the product directly)
             $stmt=$this->db->prepare("UPDATE products SET category_id=?, name=?, base_hpp=?, base_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=?");
-            $stmt->execute([$d['category_id'], $d['name'], $d['hpp'], $d['selling_price'], $margin, $mp, now(), $pid]);
+            $stmt->execute([$catId, $name, $hpp, $selling, $margin, $mp, now(), $pid]);
             
-            // Update variant
-            $stmt=$this->db->prepare("UPDATE product_variants SET hpp=?, selling_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=?");
-            $stmt->execute([$d['hpp'], $d['selling_price'], $margin, $mp, now(), $vid]);
+            $stmt=$this->db->prepare("UPDATE product_variants SET variant_name=?, hpp=?, selling_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=?");
+            $stmt->execute([$name, $hpp, $selling, $margin, $mp, now(), $vid]);
             
             $this->db->commit();
         } catch(Throwable $e){

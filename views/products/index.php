@@ -105,6 +105,11 @@
                                             <label class="form-label text-muted small fw-bold">Harga Jual (Rp)</label>
                                             <input type="number" class="form-control" name="selling_price" value="<?= (int)$it['selling_price'] ?>" required min="0">
                                         </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted small fw-bold">Modal Dasar / HPP Langsung (Rp) <span class="badge bg-light text-secondary border">HPP Cepat</span></label>
+                                            <input type="number" class="form-control" name="cost_price" value="<?= (int)$it['hpp'] ?>" min="0">
+                                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Isi modal langsung atau gunakan resep bahan baku untuk perhitungan otomatis.</small>
+                                        </div>
                                     </div>
                                     <div class="modal-footer border-0 pt-0">
                                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>

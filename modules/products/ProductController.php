@@ -29,8 +29,11 @@ class ProductController extends Controller
         try {
             $d = [
                 'variant_name' => trim($_POST['variant_name'] ?? ''),
-                'selling_price' => (int)($_POST['selling_price'] ?? 0),
+                'selling_price' => max(0, (int)($_POST['selling_price'] ?? 0)),
             ];
+            if (isset($_POST['cost_price'])) {
+                $d['hpp'] = max(0, (int)$_POST['cost_price']);
+            }
             (new ProductModel())->updateVariant($id, $d);
             Audit::log('update_product', 'product_variants', $id, null, $d);
             $_SESSION['flash_success'] = 'Produk berhasil diupdate.';

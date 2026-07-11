@@ -45,52 +45,63 @@ $ADMIN = ['super_admin', 'administrator'];
 $OWNER = ['super_admin'];
 
 // ── Menu groups — ordered by natural daily workflow ─────
+// ── Menu groups — ordered by role & natural daily workflow ─────
 $menuGroups = [];
 
-// Pusat (HQ) — super_admin only, no double guard needed
-$menuGroups['Pusat'] = [
-    ['label' => 'Dashboard Pusat',      'icon' => 'ti ti-star',          'url' => '/hq',                 'roles' => $OWNER],
-    ['label' => 'Data Cabang',          'icon' => 'ti ti-building',      'url' => '/branches',           'roles' => $OWNER],
-    ['label' => 'Harga Cabang',         'icon' => 'ti ti-adjustments',   'url' => '/products/overrides', 'roles' => $OWNER],
-    ['label' => 'Laporan Semua Cabang', 'icon' => 'ti ti-chart-bar',     'url' => '/hq/report',          'roles' => $OWNER],
-];
+$isHQUser = (Auth::role() === 'super_admin');
+
+if ($isHQUser) {
+    $menuGroups['Pusat & Monitoring'] = [
+        ['label' => 'Dashboard Pusat',      'icon' => 'ti ti-star',          'url' => '/hq',                 'roles' => $OWNER],
+        ['label' => 'Data Cabang',          'icon' => 'ti ti-building',      'url' => '/branches',           'roles' => $OWNER],
+        ['label' => 'Harga Cabang',         'icon' => 'ti ti-adjustments',   'url' => '/products/overrides', 'roles' => $OWNER],
+        ['label' => 'Laporan Semua Cabang', 'icon' => 'ti ti-chart-bar',     'url' => '/hq/report',          'roles' => $OWNER],
+    ];
+}
 
 $menuGroups += [
     'Kasir & Penjualan' => [
-        ['label' => 'Dashboard',           'icon' => 'ti ti-layout-dashboard', 'url' => '/dashboard', 'roles' => $ALL],
+        ['label' => 'Dashboard Toko',      'icon' => 'ti ti-layout-dashboard', 'url' => '/dashboard', 'roles' => $ALL],
         ['label' => 'POS Kasir',           'icon' => 'ti ti-cash-register',    'url' => '/pos',       'roles' => $ALL],
         ['label' => 'Order & Transaksi',   'icon' => 'ti ti-receipt',          'url' => '/orders',    'roles' => $ALL],
         ['label' => 'Verifikasi Payment',  'icon' => 'ti ti-qrcode',           'url' => '/payments',  'roles' => $ALL],
     ],
-    'Operasional Harian' => [
-        ['label' => 'Buka/Tutup Toko',  'icon' => 'ti ti-login',              'url' => '/store',              'roles' => $ADMIN],
-        ['label' => 'Stok Siap Jual',   'icon' => 'ti ti-building-store',     'url' => '/daily-stock',        'roles' => $ALL],
-        ['label' => 'Gudang Bahan',     'icon' => 'ti ti-packages',           'url' => '/inventory',          'roles' => $ALL],
-        ['label' => 'Koreksi & Void',   'icon' => 'ti ti-adjustments',        'url' => '/corrections',        'roles' => $ADMIN],
-        ['label' => 'Peringatan Stok',  'icon' => 'ti ti-alert-triangle',     'url' => '/inventory/low-stock','roles' => $ALL],
-        ['label' => 'Pembelian Bahan',  'icon' => 'ti ti-shopping-cart-plus', 'url' => '/purchases',          'roles' => $ADMIN],
-        ['label' => 'Rencana Belanja',  'icon' => 'ti ti-chart-line',         'url' => '/forecasting',        'roles' => $ADMIN],
+    'Loyalty & Member Poin' => [
+        ['label' => 'Data Member & Poin',  'icon' => 'ti ti-award',            'url' => '/loyalty/members',     'roles' => $ALL],
+        ['label' => 'Katalog Hadiah Poin', 'icon' => 'ti ti-gift',             'url' => '/loyalty/rewards',     'roles' => $ADMIN],
+        ['label' => 'Validasi Penukaran',  'icon' => 'ti ti-checkup-list',     'url' => '/loyalty/redemptions', 'roles' => $ALL],
+        ['label' => 'Buka Portal Member',  'icon' => 'ti ti-external-link',    'url' => '/member',              'roles' => $ALL],
     ],
-    'Master Data' => [
+    'Operasional Harian' => [
+        ['label' => 'Buka/Tutup Toko',     'icon' => 'ti ti-login',              'url' => '/store',              'roles' => $ADMIN],
+        ['label' => 'Stok Siap Jual',      'icon' => 'ti ti-building-store',     'url' => '/daily-stock',        'roles' => $ALL],
+        ['label' => 'Gudang Bahan',        'icon' => 'ti ti-packages',           'url' => '/inventory',          'roles' => $ALL],
+        ['label' => 'Koreksi & Void',      'icon' => 'ti ti-adjustments',        'url' => '/corrections',        'roles' => $ADMIN],
+        ['label' => 'Peringatan Stok',     'icon' => 'ti ti-alert-triangle',     'url' => '/inventory/low-stock','roles' => $ALL],
+        ['label' => 'Pembelian Bahan',     'icon' => 'ti ti-shopping-cart-plus', 'url' => '/purchases',          'roles' => $ADMIN],
+    ],
+    'Produk & Master Data' => [
         ['label' => 'Sentral Data Setting', 'icon' => 'ti ti-database-cog', 'url' => '/central-settings', 'roles' => $ADMIN],
-        ['label' => 'Produk',            'icon' => 'ti ti-burger',         'url' => '/products',   'roles' => $ADMIN],
-        ['label' => 'Resep & HPP',       'icon' => 'ti ti-list-details',   'url' => '/recipes',    'roles' => $ADMIN],
-        ['label' => 'Diagnostik HPP',   'icon' => 'ti ti-stethoscope',    'url' => '/costing-diagnostics', 'roles' => $ADMIN],
-        ['label' => 'Kategori & Varian', 'icon' => 'ti ti-category-2',     'url' => '/categories', 'roles' => $ADMIN],
-        ['label' => 'Supplier',          'icon' => 'ti ti-truck-delivery', 'url' => '/vendors',    'roles' => $ADMIN],
+        ['label' => 'Daftar Produk',       'icon' => 'ti ti-burger',         'url' => '/products',   'roles' => $ADMIN],
+        ['label' => 'Resep & HPP',         'icon' => 'ti ti-list-details',   'url' => '/recipes',    'roles' => $ADMIN],
+        ['label' => 'Kategori & Varian',   'icon' => 'ti ti-category-2',     'url' => '/categories', 'roles' => $ADMIN],
+        ['label' => 'Supplier',            'icon' => 'ti ti-truck-delivery', 'url' => '/vendors',    'roles' => $ADMIN],
     ],
     'Keuangan & Laporan' => [
-        ['label' => 'Biaya Operasional', 'icon' => 'ti ti-wallet',                 'url' => '/expenses',          'roles' => $ADMIN],
-        ['label' => 'Laporan Harian',    'icon' => 'ti ti-report-analytics',       'url' => '/reports/daily',     'roles' => $ADMIN],
-        ['label' => 'Laporan Keuangan',  'icon' => 'ti ti-chart-infographic',      'url' => '/reports/financial', 'roles' => $ADMIN],
-        ['label' => 'Analisis Bisnis',   'icon' => 'ti ti-presentation-analytics', 'url' => '/executive',         'roles' => $OWNER],
-    ],
-    'Pengaturan' => [
-        ['label' => 'Pengguna & HR',     'icon' => 'ti ti-users',    'url' => '/users',      'roles' => $OWNER],
-        ['label' => 'Jejak Aktivitas',   'icon' => 'ti ti-history',  'url' => '/audit-logs', 'roles' => $OWNER],
-        ['label' => 'Setting Sistem',    'icon' => 'ti ti-settings', 'url' => '/settings',   'roles' => $OWNER],
+        ['label' => 'Biaya Operasional',   'icon' => 'ti ti-wallet',                 'url' => '/expenses',          'roles' => $ADMIN],
+        ['label' => 'Laporan Harian',      'icon' => 'ti ti-report-analytics',       'url' => '/reports/daily',     'roles' => $ADMIN],
+        ['label' => 'Laporan Keuangan',    'icon' => 'ti ti-chart-infographic',      'url' => '/reports/financial', 'roles' => $ADMIN],
     ],
 ];
+
+if ($isHQUser) {
+    $menuGroups['Analisis & Pengaturan'] = [
+        ['label' => 'Analisis Bisnis',      'icon' => 'ti ti-presentation-analytics', 'url' => '/executive',  'roles' => $OWNER],
+        ['label' => 'Pengguna & HR',        'icon' => 'ti ti-users',                  'url' => '/users',      'roles' => $OWNER],
+        ['label' => 'Jejak Aktivitas',      'icon' => 'ti ti-history',                'url' => '/audit-logs', 'roles' => $OWNER],
+        ['label' => 'Setting Sistem',       'icon' => 'ti ti-settings',               'url' => '/settings',   'roles' => $OWNER],
+    ];
+}
 ?>
 <!doctype html>
 <html lang="id">
@@ -112,8 +123,8 @@ $menuGroups += [
         <a href="<?= url('/dashboard') ?>" class="sim-brand-link">
             <span class="sim-brand-mark"><?= sim_icon('ti-tools-kitchen-2') ?></span>
             <span class="sim-brand-text">
-                <strong>SIM Resto</strong>
-                <small>Sempurna</small>
+                <strong>Lumero</strong>
+                <small>POS System</small>
             </span>
         </a>
     </div>

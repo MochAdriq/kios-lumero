@@ -1,6 +1,6 @@
 <?php
 return [
-    'name' => app_env('APP_NAME', 'SIM Resto Sempurna'),
+    'name' => app_env('APP_NAME', 'Lumero POS'),
     'company' => app_env('APP_COMPANY', 'PT. Lokapedia Karya Bersama'),
     'timezone' => app_env('APP_TIMEZONE', 'Asia/Jakarta'),
     'base_url' => rtrim((string)app_env('APP_URL', ''), '/'),

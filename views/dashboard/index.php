@@ -32,7 +32,7 @@ $status = strtolower($store['status'] ?? 'closed');
 <div class="dashboard-hero mb-4">
     <div class="row align-items-center g-3">
         <div class="col-lg-8">
-            <span class="hero-chip mb-3"><?= sim_icon('ti-tools-kitchen-2') ?> SIM Resto Sempurna</span>
+            <span class="hero-chip mb-3"><?= sim_icon('ti-tools-kitchen-2') ?> Lumero POS & Restoran</span>
             <h2 class="mb-2">Dashboard Cabang <?= htmlspecialchars(function_exists('current_outlet_name') ? current_outlet_name() : ($user['outlet_name'] ?? 'Outlet')) ?></h2>
             <p class="mb-0">Pantau penjualan, biaya, laba, status toko, dan akses cepat modul inti dari satu halaman.</p>
         </div>
