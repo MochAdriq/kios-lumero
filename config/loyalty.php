@@ -242,16 +242,16 @@ function loyalty_ensure_tables(PDO $pdo): void {
     }
 
     // Perluasan tabel orders untuk integrasi loyalty.
-    loyalty_add_col($pdo,'orders','customer_phone',"customer_phone VARCHAR(30) DEFAULT NULL AFTER customer_name");
-    loyalty_add_col($pdo,'orders','member_id',"member_id INT(11) DEFAULT NULL AFTER customer_phone");
-    loyalty_add_col($pdo,'orders','loyalty_points_earned',"loyalty_points_earned INT(11) NOT NULL DEFAULT 0 AFTER gross_profit");
-    loyalty_add_col($pdo,'orders','loyalty_points_redeemed',"loyalty_points_redeemed INT(11) NOT NULL DEFAULT 0 AFTER loyalty_points_earned");
-    loyalty_add_col($pdo,'orders','loyalty_point_value',"loyalty_point_value INT(11) NOT NULL DEFAULT 0 AFTER loyalty_points_redeemed");
-    loyalty_add_col($pdo,'orders','loyalty_redeem_amount',"loyalty_redeem_amount INT(11) NOT NULL DEFAULT 0 AFTER loyalty_point_value");
-    loyalty_add_col($pdo,'orders','nominal_point',"nominal_point INT(11) NOT NULL DEFAULT 0 AFTER loyalty_redeem_amount");
-    loyalty_add_col($pdo,'orders','loyalty_claim_code',"loyalty_claim_code VARCHAR(40) DEFAULT NULL AFTER loyalty_redeem_amount");
-    loyalty_add_col($pdo,'orders','loyalty_claim_points',"loyalty_claim_points INT(11) NOT NULL DEFAULT 0 AFTER loyalty_claim_code");
-    loyalty_add_col($pdo,'orders','loyalty_claim_status',"loyalty_claim_status ENUM('none','unclaimed','claimed','expired','cancelled') NOT NULL DEFAULT 'none' AFTER loyalty_claim_points");
+    loyalty_add_col($pdo,'orders','customer_phone',"customer_phone VARCHAR(30) DEFAULT NULL");
+    loyalty_add_col($pdo,'orders','member_id',"member_id INT(11) DEFAULT NULL");
+    loyalty_add_col($pdo,'orders','loyalty_points_earned',"loyalty_points_earned INT(11) NOT NULL DEFAULT 0");
+    loyalty_add_col($pdo,'orders','loyalty_points_redeemed',"loyalty_points_redeemed INT(11) NOT NULL DEFAULT 0");
+    loyalty_add_col($pdo,'orders','loyalty_point_value',"loyalty_point_value INT(11) NOT NULL DEFAULT 0");
+    loyalty_add_col($pdo,'orders','loyalty_redeem_amount',"loyalty_redeem_amount INT(11) NOT NULL DEFAULT 0");
+    loyalty_add_col($pdo,'orders','nominal_point',"nominal_point INT(11) NOT NULL DEFAULT 0");
+    loyalty_add_col($pdo,'orders','loyalty_claim_code',"loyalty_claim_code VARCHAR(40) DEFAULT NULL");
+    loyalty_add_col($pdo,'orders','loyalty_claim_points',"loyalty_claim_points INT(11) NOT NULL DEFAULT 0");
+    loyalty_add_col($pdo,'orders','loyalty_claim_status',"loyalty_claim_status ENUM('none','unclaimed','claimed','expired','cancelled') NOT NULL DEFAULT 'none'");
     loyalty_try_add_key($pdo,'orders','KEY idx_orders_member_id (member_id)');
     loyalty_try_add_key($pdo,'orders','KEY idx_orders_customer_phone (customer_phone)');
     loyalty_try_add_key($pdo,'orders','UNIQUE KEY uniq_orders_loyalty_claim_code (loyalty_claim_code)');
@@ -459,7 +459,7 @@ function loyalty_claim_receipt(PDO $pdo, int $memberId, string $code): array {
     if($code==='') throw new Exception('Kode struk wajib diisi.');
     $pdo->beginTransaction();
     try{
-        $st=$pdo->prepare("SELECT rc.*, o.order_no, o.payment_status, o.status AS order_status, o.member_id AS order_member_id FROM receipt_claims rc JOIN orders o ON o.id=rc.transaction_id WHERE rc.claim_code=? FOR UPDATE");
+        $st=$pdo->prepare("SELECT rc.*, o.order_number AS order_no, o.payment_status, o.order_status, o.member_id AS order_member_id FROM receipt_claims rc JOIN orders o ON o.id=rc.transaction_id WHERE rc.claim_code=? FOR UPDATE");
         $st->execute([$code]);
         $rc=$st->fetch(PDO::FETCH_ASSOC);
         if(!$rc) throw new Exception('Kode struk tidak ditemukan.');
@@ -482,7 +482,7 @@ function loyalty_claim_receipt(PDO $pdo, int $memberId, string $code): array {
 }
 function loyalty_sync_member_purchase_stats(PDO $pdo, int $memberId): void {
     try{
-        $st=$pdo->prepare("SELECT COUNT(*) trx, COALESCE(SUM(total),0) spent FROM orders WHERE member_id=? AND payment_status='paid' AND status<>'cancelled'");
+        $st=$pdo->prepare("SELECT COUNT(*) trx, COALESCE(SUM(grand_total),0) spent FROM orders WHERE member_id=? AND payment_status='paid' AND order_status<>'cancelled'");
         $st->execute([$memberId]); $r=$st->fetch(PDO::FETCH_ASSOC) ?: ['trx'=>0,'spent'=>0];
         $pdo->prepare("UPDATE members SET total_transactions=?, total_spent=? WHERE id=?")->execute([(int)$r['trx'],(int)$r['spent'],$memberId]);
     } catch(Throwable $e) {}

@@ -1,6 +1,8 @@
 <?php
-require_once __DIR__.'/../config/functions.php';
-require_once __DIR__.'/../kasir2/_free_order_helper.php';
+require_once __DIR__.'/../helpers/functions.php';
+require_once __DIR__.'/../core/Database.php';
+$pdo = Database::connection();
+require_once __DIR__.'/../helpers/free_order_helper.php';
 require_once __DIR__.'/../config/loyalty.php';
 date_default_timezone_set('Asia/Jakarta');
 try{ if(isset($pdo) && $pdo instanceof PDO) $pdo->exec("SET time_zone = '+07:00'"); }catch(Throwable $e){}
@@ -379,7 +381,7 @@ function fo_combo_img($row){
     <source src="../<?=fo_e($freeOrderVideo)?>" type="video/mp4">
   </video>
   <div class="fo-video-content">
-    <div class="fo-video-badge"><img src="../assets/img/icon-192.png" alt="D'Celup"></div>
+    <div class="fo-video-badge"><img src="../public/assets/images/pos-products/icon-192.png" alt="D'Celup"></div>
     <h2 class="fo-video-title">Online Order D'Celup</h2>
     <p class="fo-video-subtitle">Pesan dulu dari HP, pilih jam ambil yang paling pas, lalu bayar via QRIS, transfer, atau cash di outlet.</p>
     <div class="fo-video-phone-box">
@@ -411,7 +413,7 @@ function fo_combo_img($row){
 <div class="fo-wrap">
   <div class="fo-top">
     <header class="fo-header">
-      <div class="fo-brand"><img src="../assets/img/icon-192.png" alt="D'Celup"><div><h1>Online Order D'Celup</h1><p>Pesan dari HP • ambil di outlet • praktis tanpa antre lama</p></div></div>
+      <div class="fo-brand"><img src="../public/assets/images/pos-products/icon-192.png" alt="D'Celup"><div><h1>Online Order D'Celup</h1><p>Pesan dari HP • ambil di outlet • praktis tanpa antre lama</p></div></div>
       <div class="fo-header-actions">
         <div class="fo-audio-toggles">
           <button type="button" class="fo-audio-toggle active" id="toggleMusicBtn" onclick="toggleMusicSetting()"><span>♪</span> Musik ON</button>

@@ -7,9 +7,24 @@ loyalty_ensure_tables($pdo);
 
 $claimCode = strtoupper(trim((string)($_GET['claim'] ?? '')));
 
-// Ambil maksimal 4 katalog hadiah untuk showcase Hook
 $stmt = $pdo->query("SELECT * FROM point_reward_products WHERE is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT 4");
 $highlights = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+function hook_reward_image(array $rw): string {
+    $img = trim((string)($rw['image_url'] ?? ''));
+    if ($img === '' && !empty($rw['source_menu_image_url'])) {
+        $img = trim((string)$rw['source_menu_image_url']);
+    }
+    if ($img !== '') {
+        return preg_match('~^https?://~i', $img) ? $img : '../public/assets/images/pos-products/' . ltrim(basename($img), '/');
+    }
+    $name = strtolower((string)($rw['name'] ?? ''));
+    if (str_contains($name, 'kentang')) return '../public/assets/images/pos-products/kentang-kriwil.png';
+    if (str_contains($name, 'matcha')) return '../public/assets/images/pos-products/matcha.png';
+    if (str_contains($name, 'ayam') || str_contains($name, 'original')) return '../public/assets/images/pos-products/original.png';
+    if (str_contains($name, 'kopi')) return '../public/assets/images/pos-products/kopi.png';
+    return '../public/assets/images/pos-products/product-dummy.svg';
+}
 ?>
 <!doctype html>
 <html lang="id">
@@ -144,6 +159,27 @@ $highlights = $stmt->fetchAll(PDO::FETCH_ASSOC);
             transition: transform 0.2s ease;
         }
         .reward-card:hover { transform: translateY(-3px); }
+        .reward-img-wrap {
+            width: 100%;
+            height: 160px;
+            background: #fffaf0;
+            border-radius: 18px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .reward-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.25s ease;
+        }
+        .reward-card:hover .reward-img-wrap img {
+            transform: scale(1.08);
+        }
         .reward-tag {
             align-self: flex-start;
             background: #fef3c7;
@@ -238,6 +274,9 @@ $highlights = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php else: ?>
             <?php foreach ($highlights as $rw): ?>
             <div class="reward-card">
+                <div class="reward-img-wrap">
+                    <img src="<?= htmlspecialchars(hook_reward_image($rw)) ?>" alt="<?= htmlspecialchars($rw['name']) ?>">
+                </div>
                 <div>
                     <span class="reward-tag">Butuh <?= number_format((int)$rw['required_points'],0,',','.') ?> Poin</span>
                     <div class="reward-title"><?= htmlspecialchars($rw['name']) ?></div>
