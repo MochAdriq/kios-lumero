@@ -1,6 +1,5 @@
 # Environment & Sensitive Configs
 .env
-.env.production
 .env.local
 *.env
 
