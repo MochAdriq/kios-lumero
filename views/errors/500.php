@@ -1,0 +1,1 @@
+<div class="container py-5"><div class="alert alert-danger"><h4>Terjadi error sistem</h4><p>Silakan cek konfigurasi database atau log server.</p><?php if(!empty($debug)): ?><pre><?= htmlspecialchars($e->getMessage()) ?></pre><?php endif; ?></div></div>

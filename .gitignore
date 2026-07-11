@@ -1,0 +1,18 @@
+# Environment & Sensitive Configs
+.env
+.env.production
+.env.local
+*.env
+
+# Temporary / Scratch / Junk Folders
+tmp_kasir2/
+tmp/
+temp/
+cache/
+*.log
+
+# IDE & OS Artifacts
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

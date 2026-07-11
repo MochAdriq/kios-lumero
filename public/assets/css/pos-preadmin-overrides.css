@@ -1,0 +1,26 @@
+/* ============================================
+   POS Preadmin Overrides – Dark Premium v3
+   Minimal overrides for compatibility only
+   ============================================ */
+
+/* Hide preadmin customizer/widgets */
+.customizer-links,.sidebar-settings,#customizer,.theme-settings,
+.theme-customizer,.settings-sidebar,.customizer-open,.layout-mode,
+.btn-switcher,.sidebar-theme { display:none !important; visibility:hidden !important; }
+
+/* Base utility classes */
+.sim-icon { display:inline-block; vertical-align:-0.125em; flex:0 0 auto; color:currentColor; stroke:currentColor; stroke-width:2.1; }
+
+/* Bootstrap color utilities – keep for any leftover usage */
+.border-dashed { border-style:dashed !important; }
+.text-teal { color:#34d399 !important; }
+.bg-teal { background:#0f766e !important; }
+.btn-teal { background:#0f766e !important; color:#fff !important; }
+.btn-purple { background:#7c3aed !important; color:#fff !important; }
+.btn-orange { background:#f97316 !important; color:#fff !important; }
+.btn-cyan { background:#06b6d4 !important; color:#fff !important; }
+.btn-indigo { background:#4f46e5 !important; color:#fff !important; }
+.badge-dark { background:#111827 !important; color:#fff; }
+
+/* Select2 compatibility */
+.select2-container { width:100% !important; }

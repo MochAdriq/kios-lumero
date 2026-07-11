@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360" role="img" aria-label="Dummy product image">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6e7cf"/>
+      <stop offset="100%" stop-color="#ead1ad"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="360" fill="url(#bg)"/>
+  <g fill="none" stroke="#b7864a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.7">
+    <path d="M190 110h220l30 65H160z"/>
+    <path d="M220 95c0-18 14-32 32-32h96c18 0 32 14 32 32"/>
+    <circle cx="255" cy="215" r="7" fill="#b7864a"/>
+    <circle cx="300" cy="215" r="7" fill="#b7864a"/>
+    <circle cx="345" cy="215" r="7" fill="#b7864a"/>
+  </g>
+  <text x="300" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#7a5a35">DUMMY IMAGE</text>
+</svg>

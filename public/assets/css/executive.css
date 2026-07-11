@@ -1,0 +1,197 @@
+/* ── Executive Suite / Business Navigator ────────────── */
+:root {
+  --ex-red: #c41230; --ex-red2: #8f001b; --ex-dark: #111827; --ex-text: #172033;
+  --ex-muted: #667085; --ex-gold: #ffb547; --ex-cream: #fff7e8; --ex-bg: #f5f7fb;
+  --ex-line: #e7edf5; --ex-green: #16a34a; --ex-blue: #2563eb; --ex-purple: #7c3aed;
+  --ex-orange: #f97316; --ex-shadow: 0 20px 55px rgba(15,23,42,.08); --ex-radius: 22px;
+}
+
+/* ── Hero ────────────────────────────────────────────── */
+.ex-hero {
+  display: flex; justify-content: space-between; gap: 16px; align-items: center;
+  background: radial-gradient(circle at 16% 0%,rgba(255,255,255,.26),transparent 34%),linear-gradient(135deg,var(--ex-red2),var(--ex-red) 58%,var(--ex-orange));
+  color: #fff; border-radius: 24px; padding: 22px; box-shadow: 0 24px 62px rgba(196,18,48,.22);
+}
+.ex-hero h1 { margin: 0; font-size: clamp(22px,3vw,38px); letter-spacing: -.05em; line-height: 1; color: #fff; }
+.ex-hero p { margin: 8px 0 0; color: rgba(255,255,255,.86); font-weight: 750; line-height: 1.45; }
+.ex-hero-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ── KPI Grid ────────────────────────────────────────── */
+.ex-kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 16px 0; }
+.ex-card {
+  background: linear-gradient(180deg,#fff,#fffdf9); border: 1px solid var(--ex-line);
+  border-radius: var(--ex-radius); padding: 18px; box-shadow: var(--ex-shadow); position: relative; overflow: hidden;
+}
+.ex-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: linear-gradient(180deg,var(--ex-gold),rgba(196,18,48,.65)); border-radius: 4px 0 0 4px; }
+.ex-card small { display: block; color: var(--ex-muted); font-weight: 900; text-transform: uppercase; letter-spacing: .07em; font-size: 11px; line-height: 1.4; }
+.ex-card b { display: block; margin-top: 8px; font-size: clamp(20px,2vw,30px); letter-spacing: -.04em; line-height: 1.1; overflow-wrap: anywhere; }
+.ex-card.green b { color: var(--ex-green); }
+.ex-card.red b { color: var(--ex-red); }
+.ex-card.blue b { color: var(--ex-blue); }
+.ex-card.gold { background: linear-gradient(135deg,#fff8df,#fff); border-color: #ffd98a; }
+.ex-hint { color: var(--ex-muted); font-size: 12.5px; font-weight: 750; line-height: 1.55; margin-top: 8px; }
+.ex-progress { height: 13px; background: #edf2f7; border-radius: 999px; overflow: hidden; margin-top: 10px; }
+.ex-progress span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg,var(--ex-red),var(--ex-gold),var(--ex-green)); }
+
+/* ── Panels ──────────────────────────────────────────── */
+.ex-panel { background: rgba(255,255,255,.94); border: 1px solid var(--ex-line); border-radius: 24px; padding: 20px; box-shadow: var(--ex-shadow); overflow: hidden; margin-bottom: 16px; }
+.ex-panel h2 { margin: 0 0 12px; font-size: clamp(18px,2vw,26px); letter-spacing: -.04em; font-weight: 900; color: var(--ex-dark); }
+.ex-section-title { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+
+/* ── Badges ──────────────────────────────────────────── */
+.ex-badge { display: inline-flex; padding: 6px 9px; border-radius: 999px; font-weight: 900; font-size: 12px; }
+.ex-badge-gold { background: #fff3d7; color: #704600; border: 1px solid #ffd98a; }
+.ex-badge-green { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.ex-badge-red { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.ex-badge-blue { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+/* ── Decision Card ───────────────────────────────────── */
+.ex-decision {
+  border-radius: 24px; padding: 22px; color: #fff; box-shadow: var(--ex-shadow);
+  background: linear-gradient(135deg,#064e3b,#059669); min-height: 100%;
+}
+.ex-decision.warning { background: linear-gradient(135deg,#78350f,#f97316); }
+.ex-decision.danger { background: linear-gradient(135deg,#7f1d1d,#dc2626); }
+.ex-decision h2 { margin: 0 0 10px; color: #fff; font-size: clamp(20px,2.5vw,32px); }
+.ex-decision p { color: rgba(255,255,255,.88); font-weight: 750; line-height: 1.55; }
+
+/* ── Score Ring ──────────────────────────────────────── */
+.ex-score-ring {
+  width: 110px; height: 110px; border-radius: 999px;
+  background: conic-gradient(#22c55e calc(var(--score)*1%),rgba(255,255,255,.22) 0);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.ex-score-ring div { width: 80px; height: 80px; border-radius: 999px; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 24px; font-weight: 950; color: #fff; }
+
+/* ── Cash Grid ───────────────────────────────────────── */
+.ex-cash-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+.ex-cashbox { background: #fff; border: 1px solid var(--ex-line); border-radius: 18px; padding: 14px; }
+.ex-cashbox small { font-weight: 900; color: var(--ex-muted); text-transform: uppercase; letter-spacing: .07em; font-size: 11px; }
+.ex-cashbox b { display: block; font-size: clamp(16px,1.5vw,24px); margin-top: 7px; line-height: 1.08; overflow-wrap: anywhere; }
+
+/* ── Tips / Actions ──────────────────────────────────── */
+.ex-tip { display: flex; gap: 10px; background: #fff8e8; border: 1px solid #f0dfbd; border-radius: 16px; padding: 12px; color: #4d3920; font-weight: 780; line-height: 1.5; margin-bottom: 8px; }
+.ex-tip span { width: 28px; height: 28px; min-width: 28px; border-radius: 999px; background: var(--ex-gold); display: grid; place-items: center; color: #3a2600; font-weight: 950; font-size: 12px; }
+.ex-tip.high { background: #fff1f2; border-color: #fecdd3; }
+.ex-tip.med { background: #fff7ed; border-color: #fed7aa; }
+.ex-tip.info { background: #eff6ff; border-color: #bfdbfe; }
+
+/* ── Command List ────────────────────────────────────── */
+.ex-command { display: flex; gap: 10px; align-items: flex-start; background: #fff; border: 1px solid var(--ex-line); border-radius: 16px; padding: 12px; font-weight: 800; line-height: 1.45; margin-bottom: 8px; }
+.ex-command span { width: 28px; height: 28px; min-width: 28px; border-radius: 999px; background: linear-gradient(135deg,var(--ex-gold),#ff8a00); display: grid; place-items: center; color: #3a2600; font-weight: 950; font-size: 13px; }
+
+/* ── Forecast Grid ───────────────────────────────────── */
+.ex-forecast-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.ex-forecast { border: 1px solid var(--ex-line); border-radius: 20px; padding: 16px; background: linear-gradient(180deg,#fff,#f9fbff); }
+.ex-forecast h3 { margin: 0 0 8px; font-size: 17px; font-weight: 900; }
+.ex-forecast b { font-size: 22px; letter-spacing: -.04em; }
+
+/* ── Chart ───────────────────────────────────────────── */
+.ex-chart-area {
+  height: 280px; display: flex; align-items: flex-end; gap: 9px; padding: 16px 4px 8px;
+  border-radius: 20px; background: repeating-linear-gradient(0deg,transparent 0,transparent 58px,rgba(15,23,42,.055) 59px),linear-gradient(180deg,#f8fafc,#fff);
+  overflow-x: auto;
+}
+.ex-day-group { min-width: 58px; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; position: relative; }
+.ex-bars { height: 210px; display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; align-items: end; }
+.ex-bar { border-radius: 8px 8px 4px 4px; min-height: 4px; transform-origin: bottom; animation: exGrow .7s ease both; }
+.ex-bar.sales { background: linear-gradient(180deg,#ffb547,#f97316); }
+.ex-bar.hpp { background: linear-gradient(180deg,#60a5fa,#2563eb); }
+.ex-bar.exp { background: linear-gradient(180deg,#a78bfa,#7c3aed); }
+.ex-bar.net { background: linear-gradient(180deg,#fb7185,#be123c); }
+.ex-day-label { font-size: 11px; color: #667085; font-weight: 850; text-align: center; }
+.ex-day-group:hover::after {
+  content: attr(data-tip); position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%);
+  background: #101828; color: #fff; padding: 10px 12px; border-radius: 14px; font-size: 12px; line-height: 1.45;
+  min-width: 220px; z-index: 8; box-shadow: 0 16px 38px rgba(15,23,42,.22);
+}
+@keyframes exGrow { from { transform: scaleY(.15); opacity: .35; } to { transform: scaleY(1); opacity: 1; } }
+.ex-legend { display: flex; gap: 8px; flex-wrap: wrap; }
+.ex-pill { border: 1px solid var(--ex-line); background: #fff; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 850; color: #475467; }
+.ex-pill::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 99px; margin-right: 6px; }
+.ex-pill.sales::before { background: var(--ex-gold); }
+.ex-pill.hpp::before { background: var(--ex-blue); }
+.ex-pill.exp::before { background: var(--ex-purple); }
+.ex-pill.net::before { background: var(--ex-red); }
+
+/* ── Table ───────────────────────────────────────────── */
+.ex-table-wrap { overflow: auto; border: 1px solid var(--ex-line); border-radius: 18px; background: #fff; margin-top: 12px; }
+.ex-table-wrap table { width: 100%; min-width: 700px; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.ex-table-wrap th { position: sticky; top: 0; background: #f8fafc; color: #344054; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--ex-line); }
+.ex-table-wrap td { padding: 12px 14px; border-bottom: 1px solid var(--ex-line); vertical-align: top; }
+.ex-table-wrap tbody tr:hover { background: #fff7ed; }
+.ex-num { text-align: right; white-space: nowrap; }
+.ex-inactive { opacity: .55; }
+.ex-empty { padding: 20px; text-align: center; color: var(--ex-muted); font-weight: 850; background: #fff8e8; border-radius: 16px; }
+
+/* ── Matrix ──────────────────────────────────────────── */
+.ex-matrix-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+.ex-matrix-box { border: 1px solid var(--ex-line); border-radius: 18px; background: #fff; padding: 14px; min-height: 140px; }
+.ex-matrix-box h3 { margin: 0 0 8px; font-size: 16px; font-weight: 900; }
+.ex-mini-item { display: flex; justify-content: space-between; gap: 8px; border-top: 1px dashed #e5e7eb; padding: 8px 0; font-size: 13px; }
+.ex-mini-item:first-of-type { border-top: 0; }
+
+/* ── Stock/Inventory ─────────────────────────────────── */
+.ex-stock-pill { display: flex; justify-content: space-between; gap: 8px; border: 1px solid var(--ex-line); border-radius: 14px; background: #fff; padding: 10px; font-size: 13px; margin-bottom: 6px; }
+
+/* ── Sim Cards ───────────────────────────────────────── */
+.ex-sim-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.ex-sim-card { border: 1px solid var(--ex-line); border-radius: 20px; background: linear-gradient(180deg,#fff,#f9fbff); padding: 14px; }
+.ex-sim-card h3 { margin: 0 0 8px; font-size: 16px; }
+
+/* ── Checklist ───────────────────────────────────────── */
+.ex-checklist { display: grid; gap: 9px; }
+.ex-check { display: flex; justify-content: space-between; gap: 10px; align-items: center; border: 1px solid var(--ex-line); border-radius: 16px; background: #fff; padding: 11px; font-weight: 800; }
+.ex-check .ok { color: var(--ex-green); }
+.ex-check .no { color: var(--ex-red); }
+
+/* ── Experiment Cards ────────────────────────────────── */
+.ex-experiment-card { border: 1px solid var(--ex-line); border-radius: 18px; background: #fff; padding: 13px; margin-bottom: 10px; }
+.ex-experiment-card h3 { margin: 0 0 4px; font-size: 16px; }
+
+/* ── Product Items ───────────────────────────────────── */
+.ex-product-item { display: flex; justify-content: space-between; gap: 10px; align-items: center; border: 1px solid var(--ex-line); border-radius: 16px; padding: 11px; background: #fff; margin-bottom: 6px; }
+.ex-product-item b { font-size: 14px; }
+.ex-product-item small { color: var(--ex-muted); font-weight: 750; }
+
+/* ── Risk Items ──────────────────────────────────────── */
+.ex-risk-item { display: flex; justify-content: space-between; gap: 10px; border: 1px solid var(--ex-line); border-radius: 16px; padding: 11px; background: #fff; margin-bottom: 6px; }
+
+/* ── Forms (within panels) ───────────────────────────── */
+.ex-form { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; background: rgba(255,255,255,.92); border: 1px solid var(--ex-line); border-radius: 18px; padding: 14px; margin: 12px 0; }
+.ex-form label { display: grid; gap: 5px; font-size: 11px; font-weight: 900; color: #475467; text-transform: uppercase; letter-spacing: .07em; flex: 1; min-width: 140px; }
+.ex-form input, .ex-form select, .ex-form textarea { border: 1px solid var(--ex-line); border-radius: 12px; padding: 0 12px; font-weight: 800; height: 42px; color: var(--ex-dark); }
+.ex-form textarea { padding: 10px 12px; min-height: 60px; height: auto; }
+
+/* ── Grid Layouts ────────────────────────────────────── */
+.ex-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ex-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.ex-grid-nav { display: grid; grid-template-columns: 1.12fr .88fr; gap: 16px; }
+
+/* ── Translator Card ─────────────────────────────────── */
+.ex-translator-card { border: 1px solid var(--ex-line); border-radius: 20px; background: #fff; padding: 14px; }
+.ex-translator-card h3 { margin: 0 0 8px; }
+.ex-translator-card .big { font-size: 22px; font-weight: 950; letter-spacing: -.04em; }
+
+/* ── Collapsed Toggle ────────────────────────────────── */
+.ex-collapsed { display: none; }
+
+/* ── Print Styles ────────────────────────────────────── */
+@media print { .ex-no-print { display: none !important; } body { margin: 10mm; } .ex-kpi-grid { break-inside: avoid; } }
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .ex-kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .ex-grid-2, .ex-grid-3, .ex-grid-nav { grid-template-columns: 1fr; }
+  .ex-cash-grid { grid-template-columns: repeat(2,1fr); }
+  .ex-hero { flex-direction: column; align-items: flex-start; }
+  .ex-hero-actions { justify-content: flex-start; }
+}
+@media (max-width: 980px) {
+  .ex-matrix-grid, .ex-sim-grid, .ex-forecast-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 680px) {
+  .ex-kpi-grid, .ex-cash-grid, .ex-forecast-grid { grid-template-columns: 1fr; }
+  .ex-form { display: grid; }
+  .ex-card, .ex-panel, .ex-decision { border-radius: 18px; padding: 15px; }
+}

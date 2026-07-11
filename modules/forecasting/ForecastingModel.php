@@ -1,0 +1,8 @@
+<?php
+class ForecastingModel extends Model
+{
+ private function outletId(): int { return function_exists('current_outlet_id') ? current_outlet_id() : ((int)(Auth::user()['outlet_id']??1) ?: 1); }
+ public function recommendations(): array { return $this->all("SELECT pr.*, rm.name material_name, u.symbol FROM purchase_recommendations pr JOIN raw_materials rm ON rm.id=pr.raw_material_id JOIN units u ON u.id=rm.unit_id WHERE pr.outlet_id=? ORDER BY FIELD(pr.urgency,'critical','high','medium','low'), pr.recommendation_date DESC LIMIT 200",[$this->outletId()]); }
+ public function generate(): int { $out=$this->outletId(); $materials=$this->all("SELECT rm.*, u.symbol FROM raw_materials rm JOIN units u ON u.id=rm.unit_id WHERE rm.is_active=1 AND rm.stock_qty <= rm.min_stock_qty"); $count=0; foreach($materials as $m){ $need=max(0,(float)$m['min_stock_qty']*2-(float)$m['stock_qty']); $urg=((float)$m['stock_qty']<=0)?'critical':(((float)$m['stock_qty']<(float)$m['min_stock_qty']*0.5)?'high':'medium'); $this->execSql("INSERT INTO purchase_recommendations (outlet_id,recommendation_date,raw_material_id,current_stock,min_stock,forecast_usage,recommended_qty,urgency,reason,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,'open',NOW(),NOW())",[$out,today(),$m['id'],$m['stock_qty'],$m['min_stock_qty'],$m['min_stock_qty'],$need,$urg,'Stok berada di bawah minimum. Lead time '.$m['lead_time_days'].' hari.']); $count++; } return $count; }
+ public function updateStatus(int $id,string $status): void { $this->execSql("UPDATE purchase_recommendations SET status=?, updated_at=NOW() WHERE id=? AND outlet_id=?",[$status,$id,$this->outletId()]); }
+}
