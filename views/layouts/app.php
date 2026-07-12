@@ -52,7 +52,7 @@ $isHQUser = (Auth::role() === 'super_admin');
 
 if ($isHQUser) {
     $menuGroups['Pusat & Monitoring'] = [
-        ['label' => 'Dashboard Pusat',      'icon' => 'ti ti-star',          'url' => '/hq',                 'roles' => $OWNER],
+        ['label' => 'Dashboard Pusat paesekon',      'icon' => 'ti ti-star',          'url' => '/hq',                 'roles' => $OWNER],
         ['label' => 'Data Cabang',          'icon' => 'ti ti-building',      'url' => '/branches',           'roles' => $OWNER],
         ['label' => 'Harga Cabang',         'icon' => 'ti ti-adjustments',   'url' => '/products/overrides', 'roles' => $OWNER],
         ['label' => 'Laporan Semua Cabang', 'icon' => 'ti ti-chart-bar',     'url' => '/hq/report',          'roles' => $OWNER],
