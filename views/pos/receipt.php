@@ -44,8 +44,8 @@ $items = $receipt['items'];
 
 <div class="paper">
     <div class="center">
-        <img src="<?= asset('images/pos-products/icon-192.png') ?>" alt="Logo D'Celup" style="width:54px;height:54px;object-fit:contain;margin:0 auto 8px;">
-        <h3 style="margin:0; font-size:16px; font-weight:900;">D'CELUP CHICKEN CRISPY</h3>
+        <img src="<?= asset('images/pos-products/icon-192.png') ?>" alt="Logo Lumero" style="width:54px;height:54px;object-fit:contain;margin:0 auto 8px;">
+        <h3 style="margin:0; font-size:16px; font-weight:900;">Lumero CHICKEN CRISPY</h3>
         <div class="muted"><?= htmlspecialchars($order['outlet_name'] ?? 'Pasekon') ?></div>
         <div class="order-no"><?= htmlspecialchars($order['order_number'] ?? '') ?></div>
     </div>

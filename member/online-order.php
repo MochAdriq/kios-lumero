@@ -249,7 +249,7 @@ function fo_combo_img($row){
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ============================================
-   D'CELUP SELF-ORDER – DARK PREMIUM CINEMATIC
+   Lumero SELF-ORDER – DARK PREMIUM CINEMATIC
    Adapted from POS kasir2-theme
    ============================================ */
 
@@ -679,8 +679,8 @@ button,input,select,textarea{font:inherit}
     <source src="../<?=fo_e($freeOrderVideo)?>" type="video/mp4">
   </video>
   <div class="fo-video-content">
-    <div class="fo-video-badge"><img src="../public/assets/images/pos-products/icon-192.png" alt="D'Celup"></div>
-    <h2 class="fo-video-title">Online Order D'Celup</h2>
+    <div class="fo-video-badge"><img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero"></div>
+    <h2 class="fo-video-title">Online Order Lumero</h2>
     <p class="fo-video-subtitle">Pesan dulu dari HP, pilih jam ambil yang paling pas, lalu bayar via QRIS, transfer, atau cash di outlet.</p>
     <div class="fo-video-phone-box" style="display: none;">
       <label>Nomor WhatsApp Pelanggan</label>
@@ -714,9 +714,9 @@ button,input,select,textarea{font:inherit}
     <!-- Header Bar -->
     <header class="fo-header-bar">
       <div class="fo-brand">
-        <img src="../public/assets/images/pos-products/icon-192.png" alt="D'Celup">
+        <img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero">
         <div>
-          <h1>D'CELUP SELF-ORDER</h1>
+          <h1>Lumero SELF-ORDER</h1>
           <small>Pesan Cepat • Tanpa Antre • Ambil di Outlet</small>
         </div>
       </div>
@@ -1022,8 +1022,8 @@ button,input,select,textarea{font:inherit}
     <button type="button" class="payBtn active" data-pay="qris">QRIS (Midtrans)</button>
   </div>
   <div class="fo-pay-preview active" id="qrisPreview">
-    <b>Scan QRIS D'Celup</b><br><br>
-    <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS D'Celup">
+    <b>Scan QRIS Lumero</b><br><br>
+    <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero">
     <div style="margin-top:12px"><a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Dcelup.png">Download QRIS</a></div>
     <div class="fo-info" style="margin-top:10px"><?=fo_e($qrisInfo)?>. Simpan bukti pembayaran untuk diverifikasi kasir.</div>
   </div>

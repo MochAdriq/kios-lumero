@@ -153,7 +153,7 @@
                             <option value="images/pos-products/tanpa-nasi.png">Paket Tanpa Nasi</option>
                             <option value="images/pos-products/nasi.png">Nasi Putih</option>
                             <option value="images/pos-products/kentang-kriwil.png">Kentang Kriwil</option>
-                            <option value="images/pos-products/kentang-dcelup.png">Kentang D'Celup</option>
+                            <option value="images/pos-products/kentang-dcelup.png">Kentang Lumero</option>
                             <option value="images/pos-products/matcha.png">Minuman Matcha</option>
                             <option value="images/pos-products/kopi.png">Minuman Kopi</option>
                             <option value="images/pos-products/celup-saus.png">Celup Saus</option>

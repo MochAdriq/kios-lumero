@@ -1,6 +1,6 @@
 <?php
 /**
- * Lumero / D'Celup Loyalty Program Helper
+ * Lumero / Lumero Loyalty Program Helper
  * - Member berbasis nomor HP
  * - Earning: Rp 1.000 = 1 point
  * - Redeem pembelanjaan: default 1 point = Rp500 (teks rumus tidak ditampilkan ke member)
