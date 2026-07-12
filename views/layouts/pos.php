@@ -23,12 +23,13 @@ $storeName = current_outlet_name();
     <link rel="stylesheet" href="<?= asset('pos-template/owl.theme.default.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('pos-template/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/pos-preadmin-overrides.css') ?>?v=023">
-    <link rel="stylesheet" href="<?= asset('css/pos-kasir2-theme.css') ?>?v=006">
+    <link rel="stylesheet" href="<?= asset('css/pos-kasir2-theme.css') ?>?v=007">
 </head>
-<body class="pos-page sim-pos-template sim-pos-dcelup k2-body">
+<body class="pos-page sim-pos-template sim-pos-dcelup k2-body <?= isset($_GET['embed']) ? 'is-embed-modal' : '' ?>" style="<?= isset($_GET['embed']) ? 'background:#fff !important; padding:0 !important;' : '' ?>">
 <div id="global-loader" style="display:none"><div class="whirly-loader"></div></div>
 
 <div class="main-wrapper pos-five">
+    <?php if (!isset($_GET['embed'])): ?>
     <header class="header pos-header sim-pos-header">
         <div class="header-left active sim-pos-brand-wrap">
             <a href="<?= url('/dashboard') ?>" class="logo logo-normal sim-pos-logo">
@@ -90,6 +91,7 @@ $storeName = current_outlet_name();
             </li>
         </ul>
     </header>
+    <?php endif; ?>
 
     <?= $content ?>
 </div>
@@ -102,6 +104,6 @@ $storeName = current_outlet_name();
 <?php if (class_exists('MidtransService') && MidtransService::getClientKey() !== ''): ?>
 <script src="<?= MidtransService::snapJsUrl() ?>" data-client-key="<?= htmlspecialchars(MidtransService::getClientKey()) ?>"></script>
 <?php endif; ?>
-<script src="<?= asset('js/pos-preadmin.js') ?>?v=030"></script>
+<script src="<?= asset('js/pos-preadmin.js') ?>?v=<?= time() ?>"></script>
 </body>
 </html>

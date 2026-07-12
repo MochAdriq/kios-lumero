@@ -5,7 +5,7 @@ class WhatsAppGateway
     {
         $normalizedPhone = self::normalizePhone($phone);
         $message = sprintf(
-            "Kode OTP verifikasi Member Lumero POS Anda adalah: *%s*\n\nBerlaku selama 5 menit. Jangan berikan kode ini kepada siapa pun demi keamanan akun Anda.",
+            "Kode OTP verifikasi Member Lumero Anda adalah: *%s*\n\nBerlaku selama 5 menit. Jangan berikan kode ini kepada siapa pun demi keamanan akun Anda.",
             $otp
         );
 

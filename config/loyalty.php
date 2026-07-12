@@ -311,11 +311,21 @@ function loyalty_calc_earn_points(PDO $pdo, int $amount): int {
 function loyalty_member_code(int $id): string { return 'MBR'.str_pad((string)$id,6,'0',STR_PAD_LEFT); }
 function loyalty_find_member_by_phone(PDO $pdo, string $phone) {
     loyalty_ensure_tables($pdo);
-    $p=loyalty_normalize_phone($phone);
-    if($p==='') return false;
-    $st=$pdo->prepare("SELECT * FROM members WHERE phone=? LIMIT 1");
-    $st->execute([$p]);
-    return $st->fetch(PDO::FETCH_ASSOC);
+    $p = loyalty_normalize_phone($phone);
+    if ($p === '') return false;
+    $st = $pdo->prepare("SELECT * FROM members WHERE phone=? OR phone=? OR REPLACE(REPLACE(phone,'-',''),' ','')=? LIMIT 1");
+    $st->execute([$p, $phone, $p]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
+    if ($row) return $row;
+
+    if (strlen($p) >= 9) {
+        $tail = substr($p, -9);
+        $st = $pdo->prepare("SELECT * FROM members WHERE REPLACE(REPLACE(phone,'-',''),' ','') LIKE ? LIMIT 1");
+        $st->execute(['%' . $tail]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        if ($row) return $row;
+    }
+    return false;
 }
 function loyalty_member_by_id(PDO $pdo, int $id) {
     loyalty_ensure_tables($pdo);

@@ -28,11 +28,26 @@ class ProductController extends Controller
         $id = (int)($_POST['id'] ?? 0);
         try {
             $d = [
+                'product_name' => trim($_POST['product_name'] ?? ''),
                 'variant_name' => trim($_POST['variant_name'] ?? ''),
+                'image' => trim($_POST['image'] ?? ''),
                 'selling_price' => max(0, (int)($_POST['selling_price'] ?? 0)),
             ];
             if (isset($_POST['cost_price'])) {
                 $d['hpp'] = max(0, (int)$_POST['cost_price']);
+            }
+            if (!empty($_FILES['image_file']['tmp_name']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['image_file'];
+                $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                if (in_array($file['type'], $allowed)) {
+                    $uploadDir = __DIR__ . '/../../public/uploads/products/';
+                    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+                    $ext = pathinfo($file['name'], PATHINFO_EXTENSION) ?: 'png';
+                    $filename = 'product_' . $id . '_' . time() . '.' . $ext;
+                    if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
+                        $d['image'] = 'uploads/products/' . $filename;
+                    }
+                }
             }
             (new ProductModel())->updateVariant($id, $d);
             Audit::log('update_product', 'product_variants', $id, null, $d);

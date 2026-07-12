@@ -76,9 +76,16 @@ if (class_exists('LoyaltyController')) {
     $router->get('/loyalty/redemptions', [LoyaltyController::class, 'redemptions']);
     $router->post('/loyalty/settings/update', [LoyaltyController::class, 'updateSettings']);
 }
+$router->get('/member', function() {
+    $claim = trim((string)($_GET['claim'] ?? ''));
+    $query = $claim !== '' ? '?claim=' . rawurlencode($claim) : '';
+    header('Location: ' . url('/member/hook.php', false) . $query);
+    exit;
+});
 
 if (class_exists('POSController')) {
     $router->get('/pos', [POSController::class,'index']);
+    $router->get('/pos/check-member', [POSController::class,'checkMember']);
     $router->post('/pos/checkout', [POSController::class,'checkout']);
     $router->get('/pos/receipt/{id}', [POSController::class,'receipt']);
     $router->get('/orders', [POSController::class,'orders']);

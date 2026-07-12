@@ -35,6 +35,8 @@ class POSController extends Controller
                 'paid_amount' => $_POST['paid_amount'] ?? 0,
                 'discount_amount' => $_POST['discount_amount'] ?? 0,
                 'notes' => $_POST['notes'] ?? null,
+                'member_id' => !empty($_POST['member_id']) ? (int)$_POST['member_id'] : null,
+                'customer_phone' => !empty($_POST['customer_phone']) ? trim((string)$_POST['customer_phone']) : null,
             ]);
 
             $_SESSION['flash_success'] = 'Transaksi berhasil: '.$result['order_number'].' total '.rupiah($result['grand_total']);
@@ -108,8 +110,8 @@ class POSController extends Controller
         Auth::requireRoles(['super_admin','administrator','cashier']);
         $outletId = Auth::role() === 'super_admin' ? null : (function_exists('current_outlet_id') ? current_outlet_id() : (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id')));
         $data = $this->model->receipt((int)$id, $outletId);
-        if (!$data) { http_response_code(404); include __DIR__ . '/../../views/errors/404.php'; return; }
-        $this->view('pos/receipt', ['pageTitle'=>'Struk '.$data['order']['order_number'], 'receipt'=>$data]);
+        $layout = (isset($_GET['embed']) || isset($_GET['print'])) ? null : 'app';
+        $this->view('pos/receipt', ['pageTitle'=>'Struk '.$data['order']['order_number'], 'receipt'=>$data], $layout);
     }
 
     public function orders(): void
@@ -160,5 +162,25 @@ class POSController extends Controller
             $_SESSION['flash_error'] = $e->getMessage();
         }
         $this->redirect('/payments');
+    }
+
+    public function checkMember(): void
+    {
+        Auth::requireRoles(['super_admin','administrator','cashier']);
+        $phone = trim((string)($_GET['phone'] ?? ''));
+        if ($phone === '') {
+            $this->json(['success'=>false, 'message'=>'Nomor HP wajib diisi']);
+        }
+        $member = $this->model->findMemberByPhone($phone);
+        if ($member) {
+            $this->json(['success'=>true, 'found'=>true, 'member'=>[
+                'id' => (int)$member['id'],
+                'name' => (string)($member['name'] ?? 'Member'),
+                'phone' => (string)($member['phone'] ?? $phone),
+                'points' => (int)($member['total_points'] ?? ($member['points'] ?? ($member['loyalty_points'] ?? 0)))
+            ]]);
+        } else {
+            $this->json(['success'=>true, 'found'=>false, 'message'=>'Member tidak ditemukan']);
+        }
     }
 }

@@ -140,10 +140,38 @@
         <!-- SECTION: GAMBAR (Only for Product) -->
         <div id="section_image" class="d-none mt-5">
             <h5 class="fw-bold mb-4 border-bottom pb-2">Gambar Produk</h5>
-            <div class="mb-4">
-                <label class="form-label fw-medium">Upload File Gambar</label>
-                <input type="file" name="image" class="form-control" accept="image/jpeg,image/png,image/webp">
-                <small class="text-muted d-block mt-2">Maksimal 2MB. Format JPG, PNG, WEBP.</small>
+            <div class="row g-4 mb-4">
+                <div class="col-md-7">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">1. Pilih dari Galeri Existing (Default)</label>
+                        <select name="image" id="wizard_image_select" class="form-select">
+                            <option value="images/pos-products/original.png">Ayam Crispy (Original)</option>
+                            <option value="images/pos-products/dada.png">Ayam Dada</option>
+                            <option value="images/pos-products/paha-atas.png">Ayam Paha Atas</option>
+                            <option value="images/pos-products/paha-bawah.png">Ayam Paha Bawah</option>
+                            <option value="images/pos-products/sayap.png">Ayam Sayap</option>
+                            <option value="images/pos-products/tanpa-nasi.png">Paket Tanpa Nasi</option>
+                            <option value="images/pos-products/nasi.png">Nasi Putih</option>
+                            <option value="images/pos-products/kentang-kriwil.png">Kentang Kriwil</option>
+                            <option value="images/pos-products/kentang-dcelup.png">Kentang D'Celup</option>
+                            <option value="images/pos-products/matcha.png">Minuman Matcha</option>
+                            <option value="images/pos-products/kopi.png">Minuman Kopi</option>
+                            <option value="images/pos-products/celup-saus.png">Celup Saus</option>
+                            <option value="images/pos-products/saus.png">Saus Tambahan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label fw-medium">2. Atau Upload File Gambar Baru (Prioritas Utama)</label>
+                        <input type="file" name="image" id="wizard_image_input" class="form-control" accept="image/jpeg,image/png,image/webp">
+                        <small class="text-muted d-block mt-1">Maksimal 2MB. Format JPG, PNG, WEBP. Jika diisi, foto upload ini yang akan digunakan.</small>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-medium d-block">Live Preview Gambar:</label>
+                    <div class="border rounded p-3 bg-white text-center shadow-sm" style="height: 150px; display: flex; align-items: center; justify-content: center;">
+                        <img id="wizard_image_preview" src="<?= asset('images/pos-products/original.png') ?>" alt="Preview" style="max-height: 130px; max-width: 100%; object-fit: contain;">
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -198,6 +226,18 @@ fetch('<?= url('/central-settings/api/items') ?>')
     .then(res => {
         if(res.status === 'success') itemsData = res.data;
     });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetType = urlParams.get('type');
+    if (targetType) {
+        const radio = document.querySelector(`input[name="item_type"][value="${targetType}"]`);
+        if (radio) {
+            radio.checked = true;
+            toggleTypeForms();
+        }
+    }
+});
 
 function toggleTypeForms() {
     const type = document.querySelector('input[name="item_type"]:checked')?.value;
@@ -287,4 +327,42 @@ function populateItems(selectEl) {
         }
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const baseAssetUrl = "<?= rtrim(asset(''), '/') ?>/";
+    const selectImg = document.getElementById('wizard_image_select');
+    const fileInput = document.getElementById('wizard_image_input');
+    const previewImg = document.getElementById('wizard_image_preview');
+
+    function updateWizardPreview(val) {
+        if (!val) val = 'images/pos-products/original.png';
+        if (val.startsWith('http://') || val.startsWith('https://')) {
+            previewImg.src = val;
+        } else {
+            previewImg.src = baseAssetUrl + val.replace(/^\/+/, '');
+        }
+    }
+
+    if (selectImg && previewImg) {
+        selectImg.addEventListener('change', function() {
+            if (fileInput) fileInput.value = '';
+            updateWizardPreview(this.value);
+        });
+    }
+
+    if (fileInput && previewImg) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewImg.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else if (selectImg) {
+                updateWizardPreview(selectImg.value);
+            }
+        });
+    }
+});
 </script>

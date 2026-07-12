@@ -222,23 +222,28 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                                     <div class="sim-summary-row sim-summary-total"><span>Total</span><strong id="totalText">Rp 0</strong></div>
                                 </div>
                                 <textarea name="notes" class="form-control mt-2 sim-notes-input" rows="1" placeholder="Catatan order..."></textarea>
-                            </form>
 
-                            <!-- Payment Methods -->
-                            <div class="sim-pay-section">
-                                <div class="row align-items-center methods g-2 sim-pay-methods">
-                                    <div class="col-3 d-flex"><a href="javascript:void(0);" class="payment-item active d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="cash"><?= sim_icon('ti-cash-banknote', 'me-1') ?><p class="fs-12 fw-medium mb-0">Cash</p></a></div>
-                                    <div class="col-3 d-flex"><a href="javascript:void(0);" class="payment-item d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="qris"><?= sim_icon('ti-qrcode', 'me-1') ?><p class="fs-12 fw-medium mb-0">QRIS</p></a></div>
-                                    <div class="col-3 d-flex"><a href="javascript:void(0);" class="payment-item d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="debit"><?= sim_icon('ti-credit-card', 'me-1') ?><p class="fs-12 fw-medium mb-0">Card</p></a></div>
-                                    <div class="col-3 d-flex"><a href="javascript:void(0);" class="payment-item d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="ewallet"><?= sim_icon('ti-wallet', 'me-1') ?><p class="fs-12 fw-medium mb-0">E-Wallet</p></a></div>
+                                <!-- Payment Methods -->
+                                <div class="sim-pay-section">
+                                    <div class="row align-items-center methods g-2 sim-pay-methods">
+                                        <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item active d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="cash"><?= sim_icon('ti-cash-banknote', 'me-1') ?><p class="fs-12 fw-medium mb-0">Cash</p></a></div>
+                                        <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="qris"><?= sim_icon('ti-qrcode', 'me-1') ?><p class="fs-12 fw-medium mb-0">QRIS</p></a></div>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Uang Diterima -->
-                            <div class="sim-paid-section" id="simPaidSection">
-                                <div class="sim-summary-row"><span>Uang Diterima</span><input type="number" class="form-control form-control-sm text-end sim-summary-input" name="paid_amount" id="paidAmount" min="0" step="500" placeholder="50000"></div>
-                                <div class="sim-summary-row"><span>Kembalian</span><span id="changeText">Rp 0</span></div>
-                            </div>
+                                <!-- QRIS Display Box -->
+                                <div class="sim-qris-section text-center p-3 mt-2 border rounded bg-light" id="simQrisBox" style="display: none;">
+                                    <img src="<?= asset('images/pos-products/qris-outlet.jpg') ?>" onerror="this.src='/lumero/assets/img/payment/qris-20260512-212418.jpg'" alt="QRIS Toko" class="img-fluid rounded border bg-white p-2 mb-2" style="max-height: 200px;">
+                                    <strong class="d-block text-dark fs-13">Scan QRIS Outlet di Kasir</strong>
+                                    <small class="text-muted fs-11">Persilakan pelanggan scan kode QR di atas</small>
+                                </div>
+
+                                <!-- Uang Diterima -->
+                                <div class="sim-paid-section" id="simPaidSection">
+                                    <div class="sim-summary-row"><span>Uang Diterima</span><input type="number" class="form-control form-control-sm text-end sim-summary-input" name="paid_amount" id="paidAmount" min="0" step="500" placeholder="50000"></div>
+                                    <div class="sim-summary-row"><span>Kembalian</span><span id="changeText">Rp 0</span></div>
+                                </div>
+                            </form>
                         </div>
                     </div>
 
@@ -254,6 +259,68 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                         </button>
                     </div>
                 </aside>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POS Member Interceptor Modal Popup (Ala Alfamart/Indomaret) -->
+<div class="modal fade" id="simPosMemberModal" tabindex="-1" aria-labelledby="simPosMemberModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header bg-warning text-dark py-3 px-4">
+                <h6 class="modal-title mb-0 fw-bold d-flex align-items-center fs-15" id="simPosMemberModalLabel">
+                    <?= sim_icon('ti-award', 'me-2') ?> Cek Member & Poin Loyalty
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-white text-start">
+                <p class="text-muted small mb-3">Tanyakan kepada pelanggan apakah memiliki Member D'Celup / Nomor WhatsApp terdaftar sebelum menyelesaikan transaksi.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">Nomor WhatsApp / HP Member</label>
+                    <div class="input-group">
+                        <input type="text" id="memberCheckPhone" class="form-control" placeholder="Contoh: 08123456789" autocomplete="off">
+                        <button class="btn btn-dark" type="button" id="btnCheckMember">Cek Member</button>
+                    </div>
+                </div>
+
+                <div id="memberCheckResult" class="d-none"></div>
+            </div>
+            <div class="modal-footer d-flex flex-column gap-2 p-3 bg-light border-top">
+                <button type="button" id="btnConfirmMemberCheckout" class="btn btn-success w-100 fw-bold py-2 d-none" style="border-radius: 10px;">
+                    <?= sim_icon('ti-check', 'me-2') ?> Gunakan Member & Lanjutkan Bayar
+                </button>
+                <button type="button" id="btnSkipMemberCheckout" class="btn btn-outline-secondary w-100 fw-semibold py-2" style="border-radius: 10px;">
+                    Lewati Tanpa Member (Cetak Struk QR)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POS Receipt Print Modal Popup -->
+<div class="modal fade" id="simPosReceiptModal" tabindex="-1" aria-labelledby="simPosReceiptModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header bg-dark text-white py-3 px-4">
+                <h6 class="modal-title mb-0 fw-bold d-flex align-items-center fs-15" id="simPosReceiptModalLabel">
+                    <?= sim_icon('ti-check', 'me-2 text-success') ?> Transaksi Berhasil!
+                </h6>
+                <span class="badge bg-success ms-auto fs-12 px-3 py-1" id="posReceiptOrderNo">ORD-000</span>
+            </div>
+            <div class="modal-body p-3 bg-light text-center">
+                <p class="text-muted fs-12 mb-2 fw-medium">Pratinjau Struk Kasir:</p>
+                <!-- Receipt Preview iFrame -->
+                <iframe id="simReceiptFrame" src="" style="width: 100%; height: 480px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"></iframe>
+            </div>
+            <div class="modal-footer d-flex flex-column gap-2 p-3 bg-white border-top">
+                <button type="button" class="btn btn-primary w-100 fw-bold d-flex align-items-center justify-content-center py-2 fs-14" style="border-radius: 10px;" onclick="printSimReceipt()">
+                    <?= sim_icon('ti-printer', 'me-2') ?> Cetak Struk Sekarang
+                </button>
+                <button type="button" class="btn btn-outline-dark w-100 fw-semibold py-2 fs-14" style="border-radius: 10px;" onclick="resetPosCartAfterOrder()">
+                    <?= sim_icon('ti-plus', 'me-2') ?> Order Selanjutnya (Selesai)
+                </button>
             </div>
         </div>
     </div>

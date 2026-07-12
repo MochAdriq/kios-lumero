@@ -185,10 +185,31 @@ class POSModel extends Model
             $payStmt->execute([$orderId,$paymentMethod,null,$grandTotal,now(),'paid',null,null,Auth::id(),now(),now(),now()]);
 
             Audit::log('create_pos_order', 'orders', $orderId, null, ['order_number'=>$orderNo,'grand_total'=>$grandTotal,'payment_method'=>$paymentMethod]);
-            $this->db->commit();
+
+            try {
+                require_once __DIR__ . '/../../config/loyalty.php';
+                $memberId = !empty($payload['member_id']) ? (int)$payload['member_id'] : 0;
+                $memberPhone = !empty($payload['customer_phone']) ? trim((string)$payload['customer_phone']) : null;
+                $memberRow = null;
+                if ($memberId > 0 && function_exists('loyalty_member_by_id')) {
+                    $memberRow = loyalty_member_by_id($this->db, $memberId);
+                    if ($memberRow) {
+                        $this->db->prepare("UPDATE orders SET member_id=?, customer_phone=? WHERE id=?")->execute([$memberId, ($memberPhone ?: ($memberRow['phone'] ?? null)), $orderId]);
+                    }
+                }
+                if (function_exists('loyalty_apply_order_after_insert')) {
+                    loyalty_apply_order_after_insert($this->db, (int)$orderId, $memberRow, (int)$grandTotal, 0, 0, Auth::id());
+                }
+            } catch (Throwable $lx) {}
+
+            if ($this->db->inTransaction()) {
+                $this->db->commit();
+            }
             return ['id'=>$orderId,'order_number'=>$orderNo,'grand_total'=>$grandTotal,'change'=>$change];
         } catch (Throwable $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             throw $e;
         }
     }
@@ -234,6 +255,16 @@ class POSModel extends Model
             LEFT JOIN outlets ou ON ou.id=o.outlet_id
             WHERE o.id=?{$outletSql} LIMIT 1", $params);
         if (!$order) return null;
+        require_once __DIR__ . '/../../config/loyalty.php';
+        if (empty($order['member_id']) && empty($order['loyalty_claim_code']) && ($order['grand_total'] ?? 0) >= 1000 && function_exists('loyalty_create_receipt_claim')) {
+            $pts = max(1, (int)floor(($order['grand_total'] ?? 0) / 1000));
+            loyalty_create_receipt_claim($this->db, (int)$order['id'], $pts);
+            $order = $this->one("SELECT o.*, p.payment_method, p.amount AS paid_amount, ou.name AS outlet_name, ou.address AS outlet_address
+                FROM orders o
+                LEFT JOIN payments p ON p.order_id=o.id
+                LEFT JOIN outlets ou ON ou.id=o.outlet_id
+                WHERE o.id=?{$outletSql} LIMIT 1", $params);
+        }
         $items = $this->all("SELECT * FROM order_items WHERE order_id=? ORDER BY id ASC", [$orderId]);
         return ['order'=>$order,'items'=>$items];
     }
@@ -259,6 +290,12 @@ class POSModel extends Model
         $this->execSql("UPDATE payments SET status='paid', verified_by=?, verified_at=?, paid_at=COALESCE(paid_at,?), updated_at=? WHERE id=?", [Auth::id(),now(),now(),now(),$paymentId]);
         $this->execSql("UPDATE orders SET payment_status='paid', order_status='completed', updated_at=? WHERE id=?", [now(),$payment['oid']]);
         Audit::log('verify_payment', 'payments', $paymentId, $payment, ['status'=>'paid']);
+    }
+
+    public function findMemberByPhone(string $phone)
+    {
+        require_once __DIR__ . '/../../config/loyalty.php';
+        return loyalty_find_member_by_phone($this->db, $phone);
     }
 
     private function setting(int $outletId, string $key, $default = null)

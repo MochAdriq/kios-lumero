@@ -66,31 +66,31 @@ $menuGroups += [
         ['label' => 'Order & Transaksi',   'icon' => 'ti ti-receipt',          'url' => '/orders',    'roles' => $ALL],
         ['label' => 'Verifikasi Payment',  'icon' => 'ti ti-qrcode',           'url' => '/payments',  'roles' => $ALL],
     ],
+    'Katalog Produk & Bahan Baku' => [
+        ['label' => 'Sentral Data & Wizard', 'icon' => 'ti ti-database-cog',  'url' => '/central-settings', 'roles' => $ADMIN],
+        ['label' => 'Produk Jual (Kasir)',   'icon' => 'ti ti-burger',         'url' => '/products',         'roles' => $ADMIN],
+        ['label' => 'Bahan Baku (Gudang)',   'icon' => 'ti ti-packages',       'url' => '/inventory',        'roles' => $ALL],
+        ['label' => 'Resep & Komposisi HPP', 'icon' => 'ti ti-list-details',   'url' => '/recipes',          'roles' => $ADMIN],
+        ['label' => 'Kategori & Varian',     'icon' => 'ti ti-category-2',     'url' => '/categories',       'roles' => $ADMIN],
+        ['label' => 'Supplier Bahan',        'icon' => 'ti ti-truck-delivery', 'url' => '/vendors',          'roles' => $ADMIN],
+    ],
+    'Stok & Operasional Harian' => [
+        ['label' => 'Buka/Tutup Toko',       'icon' => 'ti ti-login',              'url' => '/store',               'roles' => $ADMIN],
+        ['label' => 'Stok Harian Siap Jual', 'icon' => 'ti ti-building-store',     'url' => '/daily-stock',         'roles' => $ALL],
+        ['label' => 'Pembelian & Restock',   'icon' => 'ti ti-shopping-cart-plus', 'url' => '/purchases',           'roles' => $ADMIN],
+        ['label' => 'Peringatan Stok',       'icon' => 'ti ti-alert-triangle',     'url' => '/inventory/low-stock', 'roles' => $ALL],
+        ['label' => 'Koreksi & Void',        'icon' => 'ti ti-adjustments',        'url' => '/corrections',         'roles' => $ADMIN],
+    ],
     'Loyalty & Member Poin' => [
-        ['label' => 'Data Member & Poin',  'icon' => 'ti ti-award',            'url' => '/loyalty/members',     'roles' => $ALL],
-        ['label' => 'Katalog Hadiah Poin', 'icon' => 'ti ti-gift',             'url' => '/loyalty/rewards',     'roles' => $ADMIN],
-        ['label' => 'Validasi Penukaran',  'icon' => 'ti ti-checkup-list',     'url' => '/loyalty/redemptions', 'roles' => $ALL],
-        ['label' => 'Buka Portal Member',  'icon' => 'ti ti-external-link',    'url' => '/member',              'roles' => $ALL],
-    ],
-    'Operasional Harian' => [
-        ['label' => 'Buka/Tutup Toko',     'icon' => 'ti ti-login',              'url' => '/store',              'roles' => $ADMIN],
-        ['label' => 'Stok Siap Jual',      'icon' => 'ti ti-building-store',     'url' => '/daily-stock',        'roles' => $ALL],
-        ['label' => 'Gudang Bahan',        'icon' => 'ti ti-packages',           'url' => '/inventory',          'roles' => $ALL],
-        ['label' => 'Koreksi & Void',      'icon' => 'ti ti-adjustments',        'url' => '/corrections',        'roles' => $ADMIN],
-        ['label' => 'Peringatan Stok',     'icon' => 'ti ti-alert-triangle',     'url' => '/inventory/low-stock','roles' => $ALL],
-        ['label' => 'Pembelian Bahan',     'icon' => 'ti ti-shopping-cart-plus', 'url' => '/purchases',          'roles' => $ADMIN],
-    ],
-    'Produk & Master Data' => [
-        ['label' => 'Sentral Data Setting', 'icon' => 'ti ti-database-cog', 'url' => '/central-settings', 'roles' => $ADMIN],
-        ['label' => 'Daftar Produk',       'icon' => 'ti ti-burger',         'url' => '/products',   'roles' => $ADMIN],
-        ['label' => 'Resep & HPP',         'icon' => 'ti ti-list-details',   'url' => '/recipes',    'roles' => $ADMIN],
-        ['label' => 'Kategori & Varian',   'icon' => 'ti ti-category-2',     'url' => '/categories', 'roles' => $ADMIN],
-        ['label' => 'Supplier',            'icon' => 'ti ti-truck-delivery', 'url' => '/vendors',    'roles' => $ADMIN],
+        ['label' => 'Data Member & Poin',    'icon' => 'ti ti-award',            'url' => '/loyalty/members',     'roles' => $ALL],
+        ['label' => 'Katalog Hadiah Poin',   'icon' => 'ti ti-gift',             'url' => '/loyalty/rewards',     'roles' => $ADMIN],
+        ['label' => 'Validasi Penukaran',    'icon' => 'ti ti-checkup-list',     'url' => '/loyalty/redemptions', 'roles' => $ALL],
+        ['label' => 'Buka Portal Member',    'icon' => 'ti ti-external-link',    'url' => '/member/hook.php', 'root' => true, 'roles' => $ALL],
     ],
     'Keuangan & Laporan' => [
-        ['label' => 'Biaya Operasional',   'icon' => 'ti ti-wallet',                 'url' => '/expenses',          'roles' => $ADMIN],
-        ['label' => 'Laporan Harian',      'icon' => 'ti ti-report-analytics',       'url' => '/reports/daily',     'roles' => $ADMIN],
-        ['label' => 'Laporan Keuangan',    'icon' => 'ti ti-chart-infographic',      'url' => '/reports/financial', 'roles' => $ADMIN],
+        ['label' => 'Biaya Operasional',     'icon' => 'ti ti-wallet',                 'url' => '/expenses',          'roles' => $ADMIN],
+        ['label' => 'Laporan Harian',        'icon' => 'ti ti-report-analytics',       'url' => '/reports/daily',     'roles' => $ADMIN],
+        ['label' => 'Laporan Keuangan',      'icon' => 'ti ti-chart-infographic',      'url' => '/reports/financial', 'roles' => $ADMIN],
     ],
 ];
 
@@ -166,7 +166,7 @@ if ($isHQUser) {
             <?php if (!$visibleItems) continue; ?>
             <div class="sim-menu-title"><?= htmlspecialchars($groupName) ?></div>
             <?php foreach ($visibleItems as $item): ?>
-                <a class="sim-menu-link <?= $isActive($item['url']) ?>" href="<?= url($item['url']) ?>" title="<?= htmlspecialchars($item['label']) ?>">
+                <a class="sim-menu-link <?= $isActive($item['url']) ?>" href="<?= !empty($item['root']) ? url($item['url'], false) : url($item['url']) ?>" <?= !empty($item['root']) ? 'target="_blank"' : '' ?> title="<?= htmlspecialchars($item['label']) ?>">
                     <?= sim_icon($item['icon']) ?>
                     <span><?= htmlspecialchars($item['label']) ?></span>
                 </a>

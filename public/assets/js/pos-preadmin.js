@@ -247,9 +247,9 @@
     const tt2=document.querySelector('#totalText2'); if(tt2) tt2.textContent=money(total);
     const pay = paymentMethod ? paymentMethod.value : 'cash';
     const paidSec = document.getElementById('simPaidSection') || document.querySelector('.sim-paid-section');
-    if (paidSec) {
-      paidSec.style.display = (pay === 'cash') ? '' : 'none';
-    }
+    const qrisBox = document.getElementById('simQrisBox') || document.querySelector('.sim-qris-section');
+    if (paidSec) paidSec.style.display = (pay === 'cash') ? '' : 'none';
+    if (qrisBox) qrisBox.style.display = (pay === 'qris') ? 'block' : 'none';
   }
   function lineMetaText(item){
     const metaParts=[];
@@ -358,71 +358,207 @@
   }));
   discountAmount?.addEventListener('input',calc);
   paidAmount?.addEventListener('input',calc);
+  let pendingCheckoutEvent = null;
+  let verifiedMember = null;
+
   $('#checkoutForm')?.addEventListener('submit', e => {
+    e.preventDefault();
     if (!cart.length) {
-      e.preventDefault();
       alert('Keranjang masih kosong.');
       return;
     }
     calc();
 
-    const payMethod = paymentMethod ? paymentMethod.value : 'cash';
-    if (payMethod !== 'cash' && window.snap) {
-      e.preventDefault();
-      const form = e.currentTarget;
-      const submitBtn = form.querySelector('button[type="submit"]') || document.querySelector('.sim-checkout-btn');
-      const origText = submitBtn ? submitBtn.innerHTML : '';
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = 'Membuat tagihan Midtrans...';
-      }
+    pendingCheckoutEvent = {
+      form: e.currentTarget,
+      submitBtn: e.currentTarget.querySelector('button[type="submit"]') || document.querySelector('.sim-checkout-btn')
+    };
 
-      const formData = new FormData(form);
-      formData.append('ajax', '1');
+    // Open Member Check Modal
+    verifiedMember = null;
+    const phoneInput = document.getElementById('memberCheckPhone');
+    const resultDiv = document.getElementById('memberCheckResult');
+    const confirmBtn = document.getElementById('btnConfirmMemberCheckout');
+    if (phoneInput) phoneInput.value = '';
+    if (resultDiv) resultDiv.className = 'd-none';
+    if (confirmBtn) confirmBtn.classList.add('d-none');
 
-      fetch(form.action || window.location.href, {
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = origText;
-        }
-        if (data.success && data.qris_url) {
-          showQrisModal(data.qris_url, data.qris_string, data.order_number, data.grand_total, data.receipt_url);
-        } else if (data.success && data.snap_token) {
-          window.snap.pay(data.snap_token, {
-            onSuccess: function(result){
-              window.location.href = data.receipt_url;
-            },
-            onPending: function(result){
-              window.location.href = data.receipt_url;
-            },
-            onError: function(result){
-              alert('Pembayaran gagal atau dibatalkan.');
-            },
-            onClose: function(){
-              window.location.href = data.receipt_url;
-            }
-          });
-        } else if (data.success && data.receipt_url) {
-          window.location.href = data.receipt_url;
-        } else {
-          alert('Gagal memproses transaksi: ' + (data.message || 'Error tidak diketahui'));
-        }
-      })
-      .catch(err => {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = origText;
-        }
-        alert('Terjadi kesalahan koneksi saat memproses pembayaran Midtrans.');
-      });
+    const memberModalEl = document.getElementById('simPosMemberModal');
+    if (memberModalEl && window.bootstrap) {
+      const modal = new bootstrap.Modal(memberModalEl);
+      modal.show();
+      setTimeout(() => phoneInput?.focus(), 300);
+    } else {
+      executePosCheckout(null);
     }
   });
+
+  const btnCheckMember = document.getElementById('btnCheckMember');
+  const phoneInput = document.getElementById('memberCheckPhone');
+  const resultDiv = document.getElementById('memberCheckResult');
+  const confirmBtn = document.getElementById('btnConfirmMemberCheckout');
+
+  function performMemberCheck() {
+    const phone = phoneInput?.value.trim();
+    if (!phone) {
+      alert('Masukkan nomor HP/WhatsApp member.');
+      return;
+    }
+    btnCheckMember.disabled = true;
+    btnCheckMember.innerHTML = 'Mencari...';
+
+    const basePath = window.location.pathname.replace(/\/pos\/?.*$/, '');
+    const targetUrl = basePath + '/pos/check-member?phone=' + encodeURIComponent(phone);
+
+    fetch(targetUrl, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      btnCheckMember.disabled = false;
+      btnCheckMember.innerHTML = 'Cek Member';
+      if (data.success && data.found && data.member) {
+        verifiedMember = data.member;
+        resultDiv.className = 'alert alert-success border-0 shadow-sm p-3 my-3';
+        resultDiv.innerHTML = `
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <strong class="fs-14">${data.member.name}</strong>
+            <span class="badge bg-success">Member Valid</span>
+          </div>
+          <div class="small text-muted mb-1">No HP: ${data.member.phone}</div>
+          <div class="small fw-bold text-dark">Poin Aktif: <span class="text-success">${data.member.points} Poin</span></div>
+        `;
+        confirmBtn.classList.remove('d-none');
+      } else {
+        verifiedMember = null;
+        resultDiv.className = 'alert alert-warning border-0 shadow-sm p-3 my-3';
+        resultDiv.innerHTML = `
+          <div class="fw-bold small text-dark mb-1"><i class="ti ti-alert-circle"></i> Member Tidak Ditemukan</div>
+          <div class="small text-muted">Nomor belum terdaftar. Anda tetap dapat melanjutkan tanpa member.</div>
+        `;
+        confirmBtn.classList.add('d-none');
+      }
+    })
+    .catch(err => {
+      btnCheckMember.disabled = false;
+      btnCheckMember.innerHTML = 'Cek Member';
+      alert('Terjadi kesalahan koneksi saat mengecek member.');
+    });
+  }
+
+  btnCheckMember?.addEventListener('click', performMemberCheck);
+  phoneInput?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      performMemberCheck();
+    }
+  });
+
+  confirmBtn?.addEventListener('click', () => {
+    const modalEl = document.getElementById('simPosMemberModal');
+    if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
+    executePosCheckout(verifiedMember);
+  });
+
+  document.getElementById('btnSkipMemberCheckout')?.addEventListener('click', () => {
+    const modalEl = document.getElementById('simPosMemberModal');
+    if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
+    executePosCheckout(null);
+  });
+
+  function executePosCheckout(memberData) {
+    if (!pendingCheckoutEvent) return;
+    const form = pendingCheckoutEvent.form;
+    const submitBtn = pendingCheckoutEvent.submitBtn;
+    const origText = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Memproses Transaksi...';
+    }
+
+    const formData = new FormData(form);
+    formData.append('ajax', '1');
+    if (memberData && memberData.id) {
+      formData.append('member_id', memberData.id);
+      formData.append('customer_phone', memberData.phone || '');
+    }
+
+    fetch(form.action || window.location.href, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origText;
+      }
+      if (data.success && data.qris_url) {
+        showQrisModal(data.qris_url, data.qris_string, data.order_number, data.grand_total, data.receipt_url);
+      } else if (data.success && data.receipt_url) {
+        showReceiptPopupModal(data.receipt_url, data.order_number);
+      } else {
+        alert('Gagal memproses transaksi: ' + (data.message || 'Error tidak diketahui'));
+      }
+    })
+    .catch(err => {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origText;
+      }
+      alert('Terjadi kesalahan koneksi saat memproses transaksi.');
+    });
+  }
+
+  window.showReceiptPopupModal = function(receiptUrl, orderNo) {
+    const modalEl = document.getElementById('simPosReceiptModal');
+    const frame = document.getElementById('simReceiptFrame');
+    const orderBadge = document.getElementById('posReceiptOrderNo');
+    if (orderBadge && orderNo) orderBadge.textContent = orderNo;
+    if (frame && receiptUrl) {
+      const embedUrl = receiptUrl + (receiptUrl.includes('?') ? '&' : '?') + 'embed=1';
+      frame.src = embedUrl;
+    }
+    if (modalEl && window.bootstrap) {
+      const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      bsModal.show();
+    }
+  };
+
+  window.printSimReceipt = function() {
+    const frame = document.getElementById('simReceiptFrame');
+    if (frame && frame.contentWindow) {
+      try {
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+      } catch(err) {
+        if (frame.src) window.open(frame.src, '_blank');
+      }
+    }
+  };
+
+  window.resetPosCartAfterOrder = function() {
+    cart = [];
+    renderCart();
+    const modalEl = document.getElementById('simPosReceiptModal');
+    if (modalEl && window.bootstrap) {
+      try {
+        const bsModal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+        if (bsModal) bsModal.hide();
+      } catch(e) {}
+    }
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+
+    const paidInput = document.getElementById('paidAmount');
+    if (paidInput) paidInput.value = '';
+    const notesInput = document.querySelector('textarea[name="notes"]');
+    if (notesInput) notesInput.value = '';
+    calc();
+  };
 
   function showQrisModal(qrUrl, qrString, orderNo, totalAmount, receiptUrl) {
     let oldModal = document.getElementById('simQrisDirectModal');
@@ -480,12 +616,14 @@
     }
 
     document.getElementById('btnQrisFinish').addEventListener('click', () => {
-      window.location.href = receiptUrl;
+      const el = document.getElementById('simQrisDirectModal');
+      if (el) el.remove();
+      showReceiptPopupModal(receiptUrl, orderNo);
     });
     document.getElementById('btnQrisCancel').addEventListener('click', () => {
       const el = document.getElementById('simQrisDirectModal');
       if (el) el.remove();
-      window.location.href = receiptUrl;
+      showReceiptPopupModal(receiptUrl, orderNo);
     });
   }
   $('#btnFullscreen')?.addEventListener('click',()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); });

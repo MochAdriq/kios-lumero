@@ -47,6 +47,7 @@ class CentralSettingsModel extends Model
                     'category_id' => $catId,
                     'name' => $name,
                     'variant_name' => trim($post['variant_name'] ?? ''),
+                    'image' => trim($post['image'] ?? 'images/pos-products/original.png'),
                     'sku' => $sku,
                     'selling_price' => $sellPrice,
                     'hpp' => $hpp
@@ -116,7 +117,9 @@ class CentralSettingsModel extends Model
         $dest = $uploadDir . $filename;
 
         if (move_uploaded_file($file['tmp_name'], $dest)) {
-            $this->execSql("UPDATE products SET image_path = ? WHERE id = ?", ['uploads/products/' . $filename, $v['product_id']]);
+            $imgPath = 'uploads/products/' . $filename;
+            $this->execSql("UPDATE products SET image = ? WHERE id = ?", [$imgPath, $v['product_id']]);
+            $this->execSql("UPDATE product_variants SET image = ? WHERE id = ?", [$imgPath, $variantId]);
         } else {
             throw new Exception("Gagal mengupload gambar.");
         }

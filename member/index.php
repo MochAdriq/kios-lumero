@@ -10,7 +10,7 @@ loyalty_ensure_tables($pdo);
 $msg=$err='';
 function mem_e($v){ return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8'); }
 function mem_money($n){ return function_exists('rupiah') ? rupiah((int)$n) : 'Rp'.number_format((int)$n,0,',','.'); }
-function mem_reward_img_src($img){ $img=trim((string)$img); if($img==='') $img='assets/img/product-dummy.svg'; return preg_match('~^https?://~',$img) ? $img : '../'.ltrim($img,'/'); }
+function mem_reward_img_src($img, $name=''){ $img=trim((string)$img); if($img!=='' && preg_match('~^https?://~i',$img)) return $img; $base=basename($img); if($base!=='' && file_exists(__DIR__.'/../public/assets/images/pos-products/'.$base)) return '../public/assets/images/pos-products/'.$base; $n=strtolower(trim((string)$name)); if(str_contains($n,'kentang')) return '../public/assets/images/pos-products/kentang-kriwil.png'; if(str_contains($n,'matcha')) return '../public/assets/images/pos-products/matcha.png'; if(str_contains($n,'kopi')) return '../public/assets/images/pos-products/kopi.png'; if(str_contains($n,'sayap')) return '../public/assets/images/pos-products/sayap.png'; if(str_contains($n,'nasi')) return '../public/assets/images/pos-products/nasi.png'; if(str_contains($n,'saus')) return '../public/assets/images/pos-products/saus.png'; return '../public/assets/images/pos-products/original.png'; }
 function mem_csrf(){ if(empty($_SESSION['member_csrf'])) $_SESSION['member_csrf']=bin2hex(random_bytes(16)); return $_SESSION['member_csrf']; }
 function mem_check_csrf(){ if(($_POST['csrf'] ?? '') !== ($_SESSION['member_csrf'] ?? '')) throw new Exception('Sesi form tidak valid. Muat ulang halaman.'); }
 function mem_current_id(){ return (int)($_SESSION['member_id'] ?? 0); }
@@ -332,7 +332,7 @@ $prefillClaim=(string)($_SESSION['member_prefill_claim'] ?? $incomingClaim);
   ?>
   <div class="reward-card">
     <div class="reward-img-wrap">
-      <img src="<?=mem_e(mem_reward_img_src($img))?>" alt="<?=mem_e($r['name'])?>">
+      <img src="<?=mem_e(mem_reward_img_src($img, $r['name'] ?? ''))?>" alt="<?=mem_e($r['name'])?>">
       <div style="position:absolute; top:12px; left:12px; display:flex; gap:6px; flex-wrap:wrap;">
         <?php if(!empty($r['category'])): ?>
         <span class="badge" style="background:#fff; color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,.1);"><?=mem_e($r['category'])?></span>
