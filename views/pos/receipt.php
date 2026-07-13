@@ -27,43 +27,50 @@ $items = $receipt['items'];
 .paper hr {
     border: none;
     border-top: 1px dashed #bbb;
-    margin: 12px 0;
+    margin: 8px 0;
 }
 .paper .center { text-align: center; }
-.paper .muted { color: #666; font-size: 12px; }
-.paper .row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 4px; }
-.paper .item { padding: 8px 0; border-bottom: 1px dashed #eee; }
-.paper .total { font-weight: 800; font-size: 16px; margin-top: 6px; }
-.paper .order-no { font-size: 26px; font-weight: 900; margin: 8px 0; color: #ef3a2d; }
+.paper .muted { color: #666; font-size: 11px; }
+.paper .row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 3px; }
+.paper .total { font-weight: 800; font-size: 16px; margin-top: 4px; border-top: 1px solid #ddd; padding-top: 4px; }
+.paper .order-no { font-size: 24px; font-weight: 900; margin: 4px 0; color: #ef3a2d; }
+.print-logo { width:54px; height:54px; object-fit:contain; margin:0 auto 6px; }
+
 @media print {
     body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
     .sim-topbar, .sim-sidebar, .pos-header, header, aside, .no-print { display: none !important; }
     .paper { border: none !important; max-width: none !important; padding: 0 !important; }
+    .print-logo { filter: grayscale(100%) contrast(1.5); }
+    .order-no, .total span { color: #000 !important; }
 }
 </style>
 
+<!-- HIDDEN CASH DRAWER TRIGGER (Prints nothing visually, but sends hex to thermal printer if driver supports raw text) -->
+<?php if (strtolower($order['payment_method'] ?? '') === 'cash'): ?>
+<div class="no-print" style="display:none;">&#27;&#112;&#0;&#25;&#250;</div>
+<?php endif; ?>
+
 <div class="paper">
     <div class="center">
-        <img src="<?= asset('images/pos-products/icon-192.png') ?>" alt="Logo Lumero" style="width:54px;height:54px;object-fit:contain;margin:0 auto 8px;">
-        <h3 style="margin:0; font-size:16px; font-weight:900;">Lumero CHICKEN CRISPY</h3>
+        <img src="<?= asset('images/pos-products/icon-192.png') ?>" alt="Logo Lumero" class="print-logo">
+        <h3 style="margin:0; font-size:15px; font-weight:900;">Lumero CHICKEN CRISPY</h3>
         <div class="muted"><?= htmlspecialchars($order['outlet_name'] ?? 'Pasekon') ?></div>
         <div class="order-no"><?= htmlspecialchars($order['order_number'] ?? '') ?></div>
     </div>
     <hr>
-    <div class="row"><span>Tanggal</span><span><?= htmlspecialchars($order['created_at'] ?? '') ?></span></div>
+    <div class="row"><span>Tgl</span><span><?= htmlspecialchars($order['created_at'] ?? '') ?></span></div>
     <div class="row"><span>Kasir</span><span><?= htmlspecialchars($order['cashier_name'] ?? 'Kasir') ?></span></div>
-    <div class="row"><span>Payment</span><span><?= htmlspecialchars(strtoupper($order['payment_method'] ?? '-')) ?></span></div>
+    <div class="row"><span>Bayar</span><span><?= htmlspecialchars(strtoupper($order['payment_method'] ?? '-')) ?></span></div>
     <?php if (!empty($order['customer_phone'])): ?>
     <div class="row"><span>Member</span><span><?= htmlspecialchars(function_exists('loyalty_mask_phone') ? loyalty_mask_phone($order['customer_phone']) : substr($order['customer_phone'],0,4).'****'.substr($order['customer_phone'],-2)) ?></span></div>
     <?php endif; ?>
     <hr>
     <?php foreach ($items as $it): ?>
-    <div class="item">
-        <div><strong style="font-size:13px;"><?= htmlspecialchars($it['variant_name_snapshot'] ?: $it['product_name_snapshot']) ?></strong></div>
-        <div class="row" style="margin-top:2px;">
-            <span class="muted"><?= number_format($it['qty'],0,',','.') ?> x <?= rupiah($it['selling_price']) ?></span>
-            <strong><?= rupiah($it['subtotal']) ?></strong>
-        </div>
+    <div class="row" style="align-items:flex-start;">
+        <span style="flex:1;">
+            <strong style="font-size:13px;"><?= number_format($it['qty'],0,',','.') ?>x <?= htmlspecialchars($it['variant_name_snapshot'] ?: $it['product_name_snapshot']) ?></strong>
+        </span>
+        <strong style="font-size:13px;"><?= rupiah($it['subtotal']) ?></strong>
     </div>
     <?php endforeach; ?>
     <hr>
@@ -71,7 +78,6 @@ $items = $receipt['items'];
     <?php if ((float)($order['discount_amount'] ?? 0) > 0): ?>
     <div class="row"><span>Diskon</span><span>-<?= rupiah($order['discount_amount']) ?></span></div>
     <?php endif; ?>
-    <div class="row"><span>Pajak</span><span><?= rupiah($order['tax_amount']) ?></span></div>
     <div class="row total"><span>Total</span><span style="color:#ef3a2d;"><?= rupiah($order['grand_total']) ?></span></div>
     
     <?php
