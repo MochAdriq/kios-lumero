@@ -200,8 +200,41 @@ if (!function_exists('fo_upsert_customer')) {
 
 if (!function_exists('fo_calc_item')) {
     function fo_calc_item(PDO $pdo, array $item): array {
-        $type = $item['type'] ?? 'menu';
         $qty = max(1, (int)($item['qty'] ?? 1));
+        
+        if (!empty($item['variant_id'])) {
+            $st = $pdo->prepare("
+                SELECT pv.id AS variant_id, p.name AS product_name, pv.variant_name,
+                       COALESCE(NULLIF(pv.selling_price,0), p.base_price, 0) AS price,
+                       COALESCE(NULLIF(pv.hpp,0), p.base_hpp, 0) AS hpp
+                FROM product_variants pv
+                JOIN products p ON p.id = pv.product_id
+                WHERE pv.id = ?
+            ");
+            $st->execute([(int)$item['variant_id']]);
+            $row = $st->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $vName = (string)($row['variant_name'] ?? '');
+                $pName = (string)($row['product_name'] ?? '');
+                $isDefault = strcasecmp($vName, 'Default') === 0;
+                $name = trim($pName . ' ' . ($isDefault ? '' : $vName));
+                $price = (int)$row['price'];
+                $hpp = (int)$row['hpp'];
+                return [
+                    'menu_item_id' => $row['variant_id'],
+                    'type' => 'menu',
+                    'name' => $name,
+                    'item_name' => $name,
+                    'price' => $price,
+                    'hpp' => $hpp,
+                    'qty' => $qty,
+                    'line_total' => $price * $qty,
+                    'line_hpp' => $hpp * $qty
+                ];
+            }
+        }
+        
+        $type = $item['type'] ?? 'menu';
         $price = 0;
         $hpp = 0;
         $name = $item['name'] ?? 'Item';
@@ -221,7 +254,9 @@ if (!function_exists('fo_calc_item')) {
             }
         }
         return [
+            'type' => $type,
             'name' => $name,
+            'item_name' => $name,
             'price' => $price,
             'hpp' => $hpp,
             'qty' => $qty,

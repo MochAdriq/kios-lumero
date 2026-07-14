@@ -114,6 +114,28 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 }
 // order berhasil diarahkan ke halaman lacak pesanan.
 
+require_once __DIR__.'/../core/Model.php';
+require_once __DIR__.'/../modules/pos/POSModel.php';
+require_once __DIR__.'/../helpers/pos_helper.php';
+try {
+    $orderNo = '#ORD-' . date('Y') . '-' . str_pad(rand(1,999), 3, '0', STR_PAD_LEFT);
+    $posModel = new POSModel();
+    $categories = $posModel->categoriesWithProducts(1);
+    $preparedData = sim_pos_prepare_data($categories);
+    $preparedCategories = $preparedData['categories'];
+    $posAssets = $preparedData['assets'];
+    $totalVariants = $preparedData['total_variants'];
+} catch(Exception $e) {
+    $preparedCategories = [];
+    $posAssets = [];
+    $totalVariants = 0;
+}
+?>
+<script>
+window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets'=>$posAssets], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+</script>
+<?php
+
 $data = function_exists('fo_load_pos_menu_data') ? fo_load_pos_menu_data($pdo) : (function_exists('load_menu_data') ? load_menu_data() : ['parts'=>[],'sauces'=>[],'kentang'=>[],'matcha'=>[]]);
 $data['parts']=array_values(array_filter($data['parts'] ?? [], function($p){
   $name=mb_strtolower(trim((string)($p['name'] ?? '')));
@@ -290,7 +312,7 @@ button,input,select,textarea{font:inherit}
 /* ═══════════════════════════════════
    SPLIT LAYOUT
    ═══════════════════════════════════ */
-.fo-pos-wrapper{display:flex;height:100vh;overflow:hidden}
+.fo-pos-wrapper{display:flex;flex-direction:column;height:100vh;overflow:hidden;width:100%}
 .fo-pos-left{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .fo-pos-right{flex:0 0 380px;max-width:380px;display:flex;flex-direction:column;height:100vh;background:var(--dp-bg-2);border-left:1px solid var(--dp-line)}
 .fo-products-scroll{flex:1;overflow-y:auto;padding:24px 28px 120px}
@@ -585,11 +607,11 @@ button,input,select,textarea{font:inherit}
 /* ═══════════════════════════════════
    FLOATING ACTIONS & AI
    ═══════════════════════════════════ */
-.fo-floating-actions{position:fixed;right:14px;bottom:90px;z-index:54;display:grid;gap:10px;justify-items:end}
+.fo-floating-actions{position:fixed;left:14px;bottom:90px;z-index:54;display:grid;gap:10px;justify-items:start}
 .fo-float-btn{border:0;border-radius:999px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:12px}
 .fo-float-btn.ai{background:var(--dp-gradient);color:#fff}
 .fo-float-btn.wa{background:var(--dp-green);color:#fff}
-.fo-ai-panel{position:fixed;right:14px;bottom:180px;width:min(92vw,390px);z-index:56;display:none;background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);padding:16px;box-shadow:var(--dp-shadow);color:var(--dp-text)}
+.fo-ai-panel{position:fixed;left:14px;bottom:180px;width:min(92vw,390px);z-index:56;display:none;background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);padding:16px;box-shadow:var(--dp-shadow);color:var(--dp-text)}
 .fo-ai-panel.show{display:block;animation:foPayIn .2s ease both}
 .fo-ai-panel h3{margin:0 0 8px;font-size:20px;letter-spacing:-.03em;color:var(--dp-text)}
 .fo-ai-panel p{margin:0 0 10px;color:var(--dp-muted);font-weight:600;line-height:1.4;font-size:13px}
@@ -601,9 +623,9 @@ button,input,select,textarea{font:inherit}
 .fo-ai-actions .dark{background:var(--dp-surface-hover);color:var(--dp-text)}
 .fo-ai-actions .gold{background:var(--dp-gradient);color:#fff}
 
-.fo-ai-nudge{position:fixed;right:16px;bottom:148px;z-index:55;width:min(88vw,330px);display:none;background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);padding:14px;box-shadow:var(--dp-shadow);animation:aiNudgeIn .35s ease both;color:var(--dp-text)}
+.fo-ai-nudge{position:fixed;left:16px;bottom:148px;z-index:55;width:min(88vw,330px);display:none;background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);padding:14px;box-shadow:var(--dp-shadow);animation:aiNudgeIn .35s ease both;color:var(--dp-text)}
 .fo-ai-nudge.show{display:block}
-.fo-ai-nudge:after{content:"";position:absolute;right:32px;bottom:-10px;width:20px;height:20px;background:var(--dp-surface);border-right:1px solid var(--dp-glass-border);border-bottom:1px solid var(--dp-glass-border);transform:rotate(45deg)}
+.fo-ai-nudge:after{content:"";position:absolute;left:32px;bottom:-10px;width:20px;height:20px;background:var(--dp-surface);border-right:1px solid var(--dp-glass-border);border-bottom:1px solid var(--dp-glass-border);transform:rotate(45deg)}
 .fo-ai-nudge b{display:block;color:var(--dp-red);font-size:15px;margin-bottom:4px}
 .fo-ai-nudge p{margin:0;color:var(--dp-text-2);font-size:12px;font-weight:600;line-height:1.4}
 .fo-ai-nudge-actions{display:flex;gap:8px;margin-top:10px}
@@ -672,8 +694,12 @@ button,input,select,textarea{font:inherit}
 
 @media(max-width:720px){.fo-video-phone-row{grid-template-columns:1fr}.fo-video-phone-row button{height:44px}}
 </style>
+  <link rel="stylesheet" href="../public/assets/pos-template/bootstrap.min.css">
+  <link rel="stylesheet" href="../public/assets/pos-template/style.css">
+  <link rel="stylesheet" href="../public/assets/css/pos-preadmin-overrides.css">
+  <link rel="stylesheet" href="../public/assets/css/pos-kasir2-theme.css">
 </head>
-<body>
+<body class="pos-page sim-pos-template sim-pos-dcelup k2-body">
 <div class="fo-video-overlay" id="freeOrderVideoOverlay" aria-modal="true" role="dialog">
   <video id="freeOrderVideoPlayer" autoplay muted loop playsinline preload="auto" poster="../<?=fo_e($freeOrderPoster)?>">
     <source src="../<?=fo_e($freeOrderVideo)?>" type="video/mp4">
@@ -709,224 +735,194 @@ button,input,select,textarea{font:inherit}
 <div class="fo-toast-copy" id="copyToast">Nomor berhasil disalin</div>
 
 <div class="fo-pos-wrapper">
-  <!-- LEFT PANEL: Catalog -->
-  <div class="fo-pos-left">
-    <!-- Header Bar -->
-    <header class="fo-header-bar">
-      <div class="fo-brand">
-        <img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero">
-        <div>
-          <h1>Lumero SELF-ORDER</h1>
-          <small>Pesan Cepat • Tanpa Antre • Ambil di Outlet</small>
-        </div>
+  <header class="fo-header-bar w-100">
+    <div class="fo-brand">
+      <img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero">
+      <div>
+        <h1>Lumero SELF-ORDER</h1>
+        <small>Pesan Cepat • Tanpa Antre • Ambil di Outlet</small>
       </div>
-      <div class="fo-header-actions">
-        <div class="fo-audio-toggles">
-          <button type="button" class="fo-audio-toggle active" id="toggleMusicBtn" onclick="toggleMusicSetting()"><span>♪</span> Musik ON</button>
-          <button type="button" class="fo-audio-toggle active" id="toggleGuideBtn" onclick="toggleGuideSetting()"><span>🔊</span> Suara ON</button>
-        </div>
-        <a class="fo-track-link" href="../order-online/lacak.php">📍 Lacak Pesanan</a>
-        <button type="button" class="fo-cart-pill" onclick="openCheckout()" style="border:none;cursor:pointer;">
-          <span class="fo-cart-icon">🛒</span>
-          <span id="cartCount">0</span>
+    </div>
+    <div class="fo-header-actions">
+      <div class="fo-audio-toggles">
+        <button class="fo-audio-toggle on" id="toggleBgm" type="button" aria-pressed="true">
+          <span>♪</span> Musik ON
+        </button>
+        <button class="fo-audio-toggle on" id="toggleVoice" type="button" aria-pressed="true">
+          <span>🔊</span> Suara ON
         </button>
       </div>
-    </header>
+      <a href="/member/track" class="fo-track-link">
+        <span>📍</span> Lacak Pesanan
+      </a>
+      <button type="button" class="fo-cart-pill" onclick="document.querySelector('.fo-pos-right').classList.add('show')">
+        <i class="ti ti-shopping-cart fo-cart-icon"></i> Keranjang Pesanan <span id="itemCount3">0</span>
+      </button>
+    </div>
+  </header>
 
-    <!-- Main Scrollable Catalog -->
-    <main class="fo-products-scroll">
-      <?php if($err): ?>
-        <div class="fo-alert err"><?=fo_e($err)?></div>
-      <?php endif; ?>
+  <!-- LEFT PANEL: Catalog -->
+  <div class="row pos-wrapper g-0 w-100 flex-fill ">
+            <!-- ===== LEFT: PRODUCTS AREA ===== -->
+            <div class="col-md-12 col-lg-7 col-xl-8 d-flex sim-pos-main-col">
+                <div class="pos-categories tabs_wrapper p-0 flex-fill sim-pos-workspace">
+                    <div class="content-wrap sim-pos-content-wrap">
+                        <!-- ===== MAIN CONTENT (no sidebar) ===== -->
+                        <main class="tab-content-wrap sim-pos-products-panel">
+                            <!-- Top bar: Category Title + Search -->
+                            <div class="sim-pos-topbar">
+                                <div class="sim-pos-topbar-left">
+                                    <h2 id="activeCategoryLabel">Semua Menu</h2>
+                                    <small id="visibleProductInfo" class="sim-item-count"><?= (int)$totalVariants ?> item tersedia</small>
+                                </div>
+                                <div class="sim-pos-topbar-right">
+                                    <button class="btn btn-light btn-sm sim-sort-btn" type="button" id="flowBack" style="display:none"><?= sim_icon('ti-arrow-left', 'me-1') ?>Kembali</button>
+                                    <button class="btn btn-light btn-sm sim-sort-btn" type="button" id="resetFlow"><?= sim_icon('ti-refresh-dot', 'me-1') ?>Reset</button>
+                                    <div class="input-icon-start search-pos position-relative">
+                                        <span class="input-icon-addon"><?= sim_icon('ti-search') ?></span>
+                                        <input type="text" class="form-control" id="posSearch" placeholder="Cari produk... (⌘K)">
+                                    </div>
+                                </div>
+                            </div>
 
-      <!-- Category Filter Tabs -->
-      <div style="margin-bottom:18px;">
-        <nav class="fo-toolbar">
-          <button type="button" class="fo-tab active" data-target="ayam">🍗 Ayam Crispy</button>
-          <button type="button" class="fo-tab" data-target="kentang">🍟 Kentang</button>
-          <button type="button" class="fo-tab" data-target="matcha">🍵 Matcha & Kopi</button>
-          <button type="button" class="fo-tab" data-target="tambahan">🔥 Ayam 1 Ekor</button>
-          <button type="button" class="fo-tab" data-target="addon">🍚 Nasi & Saus</button>
-          <?php if($comboWindowActive): ?><button type="button" class="fo-tab" data-target="combo">🎉 Combo Promo</button><?php endif; ?>
-          <button type="button" class="fo-tab" onclick="openCheckout()" style="border-color:rgba(255,45,85,.4);color:var(--dp-red);">🛒 Lihat Keranjang</button>
-        </nav>
-      </div>
+                            <!-- Horizontal Category Tabs -->
+                            <div class="sim-horizontal-cats">
+                                <ul class="sim-pos-tabs" id="categoryList" role="tablist">
+                                    <?php foreach ($preparedCategories as $idx => $cat): ?>
+                                    <li id="cat-<?= (int)$cat['id'] ?>" class="<?= $idx===0 ? 'active' : '' ?>" data-cat="<?= (int)$cat['id'] ?>">
+                                        <a href="javascript:void(0);"><img src="<?= htmlspecialchars($cat['image']) ?>" alt="<?= htmlspecialchars($cat['name']) ?>"></a>
+                                        <h6><a href="javascript:void(0);"><?= htmlspecialchars($cat['name']) ?></a></h6>
+                                    </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
 
-  <section class="fo-section" id="ayam">
-    <div class="fo-section-head"><div><h3>Ayam Crispy</h3><p>Pilih bagian ayam, tipe original atau plus saus, lalu pilih tanpa nasi atau + nasi.</p></div></div>
-    <div class="fo-grid">
-      <?php foreach($data['parts'] as $p): $partId=(int)$p['id']; $name=trim((string)$p['name']); $img=fo_img_part($name); $isAvail = $p['stock_available'] ?? true; ?>
-      <article class="fo-card chicken-card" data-part-id="<?=$partId?>" data-part-name="<?=fo_e($name)?>" data-part-image="<?=fo_e($img)?>" <?= !$isAvail ? 'style="opacity:0.6; pointer-events:none;"' : '' ?>>
-        <img class="hero" src="../public/assets/images/pos-products/<?=fo_e($img)?>" alt="<?=fo_e($name)?>">
-        <div class="meta"><h4><?=fo_e($name)?></h4><?php if($isAvail): ?><span class="fo-badge-inline fo-badge-ready">Tersedia</span><?php else: ?><span class="fo-badge-inline" style="background:#fecaca;color:#dc2626;">Habis</span><?php endif; ?></div>
-        <div class="fo-option-groups">
-          <div class="fo-toggle-grid">
-            <button type="button" class="fo-toggle-btn" data-style="original">Original</button>
-            <button type="button" class="fo-toggle-btn" data-style="sauce">Plus Saus</button>
-          </div>
-          <div class="fo-toggle-grid">
-            <button type="button" class="fo-toggle-btn" data-rice="0">Tanpa Nasi</button>
-            <button type="button" class="fo-toggle-btn" data-rice="1">+ Nasi</button>
-          </div>
-          <div class="fo-sauce-wrap">
-            <div class="fo-sauce-grid">
-              <?php foreach($data['sauces'] as $s): $sid=(int)$s['id']; ?>
-              <button type="button" class="fo-sauce-card" data-sauce-id="<?=$sid?>" data-sauce-name="<?=fo_e($s['name'])?>">
-                <div class="thumb"><img src="../public/assets/images/pos-products/<?=fo_e($img)?>" alt="<?=fo_e($s['name'])?>"></div>
-                <div><b><?=fo_e($s['name'])?></b><small>Varian saus untuk <?=fo_e($name)?></small></div>
-              </button>
-              <?php endforeach; ?>
+                            <!-- Flow bar for chicken steps -->
+                            <div id="flowBar" class="sim-flow-bar mb-3"></div>
+                            <div id="posMessage" class="sim-pos-message mb-3" style="display:none"></div>
+
+                            <!-- Product Grid -->
+                            <div class="pos-products sim-products-area">
+                                <?php if (!$preparedCategories): ?>
+                                    <div class="card border-0 shadow-sm"><div class="card-body text-center py-5">Belum ada produk aktif. Silakan cek menu <strong>Produk & Menu</strong>.</div></div>
+                                <?php endif; ?>
+                                <div id="productGrid" class="sim-kasir2-grid"></div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            <!-- ===== RIGHT: ORDER PANEL ===== -->
+            <div class="col-md-12 col-lg-5 col-xl-4 ps-0 d-lg-flex sim-pos-order-col">
+                <aside class="product-order-list bg-secondary-transparent flex-fill">
+                    <div class="card sim-order-card">
+                        <div class="card-body">
+                            <!-- Order Header -->
+                            <div class="sim-order-header">
+                                <div class="sim-order-header-top">
+                                    <div>
+                                        <span class="sim-order-title">Pesanan</span>
+                                        <span class="sim-order-badge" id="itemCount">0</span>
+                                    </div>
+                                    <a class="sim-order-clear" href="javascript:void(0);" id="clearCart"><?= sim_icon('ti-trash') ?> Hapus</a>
+                                </div>
+                                <div class="sim-order-meta">
+                                    <div>
+                                        <small>Order</small>
+                                        <strong id="draftOrderNo"><?= $orderNo ?></strong>
+                                    </div>
+                                    <div class="sim-order-type-toggle">
+                                        <select class="form-select form-select-sm" id="customerType">
+                                            <option value="takeaway" selected>Take Away</option>
+                                            <option value="dine_in">Dine In</option>
+                                            <option value="online">Online</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cart Items -->
+                            <div class="product-added block-section">
+                                <div class="product-wrap">
+                                    <div class="empty-cart" id="emptyCart">
+                                        <div class="sim-empty-cart-icon"><?= sim_icon('ti-shopping-cart') ?></div>
+                                        <p class="fw-bold mb-1">Keranjang kosong</p>
+                                        <small>Pilih produk untuk menambahkan</small>
+                                    </div>
+                                    <div class="sim-cart-list" id="cartTableWrap" style="display:none">
+                                          <div id="cartRows"></div>
+                                      </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Summary -->
+                            <form action="" method="post" id="checkoutForm">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="cart" id="cartJson"><input type="hidden" name="payment_method" id="paymentMethod" value="qris"><input type="hidden" name="pickup_type" id="pickupTypeInput" value="outlet">
+                                <div class="sim-summary-section">
+    <div class="form-group mb-2">
+        <label class="form-label fs-12 mb-1">Nama Pemesan</label>
+        <input type="text" class="form-control form-control-sm" name="customer_name" id="customerName" placeholder="Nama Anda" required>
+    </div>
+    <div class="form-group mb-2">
+        <label class="form-label fs-12 mb-1">No WhatsApp</label>
+        <input type="text" class="form-control form-control-sm" name="customer_phone" id="customerPhone" placeholder="08..." required>
+    </div>
+    <div class="row g-2 mb-2">
+        <div class="col-6">
+            <label class="form-label fs-12 mb-1">Tgl Ambil</label>
+            <input type="date" class="form-control form-control-sm" name="pickup_date" value="<?= date('Y-m-d') ?>" required>
         </div>
-        <div class="fo-pricebar">
-          <div>
-            <span class="fo-price pricePreview">Rp0</span>
-            <div class="fo-subprice namePreview">Memuat harga…</div>
-          </div>
-          <button type="button" class="fo-add-btn addChicken" <?= !$isAvail ? 'disabled' : '' ?>><?= $isAvail ? 'Tambah ke keranjang' : 'Habis' ?></button>
+        <div class="col-6">
+            <label class="form-label fs-12 mb-1">Jam</label>
+            <input type="time" class="form-control form-control-sm" name="pickup_time" value="09:00" required>
         </div>
-      </article>
-      <?php endforeach; ?>
     </div>
-  </section>
+    <hr>
+    <div class="sim-summary-row"><span>Subtotal</span><span id="subtotalText">Rp 0</span></div>
+    <div class="sim-summary-row sim-summary-total"><span>Total</span><strong id="totalText">Rp 0</strong></div>
+</div>
+                                  <textarea name="notes" class="form-control mt-2 sim-notes-input" rows="1" placeholder="Catatan order..."></textarea>
 
-  <section class="fo-section" id="tambahan">
-    <div class="fo-section-head"><div><h3>Ayam 1 Ekor</h3><p>Pilihan ayam utuh untuk keluarga atau rombongan, harga mengikuti data menu di kasir.</p></div></div>
-    <div class="fo-extra-grid">
-      <?php foreach($wholeChickenMenus as $mi): $mid=(int)$mi['id']; $name=trim((string)$mi['name']); $desc=trim((string)($mi['description'] ?? '')); ?>
-      <article class="fo-extra-card">
-        <img src="<?=fo_e(fo_menu_item_img($mi))?>" onerror="this.src='../public/assets/images/pos-products/original.png'" alt="<?=fo_e($name)?>">
-        <div class="content">
-          <span class="fo-extra-badge">Ayam 1 Ekor</span>
-          <h4><?=fo_e($name)?></h4>
-          <?php if($desc): ?><p><?=fo_e($desc)?></p><?php else: ?><p>Menu tambahan praktis untuk keluarga atau rombongan.</p><?php endif; ?>
-          <span class="price"><?=fo_money((int)$mi['price'])?></span>
-          <button class="fo-add-btn" type="button" onclick='addMenuItem(<?=json_encode(["id"=>$mid,"name"=>$name,"price"=>(int)$mi["price"],"hpp"=>(int)$mi["hpp"]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'>Tambah ke Keranjang</button>
+                                <!-- Payment Methods -->
+                                <div class="sim-pay-section">
+                                    <div class="row align-items-center methods g-2 sim-pay-methods">
+                                        <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item active d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="cash"><?= sim_icon('ti-cash-banknote', 'me-1') ?><p class="fs-12 fw-medium mb-0">Cash</p></a></div>
+                                        <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="qris"><?= sim_icon('ti-qrcode', 'me-1') ?><p class="fs-12 fw-medium mb-0">QRIS</p></a></div>
+                                    </div>
+                                </div>
+
+                                <!-- QRIS Display Box -->
+                                <div class="sim-qris-section text-center p-3 mt-2 border rounded bg-light" id="simQrisBox" style="display: none;">
+                                    <img src="<?= asset('images/pos-products/qris-outlet.jpg') ?>" onerror="this.src='/lumero/assets/img/payment/qris-20260512-212418.jpg'" alt="QRIS Toko" class="img-fluid rounded border bg-white p-2 mb-2" style="max-height: 200px;">
+                                    <strong class="d-block text-dark fs-13">Scan QRIS Outlet di Kasir</strong>
+                                    <small class="text-muted fs-11">Persilakan pelanggan scan kode QR di atas</small>
+                                </div>
+
+                                <!-- Uang Diterima -->
+                              </form>
+                        </div>
+                    </div>
+
+                    <!-- Checkout Button -->
+                    <div class="sim-checkout-btn-wrap">
+                        <button type="submit" form="checkoutForm" class="btn sim-checkout-btn">
+                            <?= sim_icon('ti-shopping-cart', 'me-2') ?>
+                            <div>
+                                <strong>Proses Pembayaran</strong>
+                                <small><span id="itemCount2">0</span> item - <span id="totalText2">Rp 0</span></small>
+                            </div>
+                            <?= sim_icon('ti-chevron-right') ?>
+                        </button>
+                    </div>
+                </aside>
+            </div>
         </div>
-      </article>
-      <?php endforeach; ?>
-    </div>
-  </section>
-
-  <section class="fo-section" id="addon">
-    <div class="fo-section-head"><div><h3>Tambahan Nasi & Saus</h3><p>Tambah nasi atau saus favorit secara terpisah agar pesanan makin lengkap.</p></div></div>
-    <div class="fo-addon-grid">
-      <article class="fo-addon-card">
-        <div class="addon-icon">🍚</div>
-        <h4>Nasi Putih</h4>
-        <p>Tambahan nasi untuk melengkapi ayam crispy.</p>
-        <span class="price"><?=fo_money($extraRicePrice)?></span>
-        <button class="fo-add-btn" type="button" onclick='addAddon(<?=json_encode(["kind"=>"rice","name"=>"Nasi Putih","price"=>$extraRicePrice,"hpp"=>$extraRiceHpp],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'>Tambah Nasi</button>
-      </article>
-      <?php foreach($data['sauces'] as $s): $sid=(int)$s['id']; $sname=trim((string)$s['name']); ?>
-      <article class="fo-addon-card">
-        <div class="addon-icon">🥣</div>
-        <h4><?=fo_e($sname)?></h4>
-        <p>Saus tambahan untuk rasa yang lebih lumer dan mantap.</p>
-        <span class="price"><?=fo_money($extraSaucePrice)?></span>
-        <button class="fo-add-btn" type="button" onclick='addAddon(<?=json_encode(["kind"=>"sauce","sauce_id"=>$sid,"name"=>"Saus ".$sname,"price"=>$extraSaucePrice,"hpp"=>$extraSauceHpp],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'>Tambah Saus</button>
-      </article>
-      <?php endforeach; ?>
-    </div>
-  </section>
-
-  <?php if($comboWindowActive): ?>
-  <section class="fo-section" id="combo">
-    <div class="fo-section-head"><div><h3>Combo Promo Jam Spesial</h3><p>Promo combo hanya muncul pada 11:00–11:30, 15:00–15:30, dan 19:00–21:00.</p></div></div>
-    <div class="fo-combo-window">
-      <div class="fo-combo-grid">
-        <?php foreach($comboMenus as $cm): ?>
-        <article class="fo-combo-card">
-          <img src="<?=fo_e(fo_combo_img($cm))?>" onerror="this.src='../public/assets/images/pos-products/original.png'" alt="<?=fo_e($cm['title'])?>">
-          <div>
-            <h4><?=fo_e($cm['title'])?></h4>
-            <p><?=fo_e($cm['description'] ?? '')?></p>
-            <span class="price"><?=fo_money((int)$cm['price'])?></span>
-            <button class="fo-add-btn" type="button" onclick='addCombo(<?=json_encode(["id"=>(int)$cm["id"],"name"=>(string)$cm["title"],"price"=>(int)$cm["price"],"hpp"=>(int)$cm["hpp"]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'>Tambah Combo</button>
-          </div>
-        </article>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  </section>
-  <?php endif; ?>
-
-  <section class="fo-section" id="kentang">
-    <div class="fo-section-head"><div><h3>Menu Kentang</h3><p>Menu tambahan dengan margin bagus untuk melengkapi order ayam.</p></div></div>
-    <div class="fo-simple-grid">
-      <?php foreach($data['kentang'] as $k): $name=trim((string)$k['name']); $isAvail = $k['stock_available'] ?? true; ?>
-      <article class="fo-simple-card" <?= !$isAvail ? 'style="opacity:0.6; pointer-events:none;"' : '' ?>>
-        <img src="../public/assets/images/pos-products/kentang-dcelup.png" alt="<?=fo_e($name)?>">
-        <h4><?=fo_e($name)?></h4>
-        <span class="price"><?=fo_money((int)$k['price'])?></span>
-        <button class="fo-add-btn" type="button" <?= !$isAvail ? 'disabled' : '' ?> onclick='addSimple("kentang",<?=json_encode(["id"=>(int)$k["id"],"name"=>$name,"price"=>(int)$k["price"]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'><?= $isAvail ? 'Tambah' : 'Habis' ?></button>
-      </article>
-      <?php endforeach; ?>
-    </div>
-  </section>
-
-  <section class="fo-section" id="matcha">
-    <div class="fo-section-head"><div><h3>Menu Matcha</h3><p>Minuman favorit yang mudah di-upsell bersama ayam atau kentang.</p></div></div>
-    <div class="fo-simple-grid">
-      <?php foreach($data['matcha'] as $m): $name=trim((string)$m['name']); $img=fo_img_matcha($name); $isAvail = $m['stock_available'] ?? true; ?>
-      <article class="fo-simple-card" <?= !$isAvail ? 'style="opacity:0.6; pointer-events:none;"' : '' ?>>
-        <img src="../public/assets/images/pos-products/matcha/<?=fo_e($img)?>" alt="<?=fo_e($name)?>">
-        <h4>Matcha <?=fo_e($name)?></h4>
-        <span class="price"><?=fo_money((int)$m['price'])?></span>
-        <button class="fo-add-btn" type="button" <?= !$isAvail ? 'disabled' : '' ?> onclick='addSimple("matcha",<?=json_encode(["id"=>(int)$m["id"],"name"=>"Matcha ".$name,"price"=>(int)$m["price"]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'><?= $isAvail ? 'Tambah' : 'Habis' ?></button>
-      </article>
-      <?php endforeach; ?>
-    </div>
-  </section>
-  <div class="fo-matcha-spacer"></div>
-</main>
-</div><!-- end .fo-pos-left -->
-
-<!-- RIGHT SIDEBAR: Order Panel (Desktop POS Style) -->
-<aside class="fo-pos-right">
-  <div class="fo-order-header">
-    <div class="fo-order-header-top">
-      <div class="fo-order-title">Keranjang Pesanan <span class="fo-order-badge" id="sideCartBadge">0</span></div>
-      <button type="button" class="fo-order-clear" onclick="cart=[]; renderCart();">🗑️ Kosongkan</button>
-    </div>
-  </div>
-  <div class="fo-order-meta">
-    <small>METODE BAYAR</small>
-    <strong>QRIS (Midtrans) Eksklusif</strong>
-  </div>
-  <div class="fo-order-items" id="sideOrderItems">
-    <div class="fo-order-empty">
-      <div class="icon">🛒</div>
-      <p>Belum ada menu dipilih</p>
-      <small>Klik menu di kiri untuk menambah pesanan</small>
-    </div>
-  </div>
-  <div class="fo-summary-section">
-    <div class="fo-summary-total" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>Total Pesanan</span>
-      <strong id="sideTotalText">Rp0</strong>
-    </div>
-  </div>
-  <div class="fo-checkout-btn-wrap">
-    <button type="button" class="fo-checkout-btn" onclick="openCheckout()">
-      <strong>Lanjut Bayar QRIS →</strong>
-      <small id="sideCountText">0 item</small>
-    </button>
-  </div>
-</aside>
 </div><!-- end .fo-pos-wrapper -->
 
 <!-- FLOATING PAYBOX (Mobile Only) -->
-<div class="fo-paybox">
-  <div class="fo-pay-inner">
-    <div class="fo-total">
-      <small>Total Online Order</small>
-      <b id="totalText">Rp0</b>
-      <div class="fo-footer-detail" id="footerDetail">Keranjang masih kosong.</div>
-    </div>
-    <button class="fo-checkout" type="button" onclick="openCheckout()">Lanjut Bayar</button>
-  </div>
+
 </div>
 
 
@@ -1964,5 +1960,13 @@ initCustomerMemory();
 initChickenCards();
 renderCart();
 </script>
+<script src="../public/assets/js/self-order-ui.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
