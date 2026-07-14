@@ -27,7 +27,15 @@
                     <span class="input-group-text bg-light border-end-0"><?= sim_icon('ti-search', 'text-muted') ?></span>
                     <input name="q" class="form-control border-start-0 ps-0 bg-light" placeholder="Cari produk, varian, SKU..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
                 </div>
-                <button type="submit" class="btn btn-primary px-4">Cari</button>
+                <select name="cat" class="form-select bg-light" style="max-width: 200px;">
+                    <option value="">Semua Kategori</option>
+                    <?php foreach($categories as $c): ?>
+                        <option value="<?= $c['id'] ?>" <?= (isset($_GET['cat']) && (int)$_GET['cat'] === (int)$c['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($c['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="btn btn-primary px-4">Filter</button>
             </form>
         </div>
 

@@ -12,7 +12,7 @@ $storeName = current_outlet_name();
     <meta name="theme-color" content="#0f0f13">
     <title><?= htmlspecialchars($pageTitle ?? 'POS Kasir') ?> - <?= htmlspecialchars(app_config('name')) ?></title>
 
-    <link rel="icon" type="image/x-icon" href="<?= url('/public/favicon.ico', false) ?>">
+    <link rel="icon" type="image/x-icon" href="<?= url('/public/favicon.ico?v=2', false) ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">

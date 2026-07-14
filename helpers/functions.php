@@ -413,3 +413,43 @@ function sim_icon(string $name, string $class = '', string $style = ''): string
     // Use 1.25em to roughly match the size of font icons (1em is often too small compared to line-height)
     return '<svg class="' . htmlspecialchars($classAttr) . '" width="1.25em" height="1.25em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"' . $styleAttr . '><use href="' . htmlspecialchars($url) . '" /></svg>';
 }
+
+/**
+ * Cek ketersediaan stok bahan baku berdasarkan resep untuk sebuah varian produk
+ */
+function check_variant_stock(PDO $pdo, int $variantId): bool
+{
+    // Cari resep aktif untuk varian ini
+    $stmt = $pdo->prepare("SELECT id FROM recipes WHERE product_variant_id = ? AND is_active = 1 LIMIT 1");
+    $stmt->execute([$variantId]);
+    $recipeId = $stmt->fetchColumn();
+    
+    // Jika tidak ada resep spesifik, asumsikan stok selalu tersedia (unlimited)
+    if (!$recipeId) {
+        return true;
+    }
+
+    // Ambil kebutuhan bahan baku dan stok saat ini
+    $stmt = $pdo->prepare("
+        SELECT ri.qty as required_qty, rm.stock_qty 
+        FROM recipe_items ri
+        JOIN raw_materials rm ON ri.raw_material_id = rm.id
+        WHERE ri.recipe_id = ? AND ri.item_type = 'raw_material'
+    ");
+    $stmt->execute([$recipeId]);
+    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Jika tidak ada bahan baku terhubung, anggap tersedia
+    if (empty($items)) {
+        return true;
+    }
+
+    // Cek apakah setiap bahan baku mencukupi untuk 1 porsi (required_qty)
+    foreach ($items as $item) {
+        if ((float)$item['stock_qty'] < (float)$item['required_qty']) {
+            return false;
+        }
+    }
+
+    return true;
+}

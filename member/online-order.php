@@ -755,10 +755,10 @@ button,input,select,textarea{font:inherit}
   <section class="fo-section" id="ayam">
     <div class="fo-section-head"><div><h3>Ayam Crispy</h3><p>Pilih bagian ayam, tipe original atau plus saus, lalu pilih tanpa nasi atau + nasi.</p></div></div>
     <div class="fo-grid">
-      <?php foreach($data['parts'] as $p): $partId=(int)$p['id']; $name=trim((string)$p['name']); $img=fo_img_part($name); ?>
-      <article class="fo-card chicken-card" data-part-id="<?=$partId?>" data-part-name="<?=fo_e($name)?>" data-part-image="<?=fo_e($img)?>">
+      <?php foreach($data['parts'] as $p): $partId=(int)$p['id']; $name=trim((string)$p['name']); $img=fo_img_part($name); $isAvail = $p['stock_available'] ?? true; ?>
+      <article class="fo-card chicken-card" data-part-id="<?=$partId?>" data-part-name="<?=fo_e($name)?>" data-part-image="<?=fo_e($img)?>" <?= !$isAvail ? 'style="opacity:0.6; pointer-events:none;"' : '' ?>>
         <img class="hero" src="../public/assets/images/pos-products/<?=fo_e($img)?>" alt="<?=fo_e($name)?>">
-        <div class="meta"><h4><?=fo_e($name)?></h4><span class="fo-badge-inline fo-badge-ready">Tersedia</span></div>
+        <div class="meta"><h4><?=fo_e($name)?></h4><?php if($isAvail): ?><span class="fo-badge-inline fo-badge-ready">Tersedia</span><?php else: ?><span class="fo-badge-inline" style="background:#fecaca;color:#dc2626;">Habis</span><?php endif; ?></div>
         <div class="fo-option-groups">
           <div class="fo-toggle-grid">
             <button type="button" class="fo-toggle-btn" data-style="original">Original</button>
@@ -784,7 +784,7 @@ button,input,select,textarea{font:inherit}
             <span class="fo-price pricePreview">Rp0</span>
             <div class="fo-subprice namePreview">Memuat harga…</div>
           </div>
-          <button type="button" class="fo-add-btn addChicken">Tambah ke keranjang</button>
+          <button type="button" class="fo-add-btn addChicken" <?= !$isAvail ? 'disabled' : '' ?>><?= $isAvail ? 'Tambah ke keranjang' : 'Habis' ?></button>
         </div>
       </article>
       <?php endforeach; ?>
@@ -855,12 +855,12 @@ button,input,select,textarea{font:inherit}
   <section class="fo-section" id="kentang">
     <div class="fo-section-head"><div><h3>Menu Kentang</h3><p>Menu tambahan dengan margin bagus untuk melengkapi order ayam.</p></div></div>
     <div class="fo-simple-grid">
-      <?php foreach($data['kentang'] as $k): $name=trim((string)$k['name']); ?>
-      <article class="fo-simple-card">
+      <?php foreach($data['kentang'] as $k): $name=trim((string)$k['name']); $isAvail = $k['stock_available'] ?? true; ?>
+      <article class="fo-simple-card" <?= !$isAvail ? 'style="opacity:0.6; pointer-events:none;"' : '' ?>>
         <img src="../public/assets/images/pos-products/kentang-dcelup.png" alt="<?=fo_e($name)?>">
         <h4><?=fo_e($name)?></h4>
         <span class="price"><?=fo_money((int)$k['price'])?></span>
-        <button class="fo-add-btn" type="button" onclick='addSimple("kentang",<?=json_encode(["id"=>(int)$k["id"],"name"=>$name,"price"=>(int)$k["price"]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'>Tambah</button>
+        <button class="fo-add-btn" type="button" <?= !$isAvail ? 'disabled' : '' ?> onclick='addSimple("kentang",<?=json_encode(["id"=>(int)$k["id"],"name"=>$name,"price"=>(int)$k["price"]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'><?= $isAvail ? 'Tambah' : 'Habis' ?></button>
       </article>
       <?php endforeach; ?>
     </div>
@@ -869,12 +869,12 @@ button,input,select,textarea{font:inherit}
   <section class="fo-section" id="matcha">
     <div class="fo-section-head"><div><h3>Menu Matcha</h3><p>Minuman favorit yang mudah di-upsell bersama ayam atau kentang.</p></div></div>
     <div class="fo-simple-grid">
-      <?php foreach($data['matcha'] as $m): $name=trim((string)$m['name']); $img=fo_img_matcha($name); ?>
-      <article class="fo-simple-card">
+      <?php foreach($data['matcha'] as $m): $name=trim((string)$m['name']); $img=fo_img_matcha($name); $isAvail = $m['stock_available'] ?? true; ?>
+      <article class="fo-simple-card" <?= !$isAvail ? 'style="opacity:0.6; pointer-events:none;"' : '' ?>>
         <img src="../public/assets/images/pos-products/matcha/<?=fo_e($img)?>" alt="<?=fo_e($name)?>">
         <h4>Matcha <?=fo_e($name)?></h4>
         <span class="price"><?=fo_money((int)$m['price'])?></span>
-        <button class="fo-add-btn" type="button" onclick='addSimple("matcha",<?=json_encode(["id"=>(int)$m["id"],"name"=>"Matcha ".$name,"price"=>(int)$m["price"]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'>Tambah</button>
+        <button class="fo-add-btn" type="button" <?= !$isAvail ? 'disabled' : '' ?> onclick='addSimple("matcha",<?=json_encode(["id"=>(int)$m["id"],"name"=>"Matcha ".$name,"price"=>(int)$m["price"]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>)'><?= $isAvail ? 'Tambah' : 'Habis' ?></button>
       </article>
       <?php endforeach; ?>
     </div>

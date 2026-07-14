@@ -94,13 +94,13 @@
     </button>`;
   }
   function productCard(item) {
-    const disabled = Number(item.price || 0) <= 0;
+    const disabled = Number(item.price || 0) <= 0 || Number(item.ready_stock || 0) <= 0;
     return optionCard({
       cls: 'choose-variant',
       attrs: `data-id="${Number(item.variant_id)}"`,
       img: item.image,
       label: item.name || item.full_name,
-      sub: 'Sekali klik masuk keranjang',
+      sub: Number(item.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Sekali klik masuk keranjang',
       price: money(item.price),
       disabled
     });
@@ -121,26 +121,34 @@
     const items = chickenItems();
     const out = [];
     partDefs.forEach(p => {
-      const count = items.filter(i => meta(i).part === p.key).length;
-      if (count > 0) out.push({ ...p, count });
+      const matched = items.filter(i => meta(i).part === p.key);
+      const count = matched.length;
+      if (count > 0) {
+        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        out.push({ ...p, count, disabled });
+      }
     });
     return out;
   }
   function availableStyles() {
     const items = chickenItems().filter(i => meta(i).part === state.part);
-    const hasOriginal = items.some(i => meta(i).style === 'original');
-    const hasSauce = items.some(i => meta(i).style === 'sauce');
+    const originalItems = items.filter(i => meta(i).style === 'original');
+    const sauceItems = items.filter(i => meta(i).style === 'sauce');
     const arr = [];
-    if (hasOriginal) arr.push({ key: 'original', label: 'Original', img: assets.original, sub: 'Tanpa saus tambahan' });
-    if (hasSauce) arr.push({ key: 'sauce', label: 'Plus Saus', img: assets.sauce, sub: 'Pilih saus favorit' });
+    if (originalItems.length) arr.push({ key: 'original', label: 'Original', img: assets.original, sub: 'Tanpa saus tambahan', disabled: originalItems.every(i => Number(i.ready_stock || 0) <= 0) });
+    if (sauceItems.length) arr.push({ key: 'sauce', label: 'Plus Saus', img: assets.sauce, sub: 'Pilih saus favorit', disabled: sauceItems.every(i => Number(i.ready_stock || 0) <= 0) });
     return arr;
   }
   function availableSauces() {
     const items = chickenItems().filter(i => meta(i).part === state.part && meta(i).style === 'sauce');
     const arr = [];
     sauceDefs.forEach(s => {
-      const count = items.filter(i => meta(i).sauce === s.key).length;
-      if (count > 0) arr.push({ ...s, count });
+      const matched = items.filter(i => meta(i).sauce === s.key);
+      const count = matched.length;
+      if (count > 0) {
+        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        arr.push({ ...s, count, disabled });
+      }
     });
     return arr;
   }
@@ -150,8 +158,8 @@
     const no = items.find(i => meta(i).rice === 0) || items.find(i => meta(i).rice === null);
     const yes = items.find(i => meta(i).rice === 1);
     const opts = [];
-    if (no) opts.push({ key: 0, label: 'Tanpa Nasi', img: assets.rice_no, item: no, sub: 'Item langsung masuk keranjang' });
-    if (yes) opts.push({ key: 1, label: 'Plus Nasi', img: assets.rice_yes, item: yes, sub: 'Item langsung masuk keranjang' });
+    if (no) opts.push({ key: 0, label: 'Tanpa Nasi', img: assets.rice_no, item: no, sub: Number(no.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Item langsung masuk keranjang', disabled: Number(no.ready_stock || 0) <= 0 });
+    if (yes) opts.push({ key: 1, label: 'Plus Nasi', img: assets.rice_yes, item: yes, sub: Number(yes.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Item langsung masuk keranjang', disabled: Number(yes.ready_stock || 0) <= 0 });
     return opts;
   }
   function renderChicken() {
@@ -163,21 +171,21 @@
       const parts = availableParts();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih bagian ayam terlebih dahulu';
       productGrid.innerHTML = parts.length
-        ? parts.map(p => optionCard({ cls: 'choose-part', attrs: `data-part="${p.key}"`, img: p.img, label: p.label, sub: `${p.count} varian tersedia` })).join('')
+        ? parts.map(p => optionCard({ cls: 'choose-part', attrs: `data-part="${p.key}"`, img: p.img, label: p.label, sub: p.disabled ? 'Bahan Habis' : `${p.count} varian tersedia`, disabled: p.disabled })).join('')
         : '<div class="sim-empty-panel">Belum ada varian ayam pada kategori ini.</div>';
       return;
     }
     if (state.step === 'style') {
       const styles = availableStyles();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | ' + (partDefs.find(p => p.key === state.part)?.label || 'Bagian ayam');
-      productGrid.innerHTML = styles.map(s => optionCard({ cls: 'choose-style', attrs: `data-style="${s.key}"`, img: s.img, label: s.label, sub: s.sub })).join('');
+      productGrid.innerHTML = styles.map(s => optionCard({ cls: 'choose-style', attrs: `data-style="${s.key}"`, img: s.img, label: s.label, sub: s.disabled ? 'Bahan Habis' : s.sub, disabled: s.disabled })).join('');
       return;
     }
     if (state.step === 'sauce') {
       const sauces = availableSauces();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih saus';
       productGrid.innerHTML = sauces.length
-        ? sauces.map(s => optionCard({ cls: 'choose-sauce', attrs: `data-sauce="${s.key}"`, img: s.img, label: s.label, sub: `${s.count} varian tersedia` })).join('')
+        ? sauces.map(s => optionCard({ cls: 'choose-sauce', attrs: `data-sauce="${s.key}"`, img: s.img, label: s.label, sub: s.disabled ? 'Bahan Habis' : `${s.count} varian tersedia`, disabled: s.disabled })).join('')
         : '<div class="sim-empty-panel">Saus untuk pilihan ini belum tersedia.</div>';
       return;
     }
@@ -185,7 +193,7 @@
       const opts = matchingRiceOptions();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih nasi lalu masuk keranjang';
       productGrid.innerHTML = opts.length
-        ? opts.map(o => optionCard({ cls: 'choose-rice', attrs: `data-rice="${o.key}" data-variant="${Number(o.item.variant_id)}"`, img: o.img, label: o.label, sub: o.item.name, price: money(o.item.price) })).join('')
+        ? opts.map(o => optionCard({ cls: 'choose-rice', attrs: `data-rice="${o.key}" data-variant="${Number(o.item.variant_id)}"`, img: o.img, label: o.label, sub: o.sub, price: money(o.item.price), disabled: o.disabled })).join('')
         : '<div class="sim-empty-panel">Varian final belum cocok. Gunakan pencarian produk atau cek master produk.</div>';
       if (!opts.length) {
         const fallback = chickenItems().filter(i => meta(i).part === state.part && meta(i).style === state.style && (state.style !== 'sauce' || meta(i).sauce === state.sauce));

@@ -60,7 +60,7 @@ class ProductModel extends Model
         } catch (Throwable $e) {}
     }
 
-    public function list(string $search=''): array
+    public function list(string $search='', int $categoryId=0): array
     {
         $this->ensureImageColumnsAndSeed();
         $outletId = $this->outletId();
@@ -72,6 +72,10 @@ class ProductModel extends Model
             AND ' . $pScope['sql'] . '
             AND ' . $pvScope['sql'] . '
             AND ' . $pcScope['sql'];
+        if ($categoryId > 0) {
+            $where .= ' AND p.category_id = ?';
+            $params[] = $categoryId;
+        }
         if ($search !== '') {
             $where .= ' AND (p.name LIKE ? OR pv.variant_name LIKE ? OR pv.sku LIKE ?)';
             $s='%'.$search.'%';
@@ -101,7 +105,8 @@ class ProductModel extends Model
     public function createVariant(array $d): int
     {
         $outletId = $this->outletId();
-        $this->db->beginTransaction();
+        $inTrans = $this->db->inTransaction();
+        if (!$inTrans) $this->db->beginTransaction();
         try {
             $slugSku = $d['sku'] ?: 'SKU-' . time();
             $img = trim((string)($d['image'] ?? 'images/pos-products/original.png'));
@@ -117,10 +122,10 @@ class ProductModel extends Model
             // Auto create an empty final recipe container for this variant
             $stmt=$this->db->prepare("INSERT INTO recipes (product_variant_id, name, recipe_type, yield_qty, yield_unit_id, is_active, created_at, updated_at) VALUES (?, ?, 'final', 1, 4, 1, ?, ?)");
             $stmt->execute([$vid, $d['name'] . ' - ' . ($d['variant_name'] ?: 'Default'), now(), now()]);
-            $this->db->commit();
+            if (!$inTrans) $this->db->commit();
             return $vid;
         } catch(Throwable $e){
-            $this->db->rollBack();
+            if (!$inTrans) $this->db->rollBack();
             throw $e;
         }
     }
@@ -131,7 +136,8 @@ class ProductModel extends Model
         if (!$v) throw new Exception("Variant tidak ditemukan (ID: $vid).");
         $pid = $v['product_id'];
 
-        $this->db->beginTransaction();
+        $inTrans = $this->db->inTransaction();
+        if (!$inTrans) $this->db->beginTransaction();
         try {
             $catId = (int)($d['category_id'] ?? $v['category_id'] ?? 1);
             $prodName = isset($d['product_name']) && trim($d['product_name']) !== '' ? trim($d['product_name']) : $v['product_name'];
@@ -154,9 +160,9 @@ class ProductModel extends Model
                 $stmt->execute([$variantName, $hpp, $selling, $margin, $mp, now(), $vid]);
             }
             
-            $this->db->commit();
+            if (!$inTrans) $this->db->commit();
         } catch(Throwable $e){
-            $this->db->rollBack();
+            if (!$inTrans) $this->db->rollBack();
             throw $e;
         }
     }
@@ -167,14 +173,15 @@ class ProductModel extends Model
         if (!$v) throw new Exception("Variant tidak ditemukan.");
         $pid = $v['product_id'];
 
-        $this->db->beginTransaction();
+        $inTrans = $this->db->inTransaction();
+        if (!$inTrans) $this->db->beginTransaction();
         try {
             // Soft delete
             $this->db->prepare("UPDATE product_variants SET is_active=0, updated_at=? WHERE id=?")->execute([now(), $vid]);
             $this->db->prepare("UPDATE products SET is_active=0, updated_at=? WHERE id=?")->execute([now(), $pid]);
-            $this->db->commit();
+            if (!$inTrans) $this->db->commit();
         } catch(Throwable $e){
-            $this->db->rollBack();
+            if (!$inTrans) $this->db->rollBack();
             throw $e;
         }
     }
@@ -218,7 +225,8 @@ class ProductModel extends Model
     public function saveOverrides(int $outletId, array $items): int
     {
         $saved = 0;
-        $this->db->beginTransaction();
+        $inTrans = $this->db->inTransaction();
+        if (!$inTrans) $this->db->beginTransaction();
         try {
             foreach ($items as $item) {
                 $variantId = (int)($item['variant_id'] ?? 0);
@@ -245,10 +253,10 @@ class ProductModel extends Model
                 ", [$outletId, $variantId, $priceVal, $hppVal, $activeVal]);
                 $saved++;
             }
-            $this->db->commit();
+            if (!$inTrans) $this->db->commit();
             return $saved;
         } catch (Throwable $e) {
-            $this->db->rollBack();
+            if (!$inTrans) $this->db->rollBack();
             throw $e;
         }
     }

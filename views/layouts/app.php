@@ -110,7 +110,7 @@ if ($isHQUser) {
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="theme-color" content="#b91c1c">
     <title><?= htmlspecialchars($pageTitle ?? app_config('name')) ?> - <?= htmlspecialchars(app_config('name')) ?></title>
-    <link rel="icon" type="image/x-icon" href="<?= url('/public/favicon.ico', false) ?>">
+    <link rel="icon" type="image/x-icon" href="<?= url('/public/favicon.ico?v=2', false) ?>">
     <link rel="stylesheet" href="<?= asset('pos-template/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=016">
     <link rel="stylesheet" href="<?= asset('css/daily-stock.css') ?>?v=026">

@@ -5,8 +5,9 @@ class ProductController extends Controller
     {
         Auth::requireRoles(['super_admin','administrator']);
         $m = new ProductModel();
+        $categoryId = (int)($_GET['cat'] ?? 0);
         $this->view('products/index', [
-            'items'      => $m->list($_GET['q'] ?? ''),
+            'items'      => $m->list($_GET['q'] ?? '', $categoryId),
             'categories' => $m->categories(),
             'pageTitle'  => 'Produk & Menu',
         ]);
