@@ -13,19 +13,18 @@ class CentralSettingsController extends Controller
     public function wizard(): void
     {
         Auth::requireRoles(['super_admin', 'administrator']);
+        if (trim($_GET['type'] ?? '') === 'product') {
+            $this->redirect('/products/builder');
+            return;
+        }
+
         $invModel = new InventoryModel();
-        
-        // For products
-        $catModel = new CategoryModel();
-        
-        // For materials
-        $mRawCat = new InventoryModel();
+        $mRawCat  = new InventoryModel();
         
         $this->view('central-settings/wizard', [
-            'pageTitle' => 'Wizard Tambah Data',
-            'productCategories' => $catModel->productCategories(),
+            'pageTitle'     => 'Wizard Tambah Bahan & Sub-Resep',
             'rawCategories' => $mRawCat->categories(),
-            'units' => $invModel->units()
+            'units'         => $invModel->units()
         ]);
     }
 

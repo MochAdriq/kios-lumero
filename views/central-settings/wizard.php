@@ -20,39 +20,32 @@
         
         <div class="mb-4">
             <label class="form-label fw-bold">Tipe Data <span class="text-danger">*</span></label>
-            <div class="d-flex gap-3 flex-wrap">
-                <label class="btn btn-outline-primary flex-fill text-start p-3 position-relative">
-                    <input type="radio" name="item_type" value="raw_material" class="position-absolute opacity-0" required onchange="toggleTypeForms()">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="fs-2"><?= sim_icon('ti-box') ?></div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Bahan Baku Mentah</h6>
-                            <small class="text-muted">Barang gudang (misal: Tepung, Minyak)</small>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="btn btn-outline-primary w-100 text-start p-3 position-relative h-100">
+                        <input type="radio" name="item_type" value="raw_material" class="position-absolute opacity-0" required onchange="toggleTypeForms()">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="fs-2"><?= sim_icon('ti-box') ?></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Bahan Baku Mentah</h6>
+                                <small class="text-muted">Barang gudang (misal: Tepung, Minyak)</small>
+                            </div>
                         </div>
-                    </div>
-                </label>
+                    </label>
+                </div>
                 
-                <label class="btn btn-outline-primary flex-fill text-start p-3 position-relative">
-                    <input type="radio" name="item_type" value="sub_recipe" class="position-absolute opacity-0" onchange="toggleTypeForms()">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="fs-2"><?= sim_icon('ti-components') ?></div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Sub-Resep</h6>
-                            <small class="text-muted">Bahan setengah jadi (misal: Gula Cair)</small>
+                <div class="col-md-6">
+                    <label class="btn btn-outline-primary w-100 text-start p-3 position-relative h-100">
+                        <input type="radio" name="item_type" value="sub_recipe" class="position-absolute opacity-0" onchange="toggleTypeForms()">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="fs-2"><?= sim_icon('ti-components') ?></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Sub-Resep</h6>
+                                <small class="text-muted">Bahan setengah jadi (misal: Gula Cair)</small>
+                            </div>
                         </div>
-                    </div>
-                </label>
-                
-                <label class="btn btn-outline-primary flex-fill text-start p-3 position-relative">
-                    <input type="radio" name="item_type" value="product" class="position-absolute opacity-0" onchange="toggleTypeForms()">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="fs-2"><?= sim_icon('ti-burger') ?></div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Produk Jual</h6>
-                            <small class="text-muted">Barang di Kasir (misal: Nasi Goreng)</small>
-                        </div>
-                    </div>
-                </label>
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -113,67 +106,6 @@
             </div>
         </div>
         
-
-        <!-- Fields for Product -->
-        <div id="fields_product" class="d-none">
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-medium">Kategori Produk</label>
-                    <select name="product_category_id" class="form-select">
-                        <option value="">-- Pilih Kategori --</option>
-                        <?php foreach($productCategories as $c): ?>
-                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-medium">Nama Varian (Opsional)</label>
-                    <input type="text" name="variant_name" class="form-control" placeholder="Default">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-medium">Harga Jual (Rp) <span class="text-danger">*</span></label>
-                <input type="number" name="selling_price" class="form-control form-control-lg" value="0" min="0" id="product_selling_price">
-            </div>
-        </div>
-
-        <!-- SECTION: GAMBAR (Only for Product) -->
-        <div id="section_image" class="d-none mt-5">
-            <h5 class="fw-bold mb-4 border-bottom pb-2">Gambar Produk</h5>
-            <div class="row g-4 mb-4">
-                <div class="col-md-7">
-                    <div class="mb-3">
-                        <label class="form-label fw-medium">1. Pilih dari Galeri Existing (Default)</label>
-                        <select name="image" id="wizard_image_select" class="form-select">
-                            <option value="images/pos-products/original.png">Ayam Crispy (Original)</option>
-                            <option value="images/pos-products/dada.png">Ayam Dada</option>
-                            <option value="images/pos-products/paha-atas.png">Ayam Paha Atas</option>
-                            <option value="images/pos-products/paha-bawah.png">Ayam Paha Bawah</option>
-                            <option value="images/pos-products/sayap.png">Ayam Sayap</option>
-                            <option value="images/pos-products/tanpa-nasi.png">Paket Tanpa Nasi</option>
-                            <option value="images/pos-products/nasi.png">Nasi Putih</option>
-                            <option value="images/pos-products/kentang-kriwil.png">Kentang Kriwil</option>
-                            <option value="images/pos-products/kentang-dcelup.png">Kentang Lumero</option>
-                            <option value="images/pos-products/matcha.png">Minuman Matcha</option>
-                            <option value="images/pos-products/kopi.png">Minuman Kopi</option>
-                            <option value="images/pos-products/celup-saus.png">Celup Saus</option>
-                            <option value="images/pos-products/saus.png">Saus Tambahan</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-label fw-medium">2. Atau Upload File Gambar Baru (Prioritas Utama)</label>
-                        <input type="file" name="image" id="wizard_image_input" class="form-control" accept="image/jpeg,image/png,image/webp">
-                        <small class="text-muted d-block mt-1">Maksimal 2MB. Format JPG, PNG, WEBP. Jika diisi, foto upload ini yang akan digunakan.</small>
-                    </div>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label fw-medium d-block">Live Preview Gambar:</label>
-                    <div class="border rounded p-3 bg-white text-center shadow-sm" style="height: 150px; display: flex; align-items: center; justify-content: center;">
-                        <img id="wizard_image_preview" src="<?= asset('images/pos-products/original.png') ?>" alt="Preview" style="max-height: 130px; max-width: 100%; object-fit: contain;">
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- SECTION: KOMPOSISI -->
         <div id="section_composition" class="d-none mt-5">
@@ -244,15 +176,11 @@ function toggleTypeForms() {
     
     document.getElementById('fields_raw_material').classList.add('d-none');
     document.getElementById('fields_sub_recipe').classList.add('d-none');
-    document.getElementById('fields_product').classList.add('d-none');
-    
-    document.getElementById('section_image').classList.add('d-none');
     document.getElementById('section_composition').classList.add('d-none');
     
     document.getElementById('raw_unit_select').required = false;
     document.getElementById('sub_yield_qty').required = false;
     document.getElementById('sub_unit_select').required = false;
-    document.getElementById('product_selling_price').required = false;
     
     document.getElementById('raw_unit_select').disabled = true;
     document.getElementById('sub_unit_select').disabled = true;
@@ -268,12 +196,6 @@ function toggleTypeForms() {
         document.getElementById('sub_yield_qty').required = true;
         document.getElementById('sub_unit_select').required = true;
         document.getElementById('sub_unit_select').disabled = false;
-    } else if (type === 'product') {
-        document.getElementById('fields_product').classList.remove('d-none');
-        document.getElementById('section_image').classList.remove('d-none');
-        document.getElementById('section_composition').classList.remove('d-none');
-        
-        document.getElementById('product_selling_price').required = true;
     }
 }
 
@@ -327,42 +249,4 @@ function populateItems(selectEl) {
         }
     });
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const baseAssetUrl = "<?= rtrim(asset(''), '/') ?>/";
-    const selectImg = document.getElementById('wizard_image_select');
-    const fileInput = document.getElementById('wizard_image_input');
-    const previewImg = document.getElementById('wizard_image_preview');
-
-    function updateWizardPreview(val) {
-        if (!val) val = 'images/pos-products/original.png';
-        if (val.startsWith('http://') || val.startsWith('https://')) {
-            previewImg.src = val;
-        } else {
-            previewImg.src = baseAssetUrl + val.replace(/^\/+/, '');
-        }
-    }
-
-    if (selectImg && previewImg) {
-        selectImg.addEventListener('change', function() {
-            if (fileInput) fileInput.value = '';
-            updateWizardPreview(this.value);
-        });
-    }
-
-    if (fileInput && previewImg) {
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    previewImg.src = evt.target.result;
-                };
-                reader.readAsDataURL(file);
-            } else if (selectImg) {
-                updateWizardPreview(selectImg.value);
-            }
-        });
-    }
-});
 </script>

@@ -40,6 +40,8 @@ $router->get('/products', [ProductController::class,'index']);
 $router->post('/products', [ProductController::class,'store']);
 $router->post('/products/update', [ProductController::class,'update']);
 $router->post('/products/delete', [ProductController::class,'delete']);
+$router->get('/products/builder', [ProductController::class,'builder']);
+$router->post('/products/builder/save', [ProductController::class,'saveBuilder']);
 $router->get('/products/overrides', [ProductController::class,'overrides']);
 $router->post('/products/overrides', [ProductController::class,'saveOverride']);
 $router->get('/products/{id}', [ProductController::class,'show']);

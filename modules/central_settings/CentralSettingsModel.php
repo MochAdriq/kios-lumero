@@ -3,8 +3,8 @@ class CentralSettingsModel extends Model
 {
     public function getAllItems(): array
     {
-        $raws = $this->all("SELECT id, name, sku, 'raw_material' as type FROM raw_materials WHERE is_active=1");
-        $subs = $this->all("SELECT id, name, '' as sku, 'sub_recipe' as type FROM recipes WHERE recipe_type='sub_recipe'");
+        $raws = $this->all("SELECT id, name, sku, 'raw_material' as type, COALESCE(average_cost, 0) as unit_cost, unit_id FROM raw_materials WHERE is_active=1");
+        $subs = $this->all("SELECT id, name, '' as sku, 'sub_recipe' as type, COALESCE(total_hpp / IF(yield_qty > 0, yield_qty, 1), 0) as unit_cost, yield_unit_id as unit_id FROM recipes WHERE recipe_type='sub_recipe'");
         return array_merge($raws, $subs);
     }
 
@@ -38,32 +38,7 @@ class CentralSettingsModel extends Model
                 ]);
 
             } elseif ($type === 'product') {
-                $prodModel = new ProductModel();
-                $catId = (int)($post['product_category_id'] ?? 0);
-                $sellPrice = (float)($post['selling_price'] ?? 0);
-                $hpp = 0; // Calculated from recipe
-                
-                $variantId = $prodModel->createVariant([
-                    'category_id' => $catId,
-                    'name' => $name,
-                    'variant_name' => trim($post['variant_name'] ?? ''),
-                    'image' => trim($post['image'] ?? 'images/pos-products/original.png'),
-                    'sku' => $sku,
-                    'selling_price' => $sellPrice,
-                    'hpp' => $hpp
-                ]);
-                $createdId = $variantId;
-
-                // Handle image upload
-                if (!empty($files['image']['tmp_name']) && $files['image']['error'] !== UPLOAD_ERR_NO_FILE) {
-                    $this->uploadProductImage($variantId, $files['image']);
-                }
-
-                // Get recipe ID created by ProductModel::createVariant
-                $recipeRow = $this->one("SELECT id FROM recipes WHERE product_variant_id = ? LIMIT 1", [$variantId]);
-                if ($recipeRow) {
-                    $recipeId = (int)$recipeRow['id'];
-                }
+                throw new Exception("Penambahan Produk Jual Final telah dipindahkan ke modul khusus. Silakan gunakan menu Product Builder (/products/builder).");
             } elseif ($type === 'sub_recipe') {
                 $recipeModel = new RecipeModel();
                 $yieldQty = (float)($post['yield_qty'] ?? 1);

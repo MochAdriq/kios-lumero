@@ -8,7 +8,7 @@
             <p class="mb-0 text-muted">Daftar produk final yang tampil di kasir (POS).</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="<?= url('/central-settings/wizard?type=product') ?>" class="btn btn-primary shadow-sm">
+            <a href="<?= url('/products/builder') ?>" class="btn btn-primary shadow-sm">
                 <?= sim_icon('ti-plus', 'me-1') ?> Tambah Produk Jual
             </a>
             <a href="<?= url('/recipes') ?>" class="btn btn-outline-primary bg-white">
