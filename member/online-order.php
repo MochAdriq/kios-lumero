@@ -949,7 +949,7 @@ button,input,select,textarea{font:inherit}
                                         <small>Order</small>
                                         <strong id="draftOrderNo"><?= $orderNo ?></strong>
                                     </div>
-                                    <div class="sim-order-type-toggle">
+                                    <div class="sim-order-type-toggle" style="display:none !important;">
                                         <select class="form-select form-select-sm" id="customerType" onchange="selectPickupOption(this.value)">
                                             <option value="outlet">🏪 Ambil di Outlet</option>
                                             <option value="delivery" <?= $deliveryEnabled ? '' : 'disabled' ?>>🛵 Delivery (Diantar Kurir) <?= $deliveryEnabled ? '' : '(Belum Aktif)' ?></option>
@@ -977,32 +977,32 @@ button,input,select,textarea{font:inherit}
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="cart" id="cartJson"><input type="hidden" name="payment_method" id="paymentMethod" value="qris"><input type="hidden" name="pickup_type" id="pickupTypeInput" value="outlet">
                                 <div class="sim-summary-section">
-    <div class="form-group mb-2">
+    <div class="form-group mb-2" style="display:none !important;">
         <label class="form-label fs-12 mb-1">Nama Pemesan</label>
-        <input type="text" class="form-control form-control-sm" name="customer_name" id="customerName" placeholder="Nama Anda" required>
+        <input type="text" class="form-control form-control-sm" name="customer_name" id="customerName" placeholder="Nama Anda">
     </div>
-    <div class="form-group mb-2">
+    <div class="form-group mb-2" style="display:none !important;">
         <label class="form-label fs-12 mb-1">No WhatsApp</label>
-        <input type="text" class="form-control form-control-sm" name="customer_phone" id="customerPhone" placeholder="08..." required>
+        <input type="text" class="form-control form-control-sm" name="customer_phone" id="customerPhone" placeholder="08...">
     </div>
-    <div class="row g-2 mb-2" id="pickupDateRowSide">
+    <div class="row g-2 mb-2" id="pickupDateRowSide" style="display:none !important;">
         <div class="col-6">
             <label class="form-label fs-12 mb-1">Tgl Ambil</label>
-            <input type="date" class="form-control form-control-sm" name="pickup_date" value="<?= date('Y-m-d') ?>" required>
+            <input type="date" class="form-control form-control-sm" name="pickup_date" value="<?= date('Y-m-d') ?>">
         </div>
         <div class="col-6">
             <label class="form-label fs-12 mb-1">Jam</label>
-            <input type="time" class="form-control form-control-sm" name="pickup_time" value="09:00" required>
+            <input type="time" class="form-control form-control-sm" name="pickup_time" value="09:00">
         </div>
     </div>
-    <hr>
+    <hr style="display:none !important;">
     <div class="sim-summary-row"><span>Subtotal</span><span id="subtotalText">Rp 0</span></div>
     <div class="sim-summary-row sim-summary-total"><span>Total</span><strong id="totalText">Rp 0</strong></div>
 </div>
-                                  <textarea name="notes" class="form-control mt-2 sim-notes-input" rows="1" placeholder="Catatan order..."></textarea>
+                                  <textarea name="notes" class="form-control mt-2 sim-notes-input" rows="1" placeholder="Catatan order..." style="display:none !important;"></textarea>
 
                                 <!-- Payment Methods -->
-                                <div class="sim-pay-section">
+                                <div class="sim-pay-section" style="display:none !important;">
                                     <div class="row align-items-center methods g-2 sim-pay-methods">
                                         <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item active d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="qris" onclick="setPayment('qris');"><?= sim_icon('ti-qrcode', 'me-1') ?><p class="fs-12 fw-medium mb-0">QRIS (Scan)</p></a></div>
                                         <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="transfer" onclick="setPayment('transfer');"><?= sim_icon('ti-credit-card', 'me-1') ?><p class="fs-12 fw-medium mb-0">Transfer Bank</p></a></div>
@@ -1174,14 +1174,20 @@ button,input,select,textarea{font:inherit}
   </div>
   <div class="fo-field"><label>Catatan</label><textarea id="customerNote" placeholder="Catatan untuk kasir, opsional"></textarea></div>
   <div class="fo-payment">
-    <button type="button" class="payBtn active" data-pay="qris">QRIS (Midtrans)</button>
+    <button type="button" class="payBtn active" data-pay="qris">QRIS / E-Wallet</button>
     <button type="button" class="payBtn" data-pay="transfer">Transfer Bank</button>
   </div>
-  <div class="fo-pay-preview active" id="qrisPreview">
-    <b>Scan QRIS Lumero</b><br><br>
-    <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero">
-    <div style="margin-top:12px"><a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Dcelup.png">Download QRIS</a></div>
-    <div class="fo-info" style="margin-top:10px"><?=fo_e($qrisInfo)?>. Simpan bukti pembayaran untuk diverifikasi kasir.</div>
+  <div class="fo-pay-preview active" id="qrisPreview" style="text-align:center; padding:20px;">
+    <b style="font-size:15px; display:block; margin-bottom:14px; color:var(--dp-text);">Scan QRIS Lumero / E-Wallet</b>
+    <div style="background:#fff; padding:14px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
+      <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero" style="width:240px; max-width:100%; height:auto; display:block; margin:0 auto; border-radius:10px; background:#fff; padding:0; border:none;">
+    </div>
+    <div style="margin-top:16px;">
+      <a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Lumero.png" style="box-shadow:0 4px 16px rgba(255,45,85,0.4); padding:10px 24px; font-size:13px;">⬇️ Download QRIS</a>
+    </div>
+    <div class="fo-info" style="margin-top:14px; font-size:12px; line-height:1.5; color:var(--dp-text-2);">
+      <?=fo_e(str_ireplace('midtrans', 'Lumero', $qrisInfo))?>. Simpan bukti pembayaran untuk diverifikasi kasir.
+    </div>
   </div>
   <div class="fo-pay-preview" id="transferPreview">
     <b>Transfer Bank</b><br><br>
@@ -1194,7 +1200,7 @@ button,input,select,textarea{font:inherit}
     </div>
     <div class="fo-info" style="margin-top:10px">Pesanan akan diproses setelah bukti pembayaran diverifikasi kasir.</div>
   </div>
-  <div class="fo-info" id="payInfo" style="margin-top:10px">Metode pembayaran otomatis: QRIS (Midtrans).</div>
+  <div class="fo-info" id="payInfo" style="margin-top:10px">Metode pembayaran otomatis: QRIS / E-Wallet.</div>
   <form method="post" id="foForm">
     <input type="hidden" name="cart" id="cartInput">
     <input type="hidden" name="pickup_date" id="pickupDateInput">

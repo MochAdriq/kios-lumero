@@ -518,19 +518,8 @@
             <img src="${esc(qrUrl)}" alt="QR Code QRIS" style="width:230px;height:230px;display:block;margin:0 auto;border-radius:8px;">
           </div>
 
-          ${qrUrl ? `
-          <div style="margin-bottom:16px;">
-            <button type="button" id="btnCopyQrisString" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-right:6px;">
-              📋 Salin URL Gambar QR (Untuk Simulator)
-            </button>
-            <a href="https://simulator.sandbox.midtrans.com/qris/index" target="_blank" style="display:inline-block;background:#e0e7ff;color:#3730a3;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;">
-              🚀 Buka Simulator
-            </a>
-          </div>
-          ` : ''}
-
-          <p style="font-size:13px;color:#475569;margin-bottom:20px;line-height:1.4;">
-            Silakan scan QR Code di atas menggunakan aplikasi e-Wallet / M-Banking. Untuk pengetesan Sandbox, klik <strong>Salin URL Gambar QR</strong> lalu paste di Simulator Midtrans.
+          <p style="font-size:13px;color:#475569;margin-bottom:20px;line-height:1.5;text-align:center;">
+            Silakan scan QR Code di atas menggunakan aplikasi e-Wallet / M-Banking (DANA, OVO, Gopay, ShopeePay, BCA, Mandiri, dll). Simpan bukti pembayaran untuk verifikasi kasir.
           </p>
 
           <div style="display:flex;gap:10px;">
