@@ -4,8 +4,11 @@ class UserModel extends Model
     /**
      * Get all roles.
      */
-    public function roles(): array
+    public function roles(?int $outletId = null): array
     {
+        if ($outletId !== null) {
+            return $this->all("SELECT * FROM roles WHERE code IN ('administrator', 'cashier') ORDER BY id");
+        }
         return $this->all("SELECT * FROM roles ORDER BY id");
     }
 
@@ -20,23 +23,33 @@ class UserModel extends Model
     /**
      * Get all active outlets.
      */
-    public function activeOutlets(): array
+    public function activeOutlets(?int $outletId = null): array
     {
+        if ($outletId !== null) {
+            return $this->all("SELECT * FROM outlets WHERE id = ? AND is_active = 1 ORDER BY name ASC", [$outletId]);
+        }
         return $this->all("SELECT * FROM outlets WHERE is_active = 1 ORDER BY is_hq DESC, name ASC");
     }
 
     /**
      * List all users with role and outlet info.
      */
-    public function list(): array
+    public function list(?int $outletId = null): array
     {
+        $whereSql = '';
+        $params = [];
+        if ($outletId !== null) {
+            $whereSql = 'WHERE u.outlet_id = ? AND r.code <> \'super_admin\'';
+            $params = [$outletId];
+        }
         return $this->all("
             SELECT u.*, r.name AS role_name, r.code AS role_code, o.name AS outlet_name
             FROM users u
             JOIN roles r ON r.id = u.role_id
             LEFT JOIN outlets o ON o.id = u.outlet_id
+            {$whereSql}
             ORDER BY u.is_active DESC, u.name ASC
-        ");
+        ", $params);
     }
 
     /**
@@ -64,15 +77,22 @@ class UserModel extends Model
     /**
      * Payroll summary (latest 50).
      */
-    public function payrollSummary(): array
+    public function payrollSummary(?int $outletId = null): array
     {
+        $whereSql = '';
+        $params = [];
+        if ($outletId !== null) {
+            $whereSql = 'WHERE pe.outlet_id = ?';
+            $params = [$outletId];
+        }
         return $this->all("
             SELECT pe.business_date, u.name, pe.amount, pe.source
             FROM payroll_expenses pe
             JOIN users u ON u.id = pe.user_id
+            {$whereSql}
             ORDER BY pe.business_date DESC, pe.id DESC
             LIMIT 50
-        ");
+        ", $params);
     }
 
     /**
@@ -80,8 +100,9 @@ class UserModel extends Model
      */
     public function store(array $d): int
     {
+        $isSuperAdmin = (Auth::role() === 'super_admin');
         $id          = (int)($d['id'] ?? 0);
-        $outletId    = (int)($d['outlet_id'] ?? 0) ?: null;
+        $outletId    = $isSuperAdmin ? ((int)($d['outlet_id'] ?? 0) ?: null) : (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id', 1));
         $roleId      = (int)($d['role_id'] ?? 0);
         $name        = trim($d['name'] ?? '');
         $username    = trim($d['username'] ?? '');
@@ -93,6 +114,19 @@ class UserModel extends Model
 
         if ($name === '') {
             throw new RuntimeException('Nama user wajib diisi.');
+        }
+
+        if (!$isSuperAdmin) {
+            $roleObj = $this->one("SELECT code FROM roles WHERE id=?", [$roleId]);
+            if ($roleObj && $roleObj['code'] === 'super_admin') {
+                throw new RuntimeException('Admin Cabang tidak dapat membuat atau mengubah user Super Admin.');
+            }
+            if ($id > 0) {
+                $existUser = $this->findById($id);
+                if ($existUser && ($existUser['role_code'] === 'super_admin' || (int)$existUser['outlet_id'] !== (int)$outletId)) {
+                    throw new RuntimeException('Anda tidak memiliki wewenang memodifikasi user ini.');
+                }
+            }
         }
 
         if ($id > 0) {
@@ -179,6 +213,13 @@ class UserModel extends Model
             throw new RuntimeException('User tidak ditemukan.');
         }
 
+        if (Auth::role() !== 'super_admin') {
+            $myOutletId = (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id', 1));
+            if ($user['role_code'] === 'super_admin' || (int)$user['outlet_id'] !== $myOutletId) {
+                throw new RuntimeException('Anda tidak memiliki wewenang mengubah status user ini.');
+            }
+        }
+
         // Prevent deactivating the last super_admin
         if ($user['role_code'] === 'super_admin' && $user['is_active']) {
             $activeAdminCount = $this->one("
@@ -203,6 +244,13 @@ class UserModel extends Model
         $user = $this->findById($id);
         if (!$user) {
             throw new RuntimeException('User tidak ditemukan.');
+        }
+
+        if (Auth::role() !== 'super_admin') {
+            $myOutletId = (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id', 1));
+            if ($user['role_code'] === 'super_admin' || (int)$user['outlet_id'] !== $myOutletId) {
+                throw new RuntimeException('Anda tidak memiliki wewenang mereset password user ini.');
+            }
         }
 
         if ($newPassword === '') {

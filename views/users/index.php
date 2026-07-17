@@ -44,13 +44,17 @@
                 </select>
 
                 <label class="form-label mt-2">Outlet / Cabang</label>
-                <select name="outlet_id" id="userOutletId" class="form-select">
+                <select name="outlet_id" id="userOutletId" class="form-select" <?= Auth::role() !== 'super_admin' ? 'readonly style="pointer-events:none;background:#e9ecef;"' : '' ?>>
+                    <?php if (Auth::role() === 'super_admin'): ?>
                     <option value="">Global (semua cabang)</option>
+                    <?php endif; ?>
                     <?php foreach($outlets as $o): ?>
-                    <option value="<?= $o['id'] ?>"><?= htmlspecialchars($o['name']) ?></option>
+                    <option value="<?= $o['id'] ?>" <?= Auth::role() !== 'super_admin' ? 'selected' : '' ?>><?= htmlspecialchars($o['name']) ?></option>
                     <?php endforeach ?>
                 </select>
+                <?php if (Auth::role() === 'super_admin'): ?>
                 <small class="text-muted">Wajib untuk role selain Super Admin.</small>
+                <?php endif; ?>
 
                 <label class="form-label mt-2">Gaji Harian</label>
                 <div class="input-group">

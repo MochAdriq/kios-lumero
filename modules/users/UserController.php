@@ -3,20 +3,22 @@ class UserController extends Controller
 {
     public function index(): void
     {
-        Auth::requireRoles(['super_admin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
+        $isSuperAdmin = (Auth::role() === 'super_admin');
+        $outletId = $isSuperAdmin ? null : (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id', 1));
         $m = new UserModel();
         $this->view('users/index', [
             'pageTitle' => 'User & HR',
-            'items'     => $m->list(),
-            'roles'     => $m->roles(),
-            'outlets'   => $m->activeOutlets(),
-            'payroll'   => $m->payrollSummary(),
+            'items'     => $m->list($outletId),
+            'roles'     => $m->roles($outletId),
+            'outlets'   => $m->activeOutlets($outletId),
+            'payroll'   => $m->payrollSummary($outletId),
         ]);
     }
 
     public function store(): void
     {
-        Auth::requireRoles(['super_admin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
         verify_csrf();
 
         // Validate: non-super_admin roles MUST have an outlet_id
@@ -33,7 +35,7 @@ class UserController extends Controller
             }
         }
 
-        if ($roleCode !== 'super_admin' && $outletId <= 0) {
+        if ($roleCode !== 'super_admin' && $outletId <= 0 && Auth::role() === 'super_admin') {
             $_SESSION['flash_error'] = 'User dengan role selain Super Admin wajib memilih outlet/cabang.';
             $this->redirect('/users');
             return;
@@ -52,7 +54,7 @@ class UserController extends Controller
 
     public function toggleActive(): void
     {
-        Auth::requireRoles(['super_admin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
         verify_csrf();
         try {
             $id = (int)($_POST['id'] ?? 0);
@@ -67,7 +69,7 @@ class UserController extends Controller
 
     public function resetPassword(): void
     {
-        Auth::requireRoles(['super_admin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
         verify_csrf();
         try {
             $id = (int)($_POST['id'] ?? 0);
@@ -83,12 +85,19 @@ class UserController extends Controller
 
     public function apiDetail(): void
     {
-        Auth::requireRoles(['super_admin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
         $id = (int)($_GET['id'] ?? 0);
         $user = (new UserModel())->findById($id);
         if (!$user) {
             $this->json(['error' => 'User tidak ditemukan'], 404);
             return;
+        }
+        if (Auth::role() !== 'super_admin') {
+            $myOutletId = (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id', 1));
+            if ((int)$user['outlet_id'] !== $myOutletId && $user['role_code'] === 'super_admin') {
+                $this->json(['error' => 'Akses ditolak'], 403);
+                return;
+            }
         }
         // Remove sensitive data
         unset($user['password']);

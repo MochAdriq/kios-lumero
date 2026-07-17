@@ -102,6 +102,10 @@ if ($isHQUser) {
         ['label' => 'Jejak Aktivitas',      'icon' => 'ti ti-history',                'url' => '/audit-logs', 'roles' => $OWNER],
         ['label' => 'Setting Sistem',       'icon' => 'ti ti-settings',               'url' => '/settings',   'roles' => $OWNER],
     ];
+} else {
+    $menuGroups['Pengaturan Cabang'] = [
+        ['label' => 'Karyawan & Gaji Toko', 'icon' => 'ti ti-users',                  'url' => '/users',      'roles' => $ADMIN],
+    ];
 }
 ?>
 <!doctype html>
