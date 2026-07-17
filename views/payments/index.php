@@ -6,12 +6,27 @@
     <p class="text-muted">Daftar payment yang masih pending/waiting verification.</p>
     <div class="table-responsive"><table class="table align-middle">
         <thead><tr><th>No Order</th><th>Metode</th><th>Status</th><th class="text-end">Amount</th><th></th></tr></thead>
-        <tbody><?php foreach ($payments as $p): ?><tr>
-            <td><strong><?= htmlspecialchars($p['order_number']) ?></strong><br><small class="text-muted"><?= htmlspecialchars($p['created_at']) ?></small></td>
+        <tbody><?php foreach ($payments as $p): $isFo = !empty($p['is_free_order']); ?><tr>
+            <td>
+                <strong><?= htmlspecialchars($p['order_number']) ?></strong>
+                <?php if ($isFo): ?><span class="badge bg-info text-dark ms-1" style="font-size:10px;">ONLINE ORDER</span><?php endif; ?>
+                <?php if (!empty($p['customer_name'])): ?><br><small class="text-secondary"><?= htmlspecialchars($p['customer_name']) ?></small><?php endif; ?>
+                <br><small class="text-muted"><?= htmlspecialchars($p['created_at']) ?></small>
+            </td>
             <td><?= htmlspecialchars(strtoupper($p['payment_method'])) ?></td>
             <td><span class="badge-soft"><?= htmlspecialchars($p['payment_real_status']) ?></span></td>
             <td class="text-end fw-bold"><?= rupiah($p['amount']) ?></td>
-            <td class="text-end"><form method="post" action="<?= url('/payments/verify') ?>"><?= csrf_field() ?><input type="hidden" name="payment_id" value="<?= (int)$p['payment_id'] ?>"><button class="btn btn-sim btn-sm">Verifikasi</button></form></td>
+            <td class="text-end">
+                <form method="post" action="<?= url('/payments/verify') ?>">
+                    <?= csrf_field() ?>
+                    <?php if ($isFo): ?>
+                        <input type="hidden" name="free_order_id" value="<?= (int)$p['free_order_id'] ?>">
+                    <?php else: ?>
+                        <input type="hidden" name="payment_id" value="<?= (int)$p['payment_id'] ?>">
+                    <?php endif; ?>
+                    <button class="btn btn-sim btn-sm">Verifikasi</button>
+                </form>
+            </td>
         </tr><?php endforeach; if (!$payments): ?><tr><td colspan="5" class="text-center text-muted py-4">Tidak ada payment pending.</td></tr><?php endif; ?></tbody>
     </table></div>
 </div>

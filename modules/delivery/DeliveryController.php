@@ -114,6 +114,16 @@ class DeliveryController extends Controller
         $st = $pdo->prepare("UPDATE free_orders SET delivery_status = ?, delivery_courier_name = ?, order_status = ? WHERE id = ? AND pickup_type = 'delivery'");
         $st->execute([$newDelStatus, $courierName, $orderStatus, $orderId]);
 
+        if ($newDelStatus === 'delivered') {
+            try {
+                require_once __DIR__ . '/../pos/POSModel.php';
+                if (class_exists('POSModel')) {
+                    $posModel = new POSModel($pdo);
+                    $posModel->verifyFreeOrderPayment($orderId, null);
+                }
+            } catch (Throwable $e) {}
+        }
+
         $_SESSION['flash_success'] = 'Status pengantaran pesanan berhasil diperbarui menjadi ' . strtoupper(str_replace('_', ' ', $newDelStatus)) . '.';
         $this->redirect('/delivery');
     }

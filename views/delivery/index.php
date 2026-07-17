@@ -114,7 +114,12 @@
                             <small class="d-block text-muted text-center" style="font-size: 11px;">Kurir: <?= htmlspecialchars($o['delivery_courier_name'] ?: 'Kurir Internal') ?></small>
                         </td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalStatus<?= $o['id'] ?>">
+                            <?php if (($o['payment_status'] ?? '') !== 'paid'): ?>
+                            <a href="<?= url('/payments') ?>" class="btn btn-sm btn-warning mb-1 w-100 fw-bold">
+                                <?= sim_icon('ti-credit-card') ?> Verifikasi Payment
+                            </a>
+                            <?php endif; ?>
+                            <button type="button" class="btn btn-sm btn-outline-info w-100" data-bs-toggle="modal" data-bs-target="#modalStatus<?= $o['id'] ?>">
                                 <?= sim_icon('ti-edit') ?> Update Status
                             </button>
                         </td>

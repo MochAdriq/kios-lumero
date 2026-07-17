@@ -271,10 +271,21 @@ class POSModel extends Model
 
     public function waitingPayments(int $outletId): array
     {
-        return $this->all("SELECT o.*, p.id AS payment_id, p.payment_method, p.amount, p.status AS payment_real_status
+        $posPayments = $this->all("SELECT o.*, p.id AS payment_id, p.payment_method, p.amount, p.status AS payment_real_status, 0 AS free_order_id, 0 AS is_free_order
             FROM payments p JOIN orders o ON o.id=p.order_id
             WHERE o.outlet_id=? AND p.status IN ('pending','waiting_verification')
             ORDER BY p.created_at ASC", [$outletId]);
+
+        $freeOrders = $this->all("SELECT id AS free_order_id, 1 AS is_free_order, 0 AS payment_id, pre_order_no AS order_number, payment_method, total AS amount, payment_status AS payment_real_status, created_at, customer_name
+            FROM free_orders
+            WHERE payment_status IN ('unpaid','pending','waiting_verification') AND order_status <> 'cancelled'
+            ORDER BY created_at ASC");
+
+        $merged = array_merge($posPayments, $freeOrders);
+        usort($merged, function($a, $b) {
+            return strtotime($a['created_at'] ?? 'now') <=> strtotime($b['created_at'] ?? 'now');
+        });
+        return $merged;
     }
 
     public function verifyPayment(int $paymentId, ?int $outletId = null): void
@@ -290,6 +301,81 @@ class POSModel extends Model
         $this->execSql("UPDATE payments SET status='paid', verified_by=?, verified_at=?, paid_at=COALESCE(paid_at,?), updated_at=? WHERE id=?", [Auth::id(),now(),now(),now(),$paymentId]);
         $this->execSql("UPDATE orders SET payment_status='paid', order_status='completed', updated_at=? WHERE id=?", [now(),$payment['oid']]);
         Audit::log('verify_payment', 'payments', $paymentId, $payment, ['status'=>'paid']);
+    }
+
+    public function verifyFreeOrderPayment(int $freeOrderId, ?int $outletId = null): void
+    {
+        $fo = $this->one("SELECT * FROM free_orders WHERE id=? LIMIT 1", [$freeOrderId]);
+        if (!$fo) throw new RuntimeException('Order Online tidak ditemukan.');
+
+        $existOrder = $this->one("SELECT id FROM orders WHERE order_number=? LIMIT 1", [$fo['pre_order_no']]);
+        if ($existOrder) {
+            if ($fo['payment_status'] === 'paid') {
+                throw new RuntimeException('Order Online sudah diverifikasi dan masuk ke POS.');
+            }
+        }
+
+        if ($fo['payment_status'] !== 'paid') {
+            $this->execSql("UPDATE free_orders SET payment_status='paid', order_status='completed', updated_at=? WHERE id=?", [now(), $freeOrderId]);
+            $fo['payment_status'] = 'paid';
+        }
+
+        $outletId = $outletId ?: (int)app_config('default_outlet_id', 1);
+        $session = $this->one("SELECT id FROM daily_store_sessions WHERE outlet_id=? AND status='open' ORDER BY id DESC LIMIT 1", [$outletId]) ?: ['id' => 0];
+
+        if (!$existOrder) {
+            $stmt = $this->db->prepare("INSERT INTO orders
+                (outlet_id,daily_store_session_id,customer_id,order_number,order_source,order_type,business_date,subtotal,discount_amount,tax_amount,service_amount,grand_total,total_hpp,gross_profit,payment_status,order_status,cashier_id,notes,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            $orderBizDate = business_date($outletId);
+            $subtotal = (int)$fo['subtotal'];
+            $discount = (int)($fo['discount'] ?? 0);
+            $total = (int)$fo['total'];
+            $totalHpp = (int)($fo['total_hpp'] ?? 0);
+            $grossProfit = $total - $totalHpp;
+            $stmt->execute([
+                $outletId,(int)$session['id'],null,$fo['pre_order_no'],'online_order',($fo['pickup_type'] ?: 'dine_in'),$orderBizDate,$subtotal,$discount,0,0,$total,$totalHpp,$grossProfit,
+                'paid','completed',Auth::id(),($fo['customer_note'] ?? null),now(),now()
+            ]);
+            $orderId = (int)$this->db->lastInsertId();
+
+            if (!empty($fo['member_id']) || !empty($fo['customer_phone'])) {
+                try {
+                    $this->execSql("UPDATE orders SET member_id=?, customer_phone=? WHERE id=?", [
+                        ($fo['member_id'] ?: null), ($fo['customer_phone'] ?: null), $orderId
+                    ]);
+                } catch (Throwable $e) {}
+            }
+
+            $foItems = $this->all("SELECT * FROM free_order_items WHERE free_order_id=?", [$freeOrderId]);
+            if ($foItems) {
+                $itemStmt = $this->db->prepare("INSERT INTO order_items
+                    (order_id,product_variant_id,product_name_snapshot,variant_name_snapshot,qty,selling_price,discount_amount,tax_amount,subtotal,hpp_per_unit,total_hpp,gross_profit,notes)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                foreach ($foItems as $ni) {
+                    $lineDiscount = $subtotal > 0 ? round($discount * (($ni['line_total'] ?? 0) / $subtotal), 2) : 0;
+                    $lineProfit = (($ni['line_total'] ?? 0) - $lineDiscount) - ($ni['line_hpp'] ?? 0);
+                    $itemStmt->execute([
+                        $orderId, (int)($ni['menu_item_id'] ?? 0), ($ni['item_name'] ?? 'Item Menu'), '', (int)($ni['qty'] ?? 1), (int)($ni['price'] ?? 0), $lineDiscount, 0, (int)($ni['line_total'] ?? 0), (int)($ni['hpp'] ?? 0), (int)($ni['line_hpp'] ?? 0), $lineProfit, null
+                    ]);
+                }
+            }
+
+            $payStmt = $this->db->prepare("INSERT INTO payments
+                (order_id,payment_method,provider,amount,paid_at,status,gateway_reference,gateway_payload,verified_by,verified_at,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+            $payStmt->execute([$orderId, ($fo['payment_method'] ?: 'qris'), null, $total, now(), 'paid', null, null, Auth::id(), now(), now(), now()]);
+
+            try {
+                require_once __DIR__ . '/../../config/loyalty.php';
+                $memberRow = (!empty($fo['member_id']) && function_exists('loyalty_member_by_id')) ? loyalty_member_by_id($this->db, (int)$fo['member_id']) : null;
+                if (function_exists('loyalty_apply_order_after_insert')) {
+                    loyalty_apply_order_after_insert($this->db, (int)$orderId, $memberRow, (int)$total, (int)($fo['loyalty_points_redeemed'] ?? 0), (int)($fo['loyalty_redeem_amount'] ?? 0), Auth::id());
+                }
+            } catch (Throwable $lx) {}
+        }
+
+        Audit::log('verify_free_order_payment', 'free_orders', $freeOrderId, $fo, ['status'=>'paid']);
     }
 
     public function findMemberByPhone(string $phone)

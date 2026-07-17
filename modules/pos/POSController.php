@@ -156,7 +156,13 @@ class POSController extends Controller
         verify_csrf();
         try {
             $outletId = Auth::role() === 'super_admin' ? null : (function_exists('current_outlet_id') ? current_outlet_id() : (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id')));
-            $this->model->verifyPayment((int)($_POST['payment_id'] ?? 0), $outletId);
+            $paymentId = (int)($_POST['payment_id'] ?? 0);
+            $freeOrderId = (int)($_POST['free_order_id'] ?? 0);
+            if ($freeOrderId > 0) {
+                $this->model->verifyFreeOrderPayment($freeOrderId, $outletId);
+            } else {
+                $this->model->verifyPayment($paymentId, $outletId);
+            }
             $_SESSION['flash_success'] = 'Payment berhasil diverifikasi.';
         } catch (Throwable $e) {
             $_SESSION['flash_error'] = $e->getMessage();
