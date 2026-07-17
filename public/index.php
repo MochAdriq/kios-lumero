@@ -79,6 +79,7 @@ if (class_exists('LoyaltyController')) {
     $router->post('/loyalty/rewards/delete', [LoyaltyController::class, 'deleteReward']);
     $router->post('/loyalty/rewards/toggle-status', [LoyaltyController::class, 'toggleStatusReward']);
     $router->get('/loyalty/redemptions', [LoyaltyController::class, 'redemptions']);
+    $router->post('/loyalty/redemptions/update-status', [LoyaltyController::class, 'updateRedemptionStatus']);
     $router->post('/loyalty/settings/update', [LoyaltyController::class, 'updateSettings']);
 }
 $router->get('/member', function() {

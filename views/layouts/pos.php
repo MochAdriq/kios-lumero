@@ -24,6 +24,24 @@ $storeName = current_outlet_name();
     <link rel="stylesheet" href="<?= asset('pos-template/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/pos-preadmin-overrides.css') ?>?v=023">
     <link rel="stylesheet" href="<?= asset('css/pos-kasir2-theme.css') ?>?v=007">
+    <script>
+    function simInitTheme(){
+        let tm = localStorage.getItem('sim_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', tm);
+        document.addEventListener('DOMContentLoaded', function(){
+            document.querySelectorAll('.theme-icon-light').forEach(el=>el.style.display=(tm==='dark'?'none':'inline-block'));
+            document.querySelectorAll('.theme-icon-dark').forEach(el=>el.style.display=(tm==='dark'?'inline-block':'none'));
+        });
+    }
+    function simToggleTheme(){
+        let tm = document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+        localStorage.setItem('sim_theme', tm);
+        document.documentElement.setAttribute('data-theme', tm);
+        document.querySelectorAll('.theme-icon-light').forEach(el=>el.style.display=(tm==='dark'?'none':'inline-block'));
+        document.querySelectorAll('.theme-icon-dark').forEach(el=>el.style.display=(tm==='dark'?'inline-block':'none'));
+    }
+    simInitTheme();
+    </script>
 </head>
 <body class="pos-page sim-pos-template sim-pos-dcelup k2-body <?= isset($_GET['embed']) ? 'is-embed-modal' : '' ?>" style="<?= isset($_GET['embed']) ? 'background:#fff !important; padding:0 !important;' : '' ?>">
 <div id="global-loader" style="display:none"><div class="whirly-loader"></div></div>
@@ -71,6 +89,12 @@ $storeName = current_outlet_name();
                 </div>
             </li>
             <li class="nav-item nav-item-box"><a href="javascript:void(0);" id="btnFullscreen" title="Fullscreen"><?= sim_icon('ti-maximize') ?></a></li>
+            <li class="nav-item nav-item-box">
+                <a href="javascript:void(0);" onclick="simToggleTheme()" title="Ganti Tema">
+                    <span class="theme-icon-light" style="display:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span>
+                    <span class="theme-icon-dark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
+                </a>
+            </li>
             <li class="nav-item nav-item-box"><a href="<?= url('/store') ?>" title="Buka/Tutup Toko"><?= sim_icon('ti-cash') ?></a></li>
             <li class="nav-item dropdown has-arrow main-drop profile-nav">
                 <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">

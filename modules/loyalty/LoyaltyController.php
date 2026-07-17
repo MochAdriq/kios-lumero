@@ -111,17 +111,54 @@ class LoyaltyController extends Controller
         require_once __DIR__ . '/../../config/loyalty.php';
         loyalty_ensure_tables($pdo);
 
-        $stmt = $pdo->query("SELECT r.*, m.name AS member_name, m.phone AS member_phone, p.name AS reward_name 
-                             FROM point_reward_redemptions r
-                             LEFT JOIN members m ON m.id = r.member_id
-                             LEFT JOIN point_reward_products p ON p.id = r.reward_product_id
-                             ORDER BY r.id DESC LIMIT 100");
+        $q = trim($_GET['q'] ?? '');
+        $sql = "SELECT r.*, m.name AS member_name, m.phone AS member_phone, p.name AS reward_name 
+                FROM point_reward_redemptions r
+                LEFT JOIN members m ON m.id = r.member_id
+                LEFT JOIN point_reward_products p ON p.id = r.reward_product_id";
+        
+        $params = [];
+        if ($q !== '') {
+            $sql .= " WHERE r.redemption_code LIKE ? OR m.name LIKE ?";
+            $params[] = "%$q%";
+            $params[] = "%$q%";
+        }
+        
+        $sql .= " ORDER BY r.id DESC LIMIT 100";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         $redemptions = $stmt->fetchAll();
 
         $this->view('loyalty/redemptions', [
             'pageTitle' => 'Validasi Penukaran Poin',
             'redemptions' => $redemptions
         ]);
+    }
+
+    public function updateRedemptionStatus()
+    {
+        Auth::requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/loyalty/redemptions'));
+            exit;
+        }
+
+        $redemptionId = (int)($_POST['id'] ?? 0);
+        $status = $_POST['status'] ?? '';
+        $adminId = $_SESSION['user_id'] ?? null;
+        
+        $pdo = Database::connection();
+        require_once __DIR__ . '/../../config/loyalty.php';
+
+        try {
+            loyalty_update_reward_redemption_status($pdo, $redemptionId, $status, $adminId, 'Divalidasi oleh Admin via layar Validasi.');
+            $_SESSION['flash_success'] = 'Status penukaran poin berhasil diperbarui.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = 'Gagal memperbarui: ' . $e->getMessage();
+        }
+
+        header('Location: ' . url('/loyalty/redemptions'));
+        exit;
     }
 
     public function updateSettings()

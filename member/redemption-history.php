@@ -14,7 +14,7 @@ function rh_status_label($s){
 }
 function rh_status_class($s){ return $s==='completed'?'badge-green':($s==='cancelled'?'badge-red':($s==='approved'?'badge-blue':'badge-gold')); }
 $memberId=(int)($_SESSION['member_id'] ?? 0);
-if($memberId<=0){ header('Location: index.php?page=penukaran'); exit; }
+if($memberId<=0){ header('Location: login.php'); exit; }
 $member=loyalty_member_by_id($pdo,$memberId);
 if(!$member){ unset($_SESSION['member_id']); header('Location: index.php'); exit; }
 $redemptions=loyalty_member_reward_redemptions($pdo,$memberId,120);
@@ -177,6 +177,29 @@ a { text-decoration: none; color: inherit; }
   .ticket { break-inside: avoid; box-shadow: none; }
   .btn { display: none; }
 }
+
+/* QR Modal */
+.qr-modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.95); z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  backdrop-filter: blur(8px);
+}
+.qr-modal.active { opacity: 1; pointer-events: auto; }
+.qr-modal img {
+  width: 90%; max-width: 400px; max-height: 80vh; object-fit: contain;
+  background: #fff; padding: 24px; border-radius: var(--radius);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.qr-modal.active img { transform: scale(1); }
+.qr-modal-close {
+  margin-top: 32px; padding: 12px 32px; border-radius: 99px;
+  background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+  font-weight: 700; cursor: pointer; transition: background 0.2s;
+}
+.qr-modal-close:hover { background: rgba(255,255,255,0.2); }
 </style></head>
 <body>
 
@@ -186,12 +209,12 @@ a { text-decoration: none; color: inherit; }
       <img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero">
       <span>Lumero Member</span>
     </div>
-    <a class="topbar-logout" href="index.php?logout=1">Keluar</a>
+    <a class="topbar-logout" href="login.php?logout=1">Keluar</a>
   </div>
   <nav class="nav-tabs">
-    <a class="nav-tab" href="index.php?page=profil">Dashboard</a>
-    <a class="nav-tab" href="index.php?page=riwayat">Aktivitas</a>
-    <a class="nav-tab" href="index.php?page=penukaran">Tukar Poin</a>
+    <a class="nav-tab" href="dashboard.php?page=profil">Dashboard</a>
+    <a class="nav-tab" href="dashboard.php?page=riwayat">Aktivitas</a>
+    <a class="nav-tab" href="dashboard.php?page=penukaran">Tukar Poin</a>
     <a class="nav-tab active" href="redemption-history.php">Riwayat Hadiah</a>
     <a class="nav-tab" href="online-order.php">Order Online</a>
   </nav>
@@ -231,7 +254,8 @@ a { text-decoration: none; color: inherit; }
     <div class="ticket-list">
       <?php foreach($redemptions as $r): 
         $code=(string)($r['redemption_code'] ?: ('RDM-'.$r['id'])); 
-        $qr='https://quickchart.io/qr?size=180&margin=1&text='.rawurlencode($code); 
+        $adminUrl = url('/loyalty/redemptions?q='.rawurlencode($code));
+        $qr='https://quickchart.io/qr?size=180&margin=1&text='.rawurlencode($adminUrl); 
       ?>
       <article class="ticket">
         <div class="ticket-body">
@@ -276,14 +300,36 @@ a { text-decoration: none; color: inherit; }
         </div>
         <div class="empty-state-title">Belum Ada Tiket Hadiah</div>
         <div class="empty-state-desc">Anda belum menukarkan poin dengan hadiah. Buka katalog penukaran sekarang.</div>
-        <a class="btn btn-red" href="index.php?page=penukaran">Lihat Katalog Penukaran</a>
+        <a class="btn btn-red" href="dashboard.php?page=penukaran">Lihat Katalog Penukaran</a>
       </div>
       <?php endif; ?>
     </div>
   </section>
 </main>
 
+<!-- Fullscreen QR Modal -->
+<div class="qr-modal" id="qrModal" onclick="closeQrModal()">
+  <img id="qrModalImg" src="" alt="QR Fullscreen" onclick="event.stopPropagation()">
+  <button class="qr-modal-close" onclick="closeQrModal()">Tutup</button>
+</div>
+
 <script>
+function openQrModal(src) {
+  document.getElementById('qrModalImg').src = src;
+  document.getElementById('qrModal').classList.add('active');
+}
+function closeQrModal() {
+  document.getElementById('qrModal').classList.remove('active');
+}
+
+// Add click listener to all QR images
+document.querySelectorAll('.ticket-qr img').forEach(img => {
+  img.style.cursor = 'pointer';
+  img.addEventListener('click', function() {
+    openQrModal(this.src);
+  });
+});
+
 const reveals = document.querySelectorAll('.reveal');
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });

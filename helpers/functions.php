@@ -415,10 +415,107 @@ function sim_icon(string $name, string $class = '', string $style = ''): string
 }
 
 /**
- * Cek ketersediaan stok bahan baku berdasarkan resep untuk sebuah varian produk
+ * Ensure outlet_raw_materials table exists and backfill initial stock from raw_materials
  */
-function check_variant_stock(PDO $pdo, int $variantId): bool
+function inventory_ensure_outlet_stocks(PDO $pdo): void
 {
+    static $ensured = false;
+    if ($ensured) return;
+    $ensured = true;
+
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS outlet_raw_materials (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            outlet_id BIGINT UNSIGNED NOT NULL,
+            raw_material_id BIGINT UNSIGNED NOT NULL,
+            stock_qty DECIMAL(18,4) DEFAULT 0.0000,
+            min_stock_qty DECIMAL(18,4) DEFAULT 0.0000,
+            average_cost DECIMAL(15,4) DEFAULT 0.0000,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_outlet_material (outlet_id, raw_material_id),
+            KEY idx_orm_outlet (outlet_id),
+            KEY idx_orm_material (raw_material_id),
+            CONSTRAINT fk_orm_outlet FOREIGN KEY (outlet_id) REFERENCES outlets(id) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT fk_orm_material FOREIGN KEY (raw_material_id) REFERENCES raw_materials(id) ON DELETE CASCADE ON UPDATE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        // Backfill initial rows for all outlets and raw materials without overwriting existing stock
+        $pdo->exec("INSERT INTO outlet_raw_materials (outlet_id, raw_material_id, stock_qty, min_stock_qty, average_cost, created_at, updated_at)
+            SELECT o.id, rm.id, (CASE WHEN o.id = 1 THEN rm.stock_qty ELSE 0.0000 END), rm.min_stock_qty, rm.average_cost, NOW(), NOW()
+            FROM outlets o CROSS JOIN raw_materials rm
+            ON DUPLICATE KEY UPDATE id = id");
+    } catch (Throwable $e) {
+        // Table or constraints already exist or being handled
+    }
+}
+
+/**
+ * Dapatkan saldo dan harga rata-rata bahan baku untuk outlet tertentu dari outlet_raw_materials
+ */
+function inventory_get_material_stock(PDO $pdo, int $rmId, ?int $outletId = null): array
+{
+    if ($outletId === null) {
+        $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+    }
+    inventory_ensure_outlet_stocks($pdo);
+
+    $stmt = $pdo->prepare("
+        SELECT rm.id, rm.name, rm.sku, rm.unit_id,
+               COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) AS stock_qty,
+               COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0) AS min_stock_qty,
+               COALESCE(orm.average_cost, rm.average_cost, 0) AS average_cost
+        FROM raw_materials rm
+        LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
+        WHERE rm.id = ?
+    ");
+    $stmt->execute([$outletId, $outletId, $rmId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        return ['stock_qty' => 0.0, 'min_stock_qty' => 0.0, 'average_cost' => 0.0];
+    }
+    return $row;
+}
+
+/**
+ * Update atau tambah saldo dan harga rata-rata bahan baku untuk outlet tertentu di outlet_raw_materials
+ */
+function inventory_set_material_stock(PDO $pdo, int $rmId, float $newStock, ?float $newAvgCost = null, ?int $outletId = null): void
+{
+    if ($outletId === null) {
+        $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+    }
+    inventory_ensure_outlet_stocks($pdo);
+
+    if ($newAvgCost === null) {
+        $curr = inventory_get_material_stock($pdo, $rmId, $outletId);
+        $newAvgCost = (float)($curr['average_cost'] ?? 0);
+    }
+
+    $stmt = $pdo->prepare("
+        INSERT INTO outlet_raw_materials (outlet_id, raw_material_id, stock_qty, average_cost, min_stock_qty, created_at, updated_at)
+        SELECT ?, id, ?, ?, min_stock_qty, NOW(), NOW() FROM raw_materials WHERE id = ?
+        ON DUPLICATE KEY UPDATE stock_qty = VALUES(stock_qty), average_cost = VALUES(average_cost), updated_at = NOW()
+    ");
+    $stmt->execute([$outletId, $newStock, $newAvgCost, $rmId]);
+
+    // Jika outlet adalah HQ (1), sync juga ke raw_materials master agar kompatibel dengan legacy query
+    if ($outletId == 1) {
+        $pdo->prepare("UPDATE raw_materials SET stock_qty = ?, average_cost = ?, updated_at = NOW() WHERE id = ?")
+            ->execute([$newStock, $newAvgCost, $rmId]);
+    }
+}
+
+/**
+ * Cek ketersediaan stok bahan baku berdasarkan resep untuk sebuah varian produk per outlet
+ */
+function check_variant_stock(PDO $pdo, int $variantId, ?int $outletId = null): bool
+{
+    if ($outletId === null) {
+        $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+    }
+    inventory_ensure_outlet_stocks($pdo);
+
     // Cari resep aktif untuk varian ini
     $stmt = $pdo->prepare("SELECT id FROM recipes WHERE product_variant_id = ? AND is_active = 1 LIMIT 1");
     $stmt->execute([$variantId]);
@@ -429,14 +526,15 @@ function check_variant_stock(PDO $pdo, int $variantId): bool
         return true;
     }
 
-    // Ambil kebutuhan bahan baku dan stok saat ini
+    // Ambil kebutuhan bahan baku dan stok saat ini dari outlet_raw_materials
     $stmt = $pdo->prepare("
-        SELECT ri.qty as required_qty, rm.stock_qty 
+        SELECT ri.qty as required_qty, COALESCE(orm.stock_qty, rm.stock_qty, 0) as stock_qty 
         FROM recipe_items ri
         JOIN raw_materials rm ON ri.raw_material_id = rm.id
+        LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
         WHERE ri.recipe_id = ? AND ri.item_type = 'raw_material'
     ");
-    $stmt->execute([$recipeId]);
+    $stmt->execute([$outletId, $recipeId]);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Jika tidak ada bahan baku terhubung, anggap tersedia

@@ -56,6 +56,7 @@ if (!function_exists('delivery_settings')) {
             'delivery_per_km_fee'        => '3000',
             'delivery_min_fee'           => '5000',
             'delivery_free_above'        => '0',         // 0 = disabled
+            'delivery_free_km_limit'     => '2',         // 2 km free
         ];
 
         try {
@@ -101,16 +102,19 @@ if (!function_exists('delivery_outlet_coords')) {
             if ($row && $row['latitude'] && $row['longitude']) {
                 return ['lat' => (float)$row['latitude'], 'lng' => (float)$row['longitude']];
             }
-            // Fallback 1: any outlet with coordinates
-            $st = $pdo->query("SELECT latitude, longitude FROM outlets WHERE latitude IS NOT NULL AND longitude IS NOT NULL LIMIT 1");
-            $row = $st->fetch(PDO::FETCH_ASSOC);
-            if ($row && $row['latitude'] && $row['longitude']) {
-                return ['lat' => (float)$row['latitude'], 'lng' => (float)$row['longitude']];
-            }
-            // Fallback 2: check system_settings
+            // Fallback 1: check system_settings for this outlet
             $s = delivery_settings($pdo);
             if (!empty($s['delivery_outlet_lat']) && !empty($s['delivery_outlet_lng'])) {
                 return ['lat' => (float)$s['delivery_outlet_lat'], 'lng' => (float)$s['delivery_outlet_lng']];
+            }
+            // Fallback 2: if branch coords not set yet, fallback to HQ (outlet 1) coords as default starting point
+            if ($outletId != 1) {
+                $st = $pdo->prepare("SELECT latitude, longitude FROM outlets WHERE id = 1 AND latitude IS NOT NULL AND longitude IS NOT NULL");
+                $st->execute();
+                $row = $st->fetch(PDO::FETCH_ASSOC);
+                if ($row && $row['latitude'] && $row['longitude']) {
+                    return ['lat' => (float)$row['latitude'], 'lng' => (float)$row['longitude']];
+                }
             }
         } catch (Throwable $e) {}
         return null;
@@ -143,10 +147,16 @@ if (!function_exists('delivery_calculate_fee')) {
     {
         $s = delivery_settings($pdo);
 
-        // Free delivery threshold
+        // Free delivery threshold (by subtotal)
         $freeAbove = (int)$s['delivery_free_above'];
         if ($freeAbove > 0 && $subtotal >= $freeAbove) {
             return 0;
+        }
+
+        // Free delivery threshold (by distance)
+        $freeKmLimit = (float)($s['delivery_free_km_limit'] ?? 2);
+        if ($distanceKm <= $freeKmLimit) {
+            return 0; // Jarak masih di bawah batas gratis
         }
 
         $model  = $s['delivery_fee_model'];
@@ -156,9 +166,10 @@ if (!function_exists('delivery_calculate_fee')) {
             return max($minFee, (int)$s['delivery_flat_fee']);
         }
 
-        // per_km model
+        // per_km model (hitung selisih jaraknya saja: Opsi A)
         $perKm = (int)$s['delivery_per_km_fee'];
-        $fee   = (int)ceil($distanceKm * $perKm);
+        $excessKm = $distanceKm - $freeKmLimit;
+        $fee   = (int)ceil($excessKm * $perKm);
         return max($minFee, $fee);
     }
 }
@@ -185,7 +196,7 @@ if (!function_exists('delivery_save_settings')) {
         $keys = [
             'delivery_enabled', 'delivery_max_radius_km', 'delivery_fee_model',
             'delivery_flat_fee', 'delivery_per_km_fee', 'delivery_min_fee', 'delivery_free_above',
-            'delivery_outlet_lat', 'delivery_outlet_lng'
+            'delivery_free_km_limit', 'delivery_outlet_lat', 'delivery_outlet_lng'
         ];
 
         // Handle checkbox: if delivery_enabled not present in POST, set to 0
@@ -211,12 +222,12 @@ if (!function_exists('delivery_save_settings')) {
             }
         }
 
-        // Save outlet coordinates to outlets table as well
+        // Save outlet coordinates to outlets table for this specific outlet only
         if (isset($data['delivery_outlet_lat']) && isset($data['delivery_outlet_lng'])) {
             $lat = (float)$data['delivery_outlet_lat'];
             $lng = (float)$data['delivery_outlet_lng'];
             if ($lat != 0 && $lng != 0) {
-                $pdo->prepare("UPDATE outlets SET latitude = ?, longitude = ? WHERE id = ? OR id = 1")->execute([$lat, $lng, $outletId]);
+                $pdo->prepare("UPDATE outlets SET latitude = ?, longitude = ? WHERE id = ?")->execute([$lat, $lng, $outletId]);
             }
         }
     }

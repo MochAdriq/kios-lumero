@@ -85,6 +85,9 @@
                     <td class="text-end fw-bold" data-sort="<?= $o['grand_total'] ?>"><?= rupiah($o['grand_total']) ?></td>
                     <td class="text-end">
                         <a class="btn btn-light btn-sm rounded-pill" href="<?= url('/pos/receipt/'.$o['id']) ?>">Struk</a>
+                        <?php if($o['order_type'] === 'delivery'): ?>
+                        <a class="btn btn-info btn-sm rounded-pill text-white ms-1" href="<?= url('/delivery?q='.urlencode($o['order_number'])) ?>" title="Buka di Monitoring Kurir">Kurir</a>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>

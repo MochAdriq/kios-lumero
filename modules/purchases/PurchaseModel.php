@@ -66,9 +66,18 @@ class PurchaseModel extends Model
 
                 $stmt=$db->prepare("INSERT INTO purchase_order_items (purchase_order_id,raw_material_id,qty,unit_id,unit_cost,total_cost) VALUES (?,?,?,?,?,?)");
                 $stmt->execute([$poId,$materialId,$qty,$mat['unit_id'],$unitCost,$itemTotal]);
-                $oldStock=(float)$mat['stock_qty']; $oldAvg=(float)$mat['average_cost'];
+
+                $outletStock = function_exists('inventory_get_material_stock') ? inventory_get_material_stock($db, $materialId, $outletId) : $mat;
+                $oldStock=(float)($outletStock['stock_qty'] ?? $mat['stock_qty']);
+                $oldAvg=(float)($outletStock['average_cost'] ?? $mat['average_cost']);
                 $newStock=$oldStock+$qty; $newAvg=$newStock>0 ? (($oldStock*$oldAvg)+$itemTotal)/$newStock : $unitCost;
-                $db->prepare("UPDATE raw_materials SET stock_qty=?, average_cost=?, updated_at=NOW() WHERE id=?")->execute([$newStock,$newAvg,$materialId]);
+
+                if (function_exists('inventory_set_material_stock')) {
+                    inventory_set_material_stock($db, $materialId, $newStock, $newAvg, $outletId);
+                } else {
+                    $db->prepare("UPDATE raw_materials SET stock_qty=?, average_cost=?, updated_at=NOW() WHERE id=?")->execute([$newStock,$newAvg,$materialId]);
+                }
+
                 $db->prepare("INSERT INTO inventory_movements (outlet_id,raw_material_id,movement_date,business_date,movement_type,reference_type,reference_id,qty_in,qty_out,unit_cost,total_cost,stock_after,notes,created_by,created_at) VALUES (?,?,NOW(),?,'purchase','purchase_orders',?,?,?,?,?,?,?,?,NOW())")
                     ->execute([$outletId,$materialId,$date,$poId,$qty,0,$unitCost,$itemTotal,$newStock,'Input belanja '.$poNo,Auth::id()]);
                 

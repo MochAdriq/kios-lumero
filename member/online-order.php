@@ -12,7 +12,7 @@ fo_ensure_tables($pdo);
 loyalty_ensure_tables($pdo);
 $memberOnline = null;
 if(!empty($_SESSION['member_id'])) $memberOnline = loyalty_member_by_id($pdo,(int)$_SESSION['member_id']);
-if(!$memberOnline){ header('Location: index.php'); exit; }
+if(!$memberOnline){ header('Location: login.php'); exit; }
 $memberPointBalance=(int)($memberOnline['total_points'] ?? 0);
 $memberPointValue=max(1,(int)(loyalty_settings($pdo)['redeem_point_value'] ?? 500));
 
@@ -316,7 +316,7 @@ function fo_combo_img($row){
 }
 ?>
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
 <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png">
 <meta charset="utf-8">
@@ -349,18 +349,25 @@ function fo_combo_img($row){
    ============================================ */
 
 /* ── Design Tokens (copas dari POS) ── */
+/* ── Design Tokens (copas dari POS) ── */
 :root{
-  --dp-bg:#0f0f13;--dp-bg-2:#16161d;--dp-surface:#1a1a2e;--dp-surface-2:#22223a;
-  --dp-surface-hover:#2a2a45;--dp-glass:rgba(26,26,46,.72);--dp-glass-border:rgba(255,255,255,.06);
+  --dp-bg:#f4f6f9;--dp-bg-2:#ffffff;--dp-surface:#ffffff;--dp-surface-2:#f8f9fc;
+  --dp-surface-hover:#e9ecef;--dp-glass:rgba(255,255,255,.85);--dp-glass-border:rgba(0,0,0,.08);
+  --dp-text:#111827;--dp-text-2:#4b5563;--dp-muted:#6b7280;
+  --dp-line:rgba(0,0,0,.08);--dp-shadow:0 4px 20px rgba(0,0,0,.06);
   --dp-red:#ff2d55;--dp-red-glow:rgba(255,45,85,.25);--dp-red-soft:rgba(255,45,85,.12);
   --dp-orange:#ff6b35;--dp-gradient:linear-gradient(135deg,#ff2d55,#ff6b35);
   --dp-gradient-subtle:linear-gradient(135deg,rgba(255,45,85,.08),rgba(255,107,53,.08));
   --dp-green:#34d399;--dp-green-soft:rgba(52,211,153,.12);
-  --dp-text:#f1f1f5;--dp-text-2:#c4c4d4;--dp-muted:#6b6b85;
-  --dp-line:rgba(255,255,255,.06);--dp-shadow:0 4px 24px rgba(0,0,0,.4);
   --dp-shadow-glow:0 0 30px rgba(255,45,85,.15);--dp-radius:16px;--dp-radius-sm:10px;
   --dp-font:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
   --dp-transition:.25s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --dp-bg:#0f0f13;--dp-bg-2:#16161d;--dp-surface:#1a1a2e;--dp-surface-2:#22223a;
+  --dp-surface-hover:#2a2a45;--dp-glass:rgba(26,26,46,.72);--dp-glass-border:rgba(255,255,255,.06);
+  --dp-text:#f1f1f5;--dp-text-2:#c4c4d4;--dp-muted:#6b6b85;
+  --dp-line:rgba(255,255,255,.06);--dp-shadow:0 4px 24px rgba(0,0,0,.4);
 }
 
 /* ── Animations ── */
@@ -810,6 +817,24 @@ button,input,select,textarea{font:inherit}
     border: 1px solid rgba(255,255,255,0.15) !important;
   }
   </style>
+<script>
+function simInitTheme(){
+    let tm = localStorage.getItem('sim_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', tm);
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('.theme-icon-light').forEach(el=>el.style.display=(tm==='dark'?'none':'inline-block'));
+        document.querySelectorAll('.theme-icon-dark').forEach(el=>el.style.display=(tm==='dark'?'inline-block':'none'));
+    });
+}
+function simToggleTheme(){
+    let tm = document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+    localStorage.setItem('sim_theme', tm);
+    document.documentElement.setAttribute('data-theme', tm);
+    document.querySelectorAll('.theme-icon-light').forEach(el=>el.style.display=(tm==='dark'?'none':'inline-block'));
+    document.querySelectorAll('.theme-icon-dark').forEach(el=>el.style.display=(tm==='dark'?'inline-block':'none'));
+}
+simInitTheme();
+</script>
 </head>
 <body class="pos-page sim-pos-template sim-pos-dcelup k2-body">
 <div class="fo-video-overlay" id="freeOrderVideoOverlay" aria-modal="true" role="dialog">
@@ -857,11 +882,15 @@ button,input,select,textarea{font:inherit}
     </div>
     <div class="fo-header-actions">
       <div class="fo-audio-toggles">
+        <button class="fo-audio-toggle" id="toggleTheme" type="button" aria-pressed="false" onclick="simToggleTheme()">
+          <span class="theme-icon-light" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span>
+          <span class="theme-icon-dark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
+        </button>
         <button class="fo-audio-toggle on" id="toggleBgm" type="button" aria-pressed="true">
           <span>♪</span> Musik ON
         </button>
         <button class="fo-audio-toggle on" id="toggleVoice" type="button" aria-pressed="true">
-          <span>🔊</span> Suara ON
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></span> Suara ON
         </button>
       </div>
       <a href="../order-online/lacak.php" class="fo-track-link">
@@ -1267,6 +1296,7 @@ const deliveryConfig = {
   perKmFee: <?= (int)($deliverySettings['delivery_per_km_fee'] ?? 3000) ?>,
   minFee: <?= (int)($deliverySettings['delivery_min_fee'] ?? 5000) ?>,
   freeAbove: <?= (int)($deliverySettings['delivery_free_above'] ?? 0) ?>,
+  freeKmLimit: <?= (float)($deliverySettings['delivery_free_km_limit'] ?? 2) ?>,
   outletLat: <?= (float)($deliveryOutletCoords['lat'] ?? -6.9175) ?>,
   outletLng: <?= (float)($deliveryOutletCoords['lng'] ?? 106.9275) ?>
 };
@@ -1403,11 +1433,18 @@ function haversineDistanceKmJS(lat1, lon1, lat2, lon2) {
 function calculateDeliveryFeeJS(subtotal, distKm) {
   const freeAbove = Number(deliveryConfig.freeAbove || 0);
   if (freeAbove > 0 && subtotal >= freeAbove) return 0;
+  
+  const freeKmLimit = Number(deliveryConfig.freeKmLimit || 2);
+  if (distKm <= freeKmLimit) return 0; // Jarak di bawah batas gratis
+
   const model = deliveryConfig.feeModel || 'per_km';
   const minFee = Number(deliveryConfig.minFee || 5000);
   if (model === 'flat') return Math.max(minFee, Number(deliveryConfig.flatFee || 5000));
+  
+  // per_km model (hitung selisih jarak)
   const perKm = Number(deliveryConfig.perKmFee || 3000);
-  return Math.max(minFee, Math.ceil(distKm * perKm));
+  const excessKm = distKm - freeKmLimit;
+  return Math.max(minFee, Math.ceil(excessKm * perKm));
 }
 
 function searchDeliveryAddress() {

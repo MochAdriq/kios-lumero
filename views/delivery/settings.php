@@ -38,14 +38,24 @@
 
             <div class="sim-card mb-4">
                 <h5 class="fw-bold mb-3"><?= sim_icon('ti-map-pin-filled', 'me-2 text-danger') ?>Radius & Jarak</h5>
+                
                 <label class="form-label mt-2 fw-medium">Radius Delivery Maksimal (km)</label>
-                <div class="input-group">
+                <div class="input-group mb-3">
                     <input type="number" step="0.1" min="0.5" max="50" name="delivery_max_radius_km"
                         value="<?= htmlspecialchars($settings['delivery_max_radius_km'] ?? '5') ?>"
                         class="form-control" placeholder="5">
                     <span class="input-group-text">km</span>
                 </div>
-                <small class="text-muted mt-1 d-block">Pelanggan yang berada di luar radius ini tidak bisa memesan dengan opsi delivery.</small>
+                <small class="text-muted mt-1 d-block mb-3">Pelanggan yang berada di luar radius ini tidak bisa memesan dengan opsi delivery.</small>
+
+                <label class="form-label fw-medium">Batas Jarak Gratis Ongkir (km)</label>
+                <div class="input-group mb-1">
+                    <input type="number" step="0.1" min="0" name="delivery_free_km_limit"
+                        value="<?= htmlspecialchars($settings['delivery_free_km_limit'] ?? '2') ?>"
+                        class="form-control" placeholder="2">
+                    <span class="input-group-text">km</span>
+                </div>
+                <small class="text-muted d-block">Pelanggan di bawah jarak ini gratis ongkir. Jika melebihi batas, tarif per-KM dihitung dari selisih kelebihan jaraknya saja.</small>
             </div>
 
             <div class="sim-card mb-4">

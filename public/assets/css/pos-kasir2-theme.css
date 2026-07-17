@@ -5,13 +5,20 @@
 
 /* ── Design Tokens ── */
 :root {
-  --dp-bg: #0f0f13;
-  --dp-bg-2: #16161d;
-  --dp-surface: #1a1a2e;
-  --dp-surface-2: #22223a;
-  --dp-surface-hover: #2a2a45;
-  --dp-glass: rgba(26, 26, 46, .72);
-  --dp-glass-border: rgba(255, 255, 255, .06);
+  /* Default Light Mode (Premium Crisp) */
+  --dp-bg: #f4f6f9;
+  --dp-bg-2: #ffffff;
+  --dp-surface: #ffffff;
+  --dp-surface-2: #f8f9fc;
+  --dp-surface-hover: #e9ecef;
+  --dp-glass: rgba(255, 255, 255, 0.85);
+  --dp-glass-border: rgba(0, 0, 0, 0.08);
+  --dp-text: #111827;
+  --dp-text-2: #4b5563;
+  --dp-muted: #6b7280;
+  --dp-line: rgba(0, 0, 0, 0.08);
+  --dp-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+
   --dp-red: #ff2d55;
   --dp-red-glow: rgba(255, 45, 85, .25);
   --dp-red-soft: rgba(255, 45, 85, .12);
@@ -20,17 +27,27 @@
   --dp-gradient-subtle: linear-gradient(135deg, rgba(255, 45, 85, .08), rgba(255, 107, 53, .08));
   --dp-green: #34d399;
   --dp-green-soft: rgba(52, 211, 153, .12);
-  --dp-text: #f1f1f5;
-  --dp-text-2: #c4c4d4;
-  --dp-muted: #6b6b85;
-  --dp-line: rgba(255, 255, 255, .06);
-  --dp-shadow: 0 4px 24px rgba(0, 0, 0, .4);
   --dp-shadow-glow: 0 0 30px rgba(255, 45, 85, .15);
   --dp-radius: 16px;
   --dp-radius-sm: 10px;
   --dp-font: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   --dp-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   --dp-transition: .25s cubic-bezier(.4, 0, .2, 1);
+}
+
+[data-theme="dark"] {
+  --dp-bg: #0f0f13;
+  --dp-bg-2: #16161d;
+  --dp-surface: #1a1a2e;
+  --dp-surface-2: #22223a;
+  --dp-surface-hover: #2a2a45;
+  --dp-glass: rgba(26, 26, 46, .72);
+  --dp-glass-border: rgba(255, 255, 255, .06);
+  --dp-text: #f1f1f5;
+  --dp-text-2: #c4c4d4;
+  --dp-muted: #6b6b85;
+  --dp-line: rgba(255, 255, 255, .06);
+  --dp-shadow: 0 4px 24px rgba(0, 0, 0, .4);
 }
 
 /* ── Animations ── */

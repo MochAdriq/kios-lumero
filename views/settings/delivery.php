@@ -28,13 +28,22 @@
             <div class="sim-card mb-4">
                 <h5 class="fw-bold mb-3"><?= sim_icon('ti-map-pin-filled', 'me-2 text-danger') ?>Radius & Jarak</h5>
                 <label class="form-label mt-2 fw-medium">Radius Delivery Maksimal (km)</label>
-                <div class="input-group">
+                <div class="input-group mb-3">
                     <input type="number" step="0.1" min="0.5" max="50" name="delivery_max_radius_km"
                         value="<?= htmlspecialchars($settings['delivery_max_radius_km'] ?? '5') ?>"
                         class="form-control" placeholder="5">
                     <span class="input-group-text">km</span>
                 </div>
-                <small class="text-muted mt-1 d-block">Pelanggan yang berada di luar radius ini tidak bisa melakukan delivery.</small>
+                <small class="text-muted mt-1 d-block mb-3">Pelanggan yang berada di luar radius ini tidak bisa melakukan delivery.</small>
+
+                <label class="form-label fw-medium">Batas Jarak Gratis Ongkir (km)</label>
+                <div class="input-group mb-1">
+                    <input type="number" step="0.1" min="0" name="delivery_free_km_limit"
+                        value="<?= htmlspecialchars($settings['delivery_free_km_limit'] ?? '2') ?>"
+                        class="form-control" placeholder="2">
+                    <span class="input-group-text">km</span>
+                </div>
+                <small class="text-muted d-block">Pelanggan di bawah jarak ini gratis ongkir. Jika melebihi batas, tarif per-KM dihitung dari selisih kelebihan jaraknya saja.</small>
             </div>
 
             <div class="sim-card mb-4">
@@ -112,7 +121,6 @@
             <div class="sim-card border-primary border-opacity-25">
                 <h5 class="fw-bold mb-3"><?= sim_icon('ti-eye', 'me-2 text-info') ?>Preview Kalkulasi</h5>
                 <div class="alert alert-light border small mb-0">
-                    <div class="mb-2"><strong>Contoh:</strong> Jarak 3 km</div>
                     <div id="previewCalc">
                         <?php
                             $model = $settings['delivery_fee_model'] ?? 'per_km';
@@ -120,14 +128,24 @@
                             $flat  = (int)($settings['delivery_flat_fee'] ?? 5000);
                             $minF  = (int)($settings['delivery_min_fee'] ?? 5000);
                             $freeA = (int)($settings['delivery_free_above'] ?? 0);
-                            $example = $model === 'flat' ? max($minF, $flat) : max($minF, (int)ceil(3 * $perKm));
+                            $freeLimit = (float)($settings['delivery_free_km_limit'] ?? 2);
+                            
+                            $jarakContoh = 5; // contoh simulasi
+                            $excess = max(0, $jarakContoh - $freeLimit);
+                            if ($jarakContoh <= $freeLimit) {
+                                $example = 0;
+                            } else {
+                                $example = $model === 'flat' ? max($minF, $flat) : max($minF, (int)ceil($excess * $perKm));
+                            }
                         ?>
-                        <div class="d-flex justify-content-between"><span>Model:</span> <strong><?= $model === 'flat' ? 'Tarif Tetap' : 'Per-KM' ?></strong></div>
-                        <div class="d-flex justify-content-between"><span>Ongkir (3 km):</span> <strong class="text-success">Rp <?= number_format($example, 0, ',', '.') ?></strong></div>
+                        <div class="d-flex justify-content-between"><span>Model Tarif:</span> <strong><?= $model === 'flat' ? 'Tarif Tetap' : 'Per-KM' ?></strong></div>
+                        <div class="d-flex justify-content-between"><span>Gratis Jarak S/d:</span> <strong><?= $freeLimit ?> km</strong></div>
+                        <div class="d-flex justify-content-between mt-2 pt-2 border-top"><span>Simulasi Jarak:</span> <strong><?= $jarakContoh ?> km</strong></div>
+                        <div class="d-flex justify-content-between"><span>Ongkir (<?= $jarakContoh ?> km):</span> <strong class="text-success">Rp <?= number_format($example, 0, ',', '.') ?></strong></div>
                         <?php if ($freeA > 0): ?>
-                        <div class="d-flex justify-content-between"><span>Gratis jika &ge;:</span> <strong>Rp <?= number_format($freeA, 0, ',', '.') ?></strong></div>
+                        <div class="d-flex justify-content-between mt-1 text-muted"><span>Gratis jika total belanja &ge;:</span> <strong>Rp <?= number_format($freeA, 0, ',', '.') ?></strong></div>
                         <?php endif; ?>
-                        <div class="d-flex justify-content-between"><span>Maks radius:</span> <strong><?= htmlspecialchars($settings['delivery_max_radius_km'] ?? '5') ?> km</strong></div>
+                        <div class="d-flex justify-content-between mt-1 text-muted"><span>Maks radius pengantaran:</span> <strong><?= htmlspecialchars($settings['delivery_max_radius_km'] ?? '5') ?> km</strong></div>
                     </div>
                 </div>
             </div>

@@ -742,10 +742,10 @@ function loyalty_generate_redemption_code(PDO $pdo, string $prefix='RDM'): strin
 }
 function loyalty_next_point_order_no(PDO $pdo): string {
     try{
-        $max=(int)$pdo->query("SELECT COALESCE(MAX(CAST(SUBSTRING(order_no,4) AS UNSIGNED)),1999) FROM orders WHERE order_no REGEXP '^DCK[0-9]+$'")->fetchColumn();
+        $max=(int)$pdo->query("SELECT COALESCE(MAX(CAST(SUBSTRING(order_number,4) AS UNSIGNED)),1999) FROM orders WHERE order_number REGEXP '^DCK[0-9]+$'")->fetchColumn();
         for($i=1;$i<50;$i++){
             $no='DCK'.($max+$i);
-            $st=$pdo->prepare("SELECT COUNT(*) FROM orders WHERE order_no=?"); $st->execute([$no]);
+            $st=$pdo->prepare("SELECT COUNT(*) FROM orders WHERE order_number=?"); $st->execute([$no]);
             if((int)$st->fetchColumn()===0) return $no;
         }
     }catch(Throwable $e){}
@@ -765,8 +765,14 @@ function loyalty_insert_reward_order(PDO $pdo, array $member, array $reward, int
     $cols=[]; $vals=[];
     $add=function($col,$val) use (&$cols,&$vals,$pdo){ if(loyalty_col_exists($pdo,'orders',$col)){ $cols[]=$col; $vals[]=$val; } };
     $add('brand_id',1); $add('outlet_id',1);
-    $add('order_no',$orderNo); $add('channel','kasir'); $add('order_source','wic');
+    $add('order_number',$orderNo); $add('channel','kasir'); $add('order_source','wic');
     $add('customer_name',$customerName); $add('customer_phone',$phone); $add('member_id',$memberId ?: null);
+    
+    // Ambil session aktif (atau terakhir jika tidak ada yang aktif) untuk menghindari error foreign key
+    $sessionId = (int)$pdo->query("SELECT id FROM daily_store_sessions WHERE outlet_id=1 ORDER BY status='open' DESC, id DESC LIMIT 1")->fetchColumn();
+    $add('daily_store_session_id', $sessionId ?: 0);
+    $add('business_date', date('Y-m-d'));
+
     // Order reward dibuat sebagai catatan pending dulu. Baru dihitung sebagai transaksi harian setelah status redemption = completed.
     $add('payment_method','point'); $add('payment_status','unpaid');
     $add('subtotal',$pointNominal); $add('tax',0); $add('discount',0); $add('discount_note',$note); $add('total',0);
@@ -953,7 +959,7 @@ function loyalty_member_reward_redemptions(PDO $pdo, int $memberId, int $limit=8
     loyalty_ensure_tables($pdo);
     try{
         $limit=max(1,min(200,$limit));
-        $st=$pdo->prepare("SELECT r.*, p.name product_name, p.description product_description, p.image_url, o.order_no, COALESCE(o.nominal_point,0) AS nominal_point FROM point_reward_redemptions r LEFT JOIN point_reward_products p ON p.id=r.reward_product_id LEFT JOIN orders o ON o.id=r.order_id WHERE r.member_id=? ORDER BY r.id DESC LIMIT ".$limit);
+        $st=$pdo->prepare("SELECT r.*, p.name product_name, p.description product_description, p.image_url, o.order_number AS order_no, COALESCE(o.nominal_point,0) AS nominal_point FROM point_reward_redemptions r LEFT JOIN point_reward_products p ON p.id=r.reward_product_id LEFT JOIN orders o ON o.id=r.order_id WHERE r.member_id=? ORDER BY r.id DESC LIMIT ".$limit);
         $st->execute([$memberId]);
         return $st->fetchAll(PDO::FETCH_ASSOC);
     }catch(Throwable $e){ return []; }

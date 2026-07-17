@@ -331,8 +331,13 @@ class RecipeModel extends Model
         return $bom;
     }
 
-    public function calculateMaxYield(int $productVariantId): float
+    public function calculateMaxYield(int $productVariantId, ?int $outletId = null): float
     {
+        if ($outletId === null) {
+            $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+        }
+        if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);
+
         $recipe = $this->one("SELECT id FROM recipes WHERE product_variant_id = ? LIMIT 1", [$productVariantId]);
         if (!$recipe) return 0.0;
 
@@ -342,7 +347,7 @@ class RecipeModel extends Model
         $maxYield = PHP_FLOAT_MAX;
         foreach ($bom as $rmId => $qtyNeeded) {
             if ($qtyNeeded <= 0) continue;
-            $rm = $this->one("SELECT stock_qty FROM raw_materials WHERE id = ?", [$rmId]);
+            $rm = function_exists('inventory_get_material_stock') ? inventory_get_material_stock($this->db, $rmId, $outletId) : $this->one("SELECT stock_qty FROM raw_materials WHERE id = ?", [$rmId]);
             $stock = $rm ? (float)$rm['stock_qty'] : 0.0;
             $possible = floor($stock / $qtyNeeded);
             if ($possible < $maxYield) {
@@ -355,6 +360,7 @@ class RecipeModel extends Model
 
     public function backflushRawMaterials(int $productVariantId, float $qtySold, int $orderItemId, int $userId, string $businessDate, int $outletId): void
     {
+        if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);
         $recipe = $this->one("SELECT id FROM recipes WHERE product_variant_id = ? LIMIT 1", [$productVariantId]);
         if (!$recipe) return;
 
@@ -364,15 +370,21 @@ class RecipeModel extends Model
         foreach ($bom as $rmId => $qtyToDeduct) {
             if ($qtyToDeduct <= 0) continue;
             
-            $rm = $this->one("SELECT stock_qty, average_cost FROM raw_materials WHERE id = ?", [$rmId]);
+            $rm = function_exists('inventory_get_material_stock') ? inventory_get_material_stock($this->db, $rmId, $outletId) : $this->one("SELECT stock_qty, average_cost FROM raw_materials WHERE id = ?", [$rmId]);
             if (!$rm) continue;
 
             $stockAfter = (float)$rm['stock_qty'] - $qtyToDeduct;
-            $this->execSql("UPDATE raw_materials SET stock_qty = ?, updated_at = NOW() WHERE id = ?", [$stockAfter, $rmId]);
+            $avgCost = (float)($rm['average_cost'] ?? 0);
+
+            if (function_exists('inventory_set_material_stock')) {
+                inventory_set_material_stock($this->db, $rmId, $stockAfter, $avgCost, $outletId);
+            } else {
+                $this->execSql("UPDATE raw_materials SET stock_qty = ?, updated_at = NOW() WHERE id = ?", [$stockAfter, $rmId]);
+            }
             
             $this->execSql("INSERT INTO inventory_movements (outlet_id, raw_material_id, movement_date, business_date, movement_type, reference_type, reference_id, qty_in, qty_out, unit_cost, total_cost, stock_after, notes, created_by, created_at)
                 VALUES (?, ?, NOW(), ?, 'sales_usage', 'pos_sale', ?, 0, ?, ?, ?, ?, 'Potongan otomatis (backflush) dari POS', ?, NOW())",
-                [$outletId, $rmId, $businessDate, $orderItemId, $qtyToDeduct, (float)$rm['average_cost'], $qtyToDeduct * (float)$rm['average_cost'], $stockAfter, $userId]);
+                [$outletId, $rmId, $businessDate, $orderItemId, $qtyToDeduct, $avgCost, $qtyToDeduct * $avgCost, $stockAfter, $userId]);
         }
     }
 }

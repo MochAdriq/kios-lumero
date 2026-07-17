@@ -185,18 +185,22 @@ class CorrectionModel extends Model
             foreach ($bom as $rmId => $qtyToReturn) {
                 if ($qtyToReturn <= 0) continue;
 
-                // Get current stock
-                $rm = $this->one("SELECT stock_qty, average_cost FROM raw_materials WHERE id = ?", [$rmId]);
+                // Get current stock per outlet
+                $rm = function_exists('inventory_get_material_stock') ? inventory_get_material_stock($this->db, $rmId, $outletId) : $this->one("SELECT stock_qty, average_cost FROM raw_materials WHERE id = ?", [$rmId]);
                 if (!$rm) continue;
 
                 $oldStock = (float)$rm['stock_qty'];
                 $newStock = $oldStock + $qtyToReturn;
 
                 // Return stock
-                $this->execSql(
-                    "UPDATE raw_materials SET stock_qty = stock_qty + ?, updated_at = ? WHERE id = ?",
-                    [$qtyToReturn, now(), $rmId]
-                );
+                if (function_exists('inventory_set_material_stock')) {
+                    inventory_set_material_stock($this->db, $rmId, $newStock, (float)($rm['average_cost'] ?? 0), $outletId);
+                } else {
+                    $this->execSql(
+                        "UPDATE raw_materials SET stock_qty = stock_qty + ?, updated_at = ? WHERE id = ?",
+                        [$qtyToReturn, now(), $rmId]
+                    );
+                }
 
                 // Log inventory movement as correction
                 $this->execSql(
@@ -234,15 +238,20 @@ class CorrectionModel extends Model
      */
     public function rawMaterials(): array
     {
+        if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);
+        $outletId = $this->outletId();
         return $this->all("
-            SELECT rm.id, rm.name, rm.sku, rm.stock_qty, rm.average_cost,
+            SELECT rm.id, rm.name, rm.sku,
+                   COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) AS stock_qty,
+                   COALESCE(orm.average_cost, rm.average_cost, 0) AS average_cost,
                    rmc.name AS category_name, u.symbol AS unit_symbol
             FROM raw_materials rm
             LEFT JOIN raw_material_categories rmc ON rmc.id = rm.category_id
             LEFT JOIN units u ON u.id = rm.unit_id
+            LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
             WHERE rm.is_active = 1
             ORDER BY rmc.sort_order, rm.name
-        ");
+        ", [$outletId, $outletId]);
     }
 
     /**
@@ -263,7 +272,7 @@ class CorrectionModel extends Model
             throw new RuntimeException('Alasan koreksi wajib diisi.');
         }
 
-        $rm = $this->one("SELECT id, name, stock_qty, average_cost FROM raw_materials WHERE id = ? AND is_active = 1", [$rawMaterialId]);
+        $rm = function_exists('inventory_get_material_stock') ? inventory_get_material_stock($this->db, $rawMaterialId, $outletId) : $this->one("SELECT id, name, stock_qty, average_cost FROM raw_materials WHERE id = ? AND is_active = 1", [$rawMaterialId]);
         if (!$rm) {
             throw new RuntimeException('Bahan baku tidak ditemukan.');
         }
@@ -280,10 +289,14 @@ class CorrectionModel extends Model
         $this->db->beginTransaction();
         try {
             // 1. Update stock
-            $this->execSql(
-                "UPDATE raw_materials SET stock_qty = ?, updated_at = ? WHERE id = ?",
-                [$newStock, now(), $rawMaterialId]
-            );
+            if (function_exists('inventory_set_material_stock')) {
+                inventory_set_material_stock($this->db, $rawMaterialId, $newStock, (float)($rm['average_cost'] ?? 0), $outletId);
+            } else {
+                $this->execSql(
+                    "UPDATE raw_materials SET stock_qty = ?, updated_at = ? WHERE id = ?",
+                    [$newStock, now(), $rawMaterialId]
+                );
+            }
 
             // 2. Insert inventory movement
             $this->execSql(
