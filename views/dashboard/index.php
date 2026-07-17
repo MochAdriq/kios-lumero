@@ -20,9 +20,9 @@ $quickMenus = [
     ['Supplier', '/vendors', 'ti ti-truck-delivery', 'Data pemasok', ['super_admin','administrator']],
     ['Laporan Harian', '/reports/daily', 'ti ti-report-analytics', 'Closing dan laba harian', ['super_admin','administrator']],
     ['Laporan Keuangan', '/reports/financial', 'ti ti-chart-infographic', 'P&L dan arus kas', ['super_admin','administrator']],
-    ['Analisis Bisnis', '/executive', 'ti ti-presentation-analytics', 'ROI, BEP, target bisnis', ['super_admin']],
+    ['Analisis Bisnis', '/executive', 'ti ti-presentation-analytics', 'ROI, BEP, target bisnis', ['super_admin','administrator']],
     ['Rencana Belanja', '/forecasting', 'ti ti-chart-line', 'Rencana belanja otomatis', ['super_admin','administrator']],
-    ['Pengguna', '/users', 'ti ti-users', 'Akun dan akses', ['super_admin']],
+    ['Pengguna', '/users', 'ti ti-users', 'Akun dan akses', ['super_admin','administrator']],
     ['Jejak Aktivitas', '/audit-logs', 'ti ti-history', 'Riwayat perubahan', ['super_admin']],
     ['Setting Sistem', '/settings', 'ti ti-settings', 'Pajak, printer, gateway', ['super_admin']],
 ];

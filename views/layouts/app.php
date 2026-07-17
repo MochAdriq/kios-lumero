@@ -104,7 +104,8 @@ if ($isHQUser) {
     ];
 } else {
     $menuGroups['Pengaturan Cabang'] = [
-        ['label' => 'Karyawan & Gaji Toko', 'icon' => 'ti ti-users',                  'url' => '/users',      'roles' => $ADMIN],
+        ['label' => 'Analisis ROI & Modal Toko', 'icon' => 'ti ti-presentation-analytics', 'url' => '/executive',  'roles' => $ADMIN],
+        ['label' => 'Karyawan & Gaji Toko',      'icon' => 'ti ti-users',                  'url' => '/users',      'roles' => $ADMIN],
     ];
 }
 ?>

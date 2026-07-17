@@ -3,7 +3,11 @@ class ExecutiveController extends Controller
 {
     private function requireAuth(): void
     {
-        Auth::requireRoles(['super_admin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
+        if (Auth::role() !== 'super_admin') {
+            $_GET['outlet_id'] = (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id', 1));
+            $_POST['outlet_id'] = (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id', 1));
+        }
     }
 
     private function post(string $key, string $default = ''): string
