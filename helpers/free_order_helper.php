@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/delivery_helper.php';
+
 if (!function_exists('fo_ensure_tables')) {
     function fo_ensure_tables(PDO $pdo): void
     {
@@ -56,6 +58,9 @@ if (!function_exists('fo_ensure_tables')) {
                 KEY idx_free_order_id (free_order_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
+
+        // Ensure delivery columns exist (safe ALTER IGNORE)
+        delivery_ensure_columns($pdo);
     }
 }
 
@@ -235,8 +240,8 @@ if (!function_exists('fo_calc_item')) {
         }
         
         $type = $item['type'] ?? 'menu';
-        $price = 0;
-        $hpp = 0;
+        $price = (int)($item['price'] ?? 0);
+        $hpp = (int)($item['hpp'] ?? 0);
         $name = $item['name'] ?? 'Item';
         
         if ($type === 'chicken') {
@@ -245,12 +250,15 @@ if (!function_exists('fo_calc_item')) {
             if (!empty($item['part_name'])) $name = $item['part_name'];
             if (($item['style'] ?? '') === 'sauce') $price += 3000;
             if (!empty($item['with_rice'])) $price += 5000;
-        } elseif ($type === 'menu' && !empty($item['menu_id'])) {
-            $row = fo_one($pdo, "SELECT name, price, hpp FROM menu_items WHERE id=?", [(int)$item['menu_id']]);
-            if ($row) {
-                $name = $row['name'];
-                $price = (int)$row['price'];
-                $hpp = (int)$row['hpp'];
+        } else {
+            $menuId = (int)($item['menu_id'] ?? $item['menu_item_id'] ?? $item['id'] ?? 0);
+            if ($menuId > 0) {
+                $row = fo_one($pdo, "SELECT name, price, hpp FROM menu_items WHERE id=?", [$menuId]);
+                if ($row) {
+                    $name = $row['name'];
+                    $price = (int)$row['price'];
+                    $hpp = (int)$row['hpp'];
+                }
             }
         }
         return [

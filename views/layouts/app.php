@@ -64,6 +64,7 @@ $menuGroups += [
         ['label' => 'Dashboard Toko',      'icon' => 'ti ti-layout-dashboard', 'url' => '/dashboard', 'roles' => $ALL],
         ['label' => 'POS Kasir',           'icon' => 'ti ti-cash-register',    'url' => '/pos',       'roles' => $ALL],
         ['label' => 'Order & Transaksi',   'icon' => 'ti ti-receipt',          'url' => '/orders',    'roles' => $ALL],
+        ['label' => 'Delivery & Kurir',    'icon' => 'ti ti-truck-delivery',   'url' => '/delivery',  'roles' => $ALL],
         ['label' => 'Verifikasi Payment',  'icon' => 'ti ti-qrcode',           'url' => '/payments',  'roles' => $ALL],
     ],
     'Katalog Produk & Bahan Baku' => [

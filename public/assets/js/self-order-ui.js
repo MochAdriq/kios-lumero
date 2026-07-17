@@ -24,10 +24,12 @@
   const cartRows = $('#cartRows'), emptyCart = $('#emptyCart'), cartTableWrap = $('#cartTableWrap');
   const itemCount = $('#itemCount'), subtotalText = $('#subtotalText'), totalText = $('#totalText'), taxPreview = $('#taxPreview'), changeText = $('#changeText'), cartJson = $('#cartJson');
   const discountAmount = $('#discountAmount'), paidAmount = $('#paidAmount'), paymentMethod = $('#paymentMethod');
+  const qrisBox = $('#qrisBox'), btnCheckMember = $('#btnCheckMember'), phoneInput = $('#phoneInput'), confirmBtn = $('#confirmBtn');
   const activeCategoryLabel = $('#activeCategoryLabel'), visibleProductInfo = $('#visibleProductInfo');
   const productGrid = $('#productGrid'), searchInput = $('#posSearch'), flowBar = $('#flowBar'), flowBack = $('#flowBack'), resetFlow = $('#resetFlow'), posMessage = $('#posMessage');
   const posActionFooter = $('#posActionFooter');
-  let cart = [];
+  window.cart = window.cart || [];
+  let cart = window.cart;
   let state = { catId: categories[0]?.id || null, step: 'parts', part: null, style: null, sauce: null, rice: null };
 
   const partDefs = [
@@ -255,9 +257,13 @@
     const tt2 = document.querySelector('#totalText2'); if (tt2) tt2.textContent = money(total);
     const pay = paymentMethod ? paymentMethod.value : 'cash';
     const paidSec = document.getElementById('simPaidSection') || document.querySelector('.sim-paid-section');
-    const qrisBox = document.getElementById('simQrisBox') || document.querySelector('.sim-qris-section');
     if (paidSec) paidSec.style.display = (pay === 'cash') ? '' : 'none';
-    if (qrisBox) qrisBox.style.display = (pay === 'qris') ? 'block' : 'none';
+    if (qrisBox) {
+      const isOnlineOrderPage = document.getElementById('checkoutDrawer') !== null;
+      qrisBox.style.display = (pay === 'qris' && !isOnlineOrderPage) ? 'block' : 'none';
+    }
+    window.cart = cart;
+    if (typeof window.syncSharedCart === 'function') window.syncSharedCart(cart);
   }
   function lineMetaText(item) {
     const metaParts = [];
@@ -355,7 +361,7 @@
       if (cart[idx]) { cart.splice(idx, 1); renderCart(); }
     }
   });
-  ['#clearCart', '#clearCart2', '#resetOrder'].forEach(sel => $(sel)?.addEventListener('click', () => { cart = []; renderCart(); }));
+  ['#clearCart', '#clearCart2', '#resetOrder'].forEach(sel => $(sel)?.addEventListener('click', () => { cart.length = 0; if (typeof window.syncSharedCart === 'function') window.syncSharedCart(cart); renderCart(); }));
   $('#resetDiscount')?.addEventListener('click', () => { if (discountAmount) discountAmount.value = 0; calc(); });
   $$('.payment-item[data-pay]').forEach(btn => btn.addEventListener('click', () => {
     $$('.payment-item[data-pay]').forEach(b => b.classList.remove('active'));
@@ -370,21 +376,17 @@
   let verifiedMember = null;
 
   $('#checkoutForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    cart = window.cart || cart || [];
     if (!cart.length) {
-        e.preventDefault();
-        alert('Keranjang masih kosong.'); try { if(typeof foPlay==='function') foPlay('foVoiceEmptyCart'); } catch(err){}
-        return;
+        alert('Keranjang masih kosong (dari JS checkoutForm).'); try { if(typeof foPlay==='function') foPlay('foVoiceEmptyCart'); } catch(err){}
+        return false;
     }
-    if(!$('#customerName')?.value || !$('#customerPhone')?.value) {
-        e.preventDefault();
-        alert('Mohon isi Nama dan Nomor WhatsApp.');
-        try { if(typeof foPlay==='function') foPlay('foVoiceMaaf'); } catch(err){}
-        return;
+    if (typeof openCheckout === 'function') {
+        openCheckout(false);
     }
-    // Update hidden cart input right before submitting
-    const cartJson = document.getElementById('cartJson');
-    if (cartJson) cartJson.value = JSON.stringify(cart.map(i => ({ variant_id: i.variant_id, qty: i.qty })));
-});
+    return false;
+  });
 
   btnCheckMember?.addEventListener('click', performMemberCheck);
   phoneInput?.addEventListener('keydown', e => {
@@ -479,7 +481,8 @@
   };
 
   window.resetPosCartAfterOrder = function () {
-    cart = [];
+    cart.length = 0;
+    if (typeof window.syncSharedCart === 'function') window.syncSharedCart(cart);
     renderCart();
     const modalEl = document.getElementById('simPosReceiptModal');
     if (modalEl && window.bootstrap) {

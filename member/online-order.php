@@ -4,6 +4,7 @@ require_once __DIR__.'/../core/Database.php';
 $pdo = Database::connection();
 require_once __DIR__.'/../helpers/free_order_helper.php';
 require_once __DIR__.'/../config/loyalty.php';
+require_once __DIR__.'/../helpers/delivery_helper.php';
 date_default_timezone_set('Asia/Jakarta');
 try{ if(isset($pdo) && $pdo instanceof PDO) $pdo->exec("SET time_zone = '+07:00'"); }catch(Throwable $e){}
 if(function_exists('ensure_today_stock')) ensure_today_stock();
@@ -14,6 +15,10 @@ if(!empty($_SESSION['member_id'])) $memberOnline = loyalty_member_by_id($pdo,(in
 if(!$memberOnline){ header('Location: index.php'); exit; }
 $memberPointBalance=(int)($memberOnline['total_points'] ?? 0);
 $memberPointValue=max(1,(int)(loyalty_settings($pdo)['redeem_point_value'] ?? 500));
+
+$deliveryEnabled = delivery_is_enabled($pdo);
+$deliverySettings = delivery_settings($pdo);
+$deliveryOutletCoords = delivery_outlet_coords($pdo) ?? ['lat' => -6.9175, 'lng' => 106.9275];
 
 
 if(isset($_GET['lookup_phone'])){
@@ -48,8 +53,8 @@ $tomorrow=(new DateTime($today))->modify('+1 day')->format('Y-m-d');
 $nowTime=date('H:i');
 
 $qrisInfo=function_exists('get_setting')?get_setting('payment_qris_info','Scan QRIS outlet D\'Celup'):'Scan QRIS outlet D\'Celup';
-$paymentQrisImage=trim((string)(function_exists('get_setting')?get_setting('payment_qris_image','assets/img/payment/qris-dana.jpeg'):'assets/img/payment/qris-dana.jpeg'));
-if($paymentQrisImage==='') $paymentQrisImage='assets/img/payment/qris-dana.jpeg';
+$paymentQrisImage=trim((string)(function_exists('get_setting')?get_setting('payment_qris_image','public/assets/images/pos-products/payment/qris-dana.jpeg'):'public/assets/images/pos-products/payment/qris-dana.jpeg'));
+if($paymentQrisImage==='' || $paymentQrisImage==='assets/img/payment/qris-dana.jpeg') $paymentQrisImage='public/assets/images/pos-products/payment/qris-dana.jpeg';
 $bankName='BCA';
 $bankAccountName='Sri Kusma Dewi';
 $bankAccountNo='0382731393';
@@ -66,24 +71,55 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     $pickupTime=trim((string)($_POST['pickup_time'] ?? '09:00'));
     $paymentMethod=trim((string)($_POST['payment_method'] ?? ''));
     $pickupType=trim((string)($_POST['pickup_type'] ?? 'outlet'));
-    if($pickupType!=='outlet') $pickupType='outlet';
+    if(!in_array($pickupType, ['outlet', 'delivery'], true)) $pickupType='outlet';
+    if($pickupType==='delivery' && !$deliveryEnabled) throw new Exception('Fitur Delivery Order saat ini tidak tersedia.');
     $note=trim((string)($_POST['customer_note'] ?? ''));
     $cart=json_decode($_POST['cart'] ?? '[]', true);
     if($customerName==='') throw new Exception('Nama pemesan wajib diisi.');
     if($customerPhone==='') throw new Exception('Nomor WhatsApp wajib diisi.');
-    if(!is_array($cart) || count($cart)<=0) throw new Exception('Keranjang masih kosong.');
-    if(!fo_valid_date($pickupDate) || strtotime($pickupDate)<strtotime($today)) throw new Exception('Tanggal pengambilan tidak valid.');
-    if(!fo_valid_time($pickupTime)) throw new Exception('Jam pengambilan tidak valid.');
-    if($paymentMethod !== 'qris') throw new Exception('Pilihan pembayaran untuk Self-Order adalah QRIS.');
+    if(!is_array($cart) || count($cart)<=0) throw new Exception('Keranjang masih kosong (dari PHP Server, data POST yang diterima: ' . substr(trim($_POST['cart'] ?? 'KOSONG'), 0, 150) . ')');
+    if($pickupType === 'delivery') {
+      $pickupDate = $today;
+      $pickupTime = $nowTime;
+    } else {
+      if(!fo_valid_date($pickupDate) || strtotime($pickupDate)<strtotime($today)) throw new Exception('Tanggal pengambilan tidak valid.');
+      if(!fo_valid_time($pickupTime)) throw new Exception('Jam pengambilan tidak valid.');
+    }
+    if(!in_array($paymentMethod, ['qris', 'transfer', 'point'], true)) throw new Exception('Pilihan metode pembayaran tidak valid.');
 
     $calc=fo_normalize_cart($pdo,$cart);
-    if(!$calc['items']) throw new Exception('Keranjang tidak valid.');
+    if(!$calc['items']) throw new Exception('Keranjang tidak valid (dari PHP Server fo_normalize_cart).');
+
+    $deliveryAddress = null;
+    $deliveryLat = null;
+    $deliveryLng = null;
+    $deliveryFee = 0;
+    $deliveryDistanceKm = null;
+    $deliveryStatus = null;
+    $deliveryCourierName = null;
+
+    if($pickupType === 'delivery'){
+      $deliveryAddress = trim((string)($_POST['delivery_address'] ?? ''));
+      $deliveryLat = (float)($_POST['delivery_lat'] ?? 0);
+      $deliveryLng = (float)($_POST['delivery_lng'] ?? 0);
+      if($deliveryAddress === '' || $deliveryLat == 0 || $deliveryLng == 0){
+        throw new Exception('Silakan lengkapi titik lokasi dan alamat lengkap pengantaran pada peta.');
+      }
+      $deliveryDistanceKm = delivery_haversine($deliveryOutletCoords['lat'], $deliveryOutletCoords['lng'], $deliveryLat, $deliveryLng);
+      if(!delivery_validate_radius($pdo, $deliveryDistanceKm)){
+        throw new Exception('Alamat pengantaran (' . $deliveryDistanceKm . ' km) melebihi batas radius maksimal (' . $deliverySettings['delivery_max_radius_km'] . ' km).');
+      }
+      $deliveryFee = delivery_calculate_fee($pdo, $deliveryDistanceKm, (int)$calc['subtotal']);
+      $deliveryStatus = 'preparing';
+      $deliveryCourierName = 'Kurir Internal';
+    }
 
     $pdo->beginTransaction();
     $no=fo_next_no($pdo);
     $memberId=(int)($memberOnline['id'] ?? 0);
     $subtotalOnline=(int)$calc['subtotal'];
-    $redeemPoints=0; $redeemAmount=0; $pointValue=$memberPointValue; $paymentStatus='unpaid'; $totalDue=$subtotalOnline;
+    $redeemPoints=0; $redeemAmount=0; $pointValue=$memberPointValue; $paymentStatus='unpaid'; 
+    $totalDue=$subtotalOnline + $deliveryFee;
     if($paymentMethod==='point'){
       if($memberId<=0) throw new Exception('Sesi member tidak ditemukan. Silakan masuk ulang.');
       $redeemPoints=loyalty_required_points_for_amount($pdo,$subtotalOnline);
@@ -95,13 +131,30 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $totalDue=0;
       loyalty_deduct_points($pdo,$memberId,$redeemPoints,'redeem_payment','Bayar online order dengan point '.$no,null,null);
     }
-    $st=$pdo->prepare("INSERT INTO free_orders (pre_order_no,customer_name,customer_phone,member_id,pickup_type,pickup_date,pickup_time,payment_method,payment_status,order_status,subtotal,discount,total,total_hpp,loyalty_points_redeemed,loyalty_point_value,loyalty_redeem_amount,customer_note,cart_json,stock_reserved) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-    $st->execute([$no,$customerName,$customerPhone,$memberId ?: null,$pickupType,$pickupDate,$pickupTime.':00',$paymentMethod,$paymentStatus,'new',$subtotalOnline,$redeemAmount,$totalDue,$calc['total_hpp'],$redeemPoints,$pointValue,$redeemAmount,$note,json_encode($cart,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),0]);
+    $st=$pdo->prepare("INSERT INTO free_orders (pre_order_no,customer_name,customer_phone,member_id,pickup_type,pickup_date,pickup_time,payment_method,payment_status,order_status,subtotal,discount,total,total_hpp,loyalty_points_redeemed,loyalty_point_value,loyalty_redeem_amount,customer_note,cart_json,stock_reserved,delivery_address,delivery_lat,delivery_lng,delivery_fee,delivery_distance_km,delivery_status,delivery_courier_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $st->execute([$no,$customerName,$customerPhone,$memberId ?: null,$pickupType,$pickupDate,$pickupTime.':00',$paymentMethod,$paymentStatus,'new',$subtotalOnline,$redeemAmount,$totalDue,$calc['total_hpp'],$redeemPoints,$pointValue,$redeemAmount,$note,json_encode($cart,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),0,$deliveryAddress,$deliveryLat,$deliveryLng,$deliveryFee,$deliveryDistanceKm,$deliveryStatus,$deliveryCourierName]);
     $freeOrderId=(int)$pdo->lastInsertId();
 
     $ins=$pdo->prepare("INSERT INTO free_order_items (free_order_id,item_type,chicken_part_id,chicken_style,sauce_id,with_rice,matcha_variant_id,kentang_variant_id,menu_item_id,item_name,qty,price,hpp,line_total,line_hpp,payload_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     foreach($calc['items'] as $ni){
-      $ins->execute([$freeOrderId,$ni['type'],$ni['chicken_part_id'],$ni['chicken_style'],$ni['sauce_id'],$ni['with_rice'],$ni['matcha_variant_id'],$ni['kentang_variant_id'],$ni['menu_item_id'] ?? null,$ni['item_name'],$ni['qty'],$ni['price'],$ni['hpp'],$ni['price']*$ni['qty'],$ni['hpp']*$ni['qty'],json_encode($ni['payload'],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)]);
+      $ins->execute([
+        $freeOrderId,
+        $ni['type'] ?? 'menu',
+        $ni['chicken_part_id'] ?? null,
+        $ni['chicken_style'] ?? null,
+        $ni['sauce_id'] ?? null,
+        $ni['with_rice'] ?? 0,
+        $ni['matcha_variant_id'] ?? null,
+        $ni['kentang_variant_id'] ?? null,
+        $ni['menu_item_id'] ?? ($ni['variant_id'] ?? ($ni['id'] ?? null)),
+        $ni['item_name'] ?? ($ni['name'] ?? 'Menu'),
+        $ni['qty'] ?? 1,
+        $ni['price'] ?? 0,
+        $ni['hpp'] ?? 0,
+        ($ni['price'] ?? 0) * ($ni['qty'] ?? 1),
+        ($ni['hpp'] ?? 0) * ($ni['qty'] ?? 1),
+        isset($ni['payload']) ? json_encode($ni['payload'],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) : null
+      ]);
     }
     fo_upsert_customer($pdo,$customerPhone,$customerName,$no);
     $pdo->commit();
@@ -235,13 +288,13 @@ try{
 }catch(Throwable $e){}
 if(!$aiNarratives){
   $aiNarratives=[
-    'empty_cart'=>[['title'=>'Bingung Pilih Menu?','suggested_menu'=>'Ayam Crispy Varian Saus','message'=>'Tenang kak, jangan bingung! Kalau kaka bingung pilih menu, aku bantu ya. Di D’Celup, Kakak wajib coba menu ayam crispy dengan varian saus favorit. Kriuknya mantap, sausnya lumer, aromanya menggoda, dan rasanya bikin pengen nambah. Biar makin sedap, kaka juga bisa tambahkan kentang kriwil dan Matcha, cobain deh, gak akan nyesel!!!','cta_text'=>'Coba ayam saus favorit']],
+    'empty_cart'=>[['title'=>'Bingung Pilih Menu?','suggested_menu'=>'Ayam Crispy Varian Saus','message'=>'Tenang kak, jangan bingung! Kalau kaka bingung pilih menu, aku bantu ya. Di Lumero, Kakak wajib coba menu ayam crispy dengan varian saus favorit. Kriuknya mantap, sausnya lumer, aromanya menggoda, dan rasanya bikin pengen nambah. Biar makin sedap, kaka juga bisa tambahkan kentang kriwil dan Matcha, cobain deh, gak akan nyesel!!!','cta_text'=>'Coba ayam saus favorit']],
     'only_chicken_original'=>[['title'=>'Lengkapi Ayam Original','suggested_menu'=>'Kentang Kriuk dan Matcha','message'=>'Biar makin lengkap, tambahkan kentang kriuk dan minuman matcha segar sebagai penyempurna hidangan. Dijamin bikin ketagihan deh, hihihi...','cta_text'=>'Tambah kentang dan matcha']],
     'chicken_original_rice'=>[['title'=>'Ayam dan Nasi Sudah Pas','suggested_menu'=>'Saus Favorit + Minuman','message'=>'Ayam original plus nasi sudah mantap, Kak. Biar rasanya makin hidup, tambahkan varian saus favorit dan minuman segar. Sekali celup, kriuknya makin lumer di hati.','cta_text'=>'Tambah saus dan minuman']],
     'chicken_sauce'=>[['title'=>'Ayam Saus Sudah Mantap','suggested_menu'=>'Nasi + Kentang + Matcha','message'=>'Pilihan ayam saus Kakak sudah juara. Biar makin puas, tambahkan nasi hangat, kentang kriwil, atau Matcha segar. Lengkapnya dapet, nikmatnya makin nempel.','cta_text'=>'Lengkapi dengan nasi atau minuman']],
     'only_potato'=>[['title'=>'Kentang Kriwil Mantap','suggested_menu'=>'Ayam Crispy dan Minuman','message'=>'Kentangnya sudah cocok jadi teman ngemil. Biar lebih puas, pasangkan dengan ayam crispy dan minuman segar favorit Kakak.','cta_text'=>'Tambah ayam dan minuman']],
     'only_drink'=>[['title'=>'Minuman Segar Siap','suggested_menu'=>'Ayam Crispy Saus','message'=>'Minumannya sudah segar, Kak. Sekarang waktunya tambahkan ayam crispy varian saus favorit. Kriuknya mantap, sausnya lumer, cocok banget jadi pasangan minuman Kakak.','cta_text'=>'Tambah ayam crispy']],
-    'drink_potato'=>[['title'=>'Minuman dan Kentang Sudah Oke','suggested_menu'=>'Ayam Crispy Varian Saus','message'=>'Minuman dan kentang sudah jadi duet yang asik. Tapi biar makin lengkap, tambahkan ayam crispy saus D’Celup. Dijamin makin kenyang dan makin puas.','cta_text'=>'Tambah ayam saus']],
+    'drink_potato'=>[['title'=>'Minuman dan Kentang Sudah Oke','suggested_menu'=>'Ayam Crispy Varian Saus','message'=>'Minuman dan kentang sudah jadi duet yang asik. Tapi biar makin lengkap, tambahkan ayam crispy saus Lumero. Dijamin makin kenyang dan makin puas.','cta_text'=>'Tambah ayam saus']],
     'drink_chicken'=>[['title'=>'Ayam dan Minuman Sudah Mantap','suggested_menu'=>'Kentang Kriwil','message'=>'Ayam dan minuman Kakak sudah pas banget. Biar teksturnya makin rame, tambahkan kentang kriwil yang renyah. Jadi lengkap, gurih, segar, dan nagih.','cta_text'=>'Tambah kentang kriwil']],
     'all_menu'=>[['title'=>'Pesanan Sudah Lengkap','suggested_menu'=>'Tambahan Saus Favorit','message'=>'Wah, pilihan Kakak sudah lengkap banget! Ayam ada, kentang ada, minuman juga ada. Kalau mau makin lumer, tambahkan saus favorit ekstra biar setiap gigitan makin seru.','cta_text'=>'Tambah saus ekstra']],
     'only_sauce'=>[['title'=>'Sausnya Sudah Siap','suggested_menu'=>'Ayam Crispy Original','message'=>'Saus favoritnya sudah dipilih, Kak. Sekarang tinggal pasangkan dengan ayam crispy original yang kriuknya mantap. Biar sausnya punya pasangan terbaik.','cta_text'=>'Tambah ayam crispy']],
@@ -249,7 +302,7 @@ if(!$aiNarratives){
     'whole_chicken'=>[['title'=>'Ayam 1 Ekor Mantap','suggested_menu'=>'Saus Ekstra dan Minuman','message'=>'Wah, 1 ekor ayam sudah pilihan mantap untuk rame-rame. Biar makin seru, tambahkan saus ekstra dan minuman segar supaya semua kebagian rasa favorit.','cta_text'=>'Tambah saus dan minuman']],
     'whole_chicken_sauce'=>[['title'=>'Ayam 1 Ekor Saus Juara','suggested_menu'=>'Nasi dan Matcha','message'=>'Ayam 1 ekor plus saus sudah paket yang menggoda banget. Biar makin lengkap untuk disantap bareng, tambahkan nasi hangat dan Matcha segar.','cta_text'=>'Tambah nasi dan matcha']],
     'promo_window'=>[['title'=>'Jam Promo Spesial','suggested_menu'=>'Combo Hemat Jam Spesial','message'=>'Kakak lagi masuk jam promo nih! Ini waktu paling pas ambil paket combo hemat. Ayamnya nikmat, nasinya ada, harganya lebih bersahabat, dan rasanya tetap juara.','cta_text'=>'Ambil combo promo sekarang']],
-    'general'=>[['title'=>'Saran Menu D’Celup','suggested_menu'=>'Ayam Crispy Varian Saus','message'=>'Kakak bisa pilih ayam crispy varian saus favorit D’Celup. Kriuknya mantap, sausnya lumer, dan cocok dilengkapi kentang atau minuman segar.','cta_text'=>'Pilih menu favorit']]
+    'general'=>[['title'=>'Saran Menu Lumero','suggested_menu'=>'Ayam Crispy Varian Saus','message'=>'Kakak bisa pilih ayam crispy varian saus favorit Lumero. Kriuknya mantap, sausnya lumer, dan cocok dilengkapi kentang atau minuman segar.','cta_text'=>'Pilih menu favorit']]
   ];
 }
 
@@ -269,7 +322,27 @@ function fo_combo_img($row){
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <style>
+/* ── Delivery Map Custom Styles ── */
+.fo-search-results {
+  position: absolute; left:0; right:0; top:100%; z-index:500;
+  background: var(--dp-surface-2); border: 1px solid var(--dp-glass-border);
+  border-radius: 8px; max-height: 160px; overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.fo-search-item {
+  padding: 8px 12px; font-size: 12px; color: var(--dp-text); cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.15s;
+}
+.fo-search-item:hover { background: var(--dp-surface-hover); color: var(--dp-gold); }
+.fo-btn-search {
+  background: var(--dp-surface-2); border: 1px solid var(--dp-glass-border);
+  color: var(--dp-text); border-radius: 8px; padding: 0 14px; font-size: 12px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.fo-btn-search:hover { background: var(--dp-red); color: #fff; border-color: var(--dp-red); }
 /* ============================================
    Lumero SELF-ORDER – DARK PREMIUM CINEMATIC
    Adapted from POS kasir2-theme
@@ -693,11 +766,50 @@ button,input,select,textarea{font:inherit}
 }
 
 @media(max-width:720px){.fo-video-phone-row{grid-template-columns:1fr}.fo-video-phone-row button{height:44px}}
+/* Force high-contrast options and form labels/inputs specifically for Online Order */
+#customerType option, select.form-select option {
+  background-color: var(--dp-surface-2) !important;
+  color: var(--dp-text) !important;
+}
+.sim-summary-section .form-label, .fo-pos-right .form-label, .sim-pos-sidebar .form-label, .form-group .form-label {
+  color: var(--dp-text-2) !important;
+  font-weight: 600 !important;
+}
+.sim-summary-section .form-control, .fo-pos-right .form-control, .sim-pos-sidebar .form-control, .sim-notes-input, .form-group .form-control {
+  background: var(--dp-surface) !important;
+  border: 1px solid var(--dp-glass-border) !important;
+  color: var(--dp-text) !important;
+  border-radius: 8px !important;
+}
+.sim-summary-section .form-control:focus, .fo-pos-right .form-control:focus, .sim-pos-sidebar .form-control:focus, .sim-notes-input:focus, .form-group .form-control:focus {
+  border-color: var(--dp-red) !important;
+  box-shadow: 0 0 0 2px var(--dp-red-soft) !important;
+  color: var(--dp-text) !important;
+}
+.sim-summary-section .form-control::placeholder, .fo-pos-right .form-control::placeholder, .sim-pos-sidebar .form-control::placeholder, .sim-notes-input::placeholder, .form-group .form-control::placeholder {
+  color: var(--dp-muted) !important;
+}
 </style>
   <link rel="stylesheet" href="../public/assets/pos-template/bootstrap.min.css">
   <link rel="stylesheet" href="../public/assets/pos-template/style.css">
-  <link rel="stylesheet" href="../public/assets/css/pos-preadmin-overrides.css">
-  <link rel="stylesheet" href="../public/assets/css/pos-kasir2-theme.css">
+  <link rel="stylesheet" href="../public/assets/css/pos-preadmin-overrides.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="../public/assets/css/pos-kasir2-theme.css?v=<?= time() ?>">
+  <style>
+  /* Extra specificity override after external stylesheets */
+  .sim-order-type-toggle .form-select option, #customerType option {
+    background-color: #22223a !important;
+    color: #f1f1f5 !important;
+  }
+  .sim-summary-section .form-label, .form-group .form-label {
+    color: #c4c4d4 !important;
+    font-weight: 600 !important;
+  }
+  .sim-summary-section .form-control, .form-group .form-control {
+    background-color: #1a1a2e !important;
+    color: #f1f1f5 !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+  }
+  </style>
 </head>
 <body class="pos-page sim-pos-template sim-pos-dcelup k2-body">
 <div class="fo-video-overlay" id="freeOrderVideoOverlay" aria-modal="true" role="dialog">
@@ -752,7 +864,7 @@ button,input,select,textarea{font:inherit}
           <span>🔊</span> Suara ON
         </button>
       </div>
-      <a href="/member/track" class="fo-track-link">
+      <a href="../order-online/lacak.php" class="fo-track-link">
         <span>📍</span> Lacak Pesanan
       </a>
       <button type="button" class="fo-cart-pill" onclick="document.querySelector('.fo-pos-right').classList.add('show')">
@@ -799,6 +911,11 @@ button,input,select,textarea{font:inherit}
 
                             <!-- Flow bar for chicken steps -->
                             <div id="flowBar" class="sim-flow-bar mb-3"></div>
+                            <?php if($err !== ''): ?>
+                            <div class="alert alert-danger fw-bold mb-3" style="border-radius:12px; padding:12px 16px; background:#ffe5e5; border:1px solid #ffb8b8; color:#d60000;">
+                                <i class="ti ti-alert-circle me-1"></i> Gagal membuat pesanan: <?= fo_e($err) ?>
+                            </div>
+                            <?php endif; ?>
                             <div id="posMessage" class="sim-pos-message mb-3" style="display:none"></div>
 
                             <!-- Product Grid -->
@@ -833,10 +950,9 @@ button,input,select,textarea{font:inherit}
                                         <strong id="draftOrderNo"><?= $orderNo ?></strong>
                                     </div>
                                     <div class="sim-order-type-toggle">
-                                        <select class="form-select form-select-sm" id="customerType">
-                                            <option value="takeaway" selected>Take Away</option>
-                                            <option value="dine_in">Dine In</option>
-                                            <option value="online">Online</option>
+                                        <select class="form-select form-select-sm" id="customerType" onchange="selectPickupOption(this.value)">
+                                            <option value="outlet">🏪 Ambil di Outlet</option>
+                                            <option value="delivery" <?= $deliveryEnabled ? '' : 'disabled' ?>>🛵 Delivery (Diantar Kurir) <?= $deliveryEnabled ? '' : '(Belum Aktif)' ?></option>
                                         </select>
                                     </div>
                                 </div>
@@ -857,7 +973,7 @@ button,input,select,textarea{font:inherit}
                             </div>
 
                             <!-- Payment Summary -->
-                            <form action="" method="post" id="checkoutForm">
+                            <form action="" method="post" id="checkoutForm" onsubmit="event.preventDefault(); openCheckout(false); return false;">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="cart" id="cartJson"><input type="hidden" name="payment_method" id="paymentMethod" value="qris"><input type="hidden" name="pickup_type" id="pickupTypeInput" value="outlet">
                                 <div class="sim-summary-section">
@@ -869,7 +985,7 @@ button,input,select,textarea{font:inherit}
         <label class="form-label fs-12 mb-1">No WhatsApp</label>
         <input type="text" class="form-control form-control-sm" name="customer_phone" id="customerPhone" placeholder="08..." required>
     </div>
-    <div class="row g-2 mb-2">
+    <div class="row g-2 mb-2" id="pickupDateRowSide">
         <div class="col-6">
             <label class="form-label fs-12 mb-1">Tgl Ambil</label>
             <input type="date" class="form-control form-control-sm" name="pickup_date" value="<?= date('Y-m-d') ?>" required>
@@ -888,16 +1004,13 @@ button,input,select,textarea{font:inherit}
                                 <!-- Payment Methods -->
                                 <div class="sim-pay-section">
                                     <div class="row align-items-center methods g-2 sim-pay-methods">
-                                        <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item active d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="cash"><?= sim_icon('ti-cash-banknote', 'me-1') ?><p class="fs-12 fw-medium mb-0">Cash</p></a></div>
-                                        <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="qris"><?= sim_icon('ti-qrcode', 'me-1') ?><p class="fs-12 fw-medium mb-0">QRIS</p></a></div>
+                                        <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item active d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="qris" onclick="setPayment('qris');"><?= sim_icon('ti-qrcode', 'me-1') ?><p class="fs-12 fw-medium mb-0">QRIS (Scan)</p></a></div>
+                                        <div class="col-6 d-flex"><a href="javascript:void(0);" class="payment-item d-flex align-items-center justify-content-center p-2 flex-fill" data-pay="transfer" onclick="setPayment('transfer');"><?= sim_icon('ti-credit-card', 'me-1') ?><p class="fs-12 fw-medium mb-0">Transfer Bank</p></a></div>
                                     </div>
                                 </div>
 
-                                <!-- QRIS Display Box -->
-                                <div class="sim-qris-section text-center p-3 mt-2 border rounded bg-light" id="simQrisBox" style="display: none;">
-                                    <img src="<?= asset('images/pos-products/qris-outlet.jpg') ?>" onerror="this.src='/lumero/assets/img/payment/qris-20260512-212418.jpg'" alt="QRIS Toko" class="img-fluid rounded border bg-white p-2 mb-2" style="max-height: 200px;">
-                                    <strong class="d-block text-dark fs-13">Scan QRIS Outlet di Kasir</strong>
-                                    <small class="text-muted fs-11">Persilakan pelanggan scan kode QR di atas</small>
+                                <!-- QRIS Display Box (Hidden in Sidebar for Online Order, shown cleanly inside Checkout Drawer) -->
+                                <div class="sim-qris-section text-center p-3 mt-2 border rounded bg-light" id="simQrisBox" style="display: none !important;">
                                 </div>
 
                                 <!-- Uang Diterima -->
@@ -907,7 +1020,7 @@ button,input,select,textarea{font:inherit}
 
                     <!-- Checkout Button -->
                     <div class="sim-checkout-btn-wrap">
-                        <button type="submit" form="checkoutForm" class="btn sim-checkout-btn">
+                        <button type="button" class="btn sim-checkout-btn" onclick="openCheckout(false)">
                             <?= sim_icon('ti-shopping-cart', 'me-2') ?>
                             <div>
                                 <strong>Proses Pembayaran</strong>
@@ -944,7 +1057,7 @@ button,input,select,textarea{font:inherit}
   <h3>Saran AI Menu Favorit</h3>
   <p id="aiRecoText">Tekan tombol dengarkan untuk mendapatkan saran menu sesuai pesanan Kakak.</p>
   <div class="fo-ai-reco-menu">
-    <b id="aiRecoMenu">Saran AI D’Celup</b>
+    <b id="aiRecoMenu">Saran AI Lumero</b>
     <span id="aiRecoReason">Saran akan menyesuaikan isi keranjang dan jam promo.</span>
   </div>
   <div class="fo-ai-actions">
@@ -982,20 +1095,63 @@ button,input,select,textarea{font:inherit}
       <button type="button" class="fo-pickup-option active" data-pickup="outlet">
         <b>Ambil di Outlet</b><span>Pesanan disiapkan sesuai jam pickup</span>
       </button>
-      <button type="button" class="fo-pickup-option disabled" data-pickup="delivery" disabled>
-        <b>Delivery</b><span>Coming soon</span>
+      <button type="button" class="fo-pickup-option <?= $deliveryEnabled ? '' : 'disabled' ?>" data-pickup="delivery" <?= $deliveryEnabled ? '' : 'disabled' ?>>
+        <b>Delivery (Diantar Kurir)</b><span><?= $deliveryEnabled ? 'Diantar langsung ke depan pintu rumah Kakak' : 'Belum aktif' ?></span>
       </button>
     </div>
 
-    <div class="fo-checkout-grid" style="margin-top:12px">
+    <div class="fo-checkout-grid" style="margin-top:12px" id="outletDateTimeGrid">
       <div class="fo-field"><label>Tanggal Pengambilan</label><input type="date" id="pickupDate" min="<?=$today?>" value="<?=$today?>"></div>
       <div class="fo-field"><label>Jam Pengambilan</label><select id="pickupTime"></select><div class="fo-time-hint" id="pickupTimeHint">Menyiapkan opsi waktu pengambilan…</div></div>
     </div>
 
-    <div class="fo-pickup-summary">
+    <!-- Delivery Map & Address Section -->
+    <div id="deliverySectionWrap" style="display:none; margin-top:14px;">
+      <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; background:var(--dp-surface); border:1px solid var(--dp-glass-border); padding:10px 12px; border-radius:10px;">
+        <div style="font-size:12px; font-weight:600; color:var(--dp-text); display:flex; align-items:center; gap:6px;">
+          <span>📍</span> <span>Lokasi Pengantaran</span>
+        </div>
+        <button type="button" id="btnUseGps" onclick="useCurrentDeviceLocation()" style="background:var(--dp-gradient); color:#fff; border:none; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:0 2px 10px rgba(255,45,85,0.3); transition:all 0.2s;">
+          🎯 Gunakan Lokasi Saat Ini (GPS)
+        </button>
+      </div>
+
+      <div class="fo-field mb-2" style="position:relative;">
+        <label>Cari Alamat / Patokan (Autocomplete)</label>
+        <div style="display:grid; grid-template-columns: 1fr auto; gap:6px;">
+          <input type="text" id="deliverySearchInput" placeholder="Ketik nama jalan / kelurahan / patokan...">
+          <button type="button" class="fo-btn-search" onclick="searchDeliveryAddress()">Cari</button>
+        </div>
+        <div id="deliverySearchResults" class="fo-search-results" style="display:none;"></div>
+      </div>
+      
+      <div style="margin: 8px 0; border-radius:10px; overflow:hidden; border:1px solid var(--dp-glass-border); position:relative;">
+        <div id="deliveryMap" style="height:220px; width:100%; z-index:1;"></div>
+        <div style="position:absolute; bottom:8px; left:8px; right:8px; z-index:400; background:rgba(15,15,19,0.85); backdrop-filter:blur(10px); padding:6px 10px; border-radius:8px; border:1px solid var(--dp-glass-border); font-size:11px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:#fff;">📍 Geser pin ke titik lokasi pasti</span>
+          <span id="mapDistanceBadge" style="font-weight:800; color:var(--dp-green);">0 km</span>
+        </div>
+      </div>
+
+      <div class="fo-field mb-2">
+        <label>Alamat Lengkap Pengantaran</label>
+        <textarea id="deliveryAddressInput" rows="2" placeholder="Nama Jalan, No. Rumah, RT/RW, Patokan detail (misal: rumah pagar hitam samping warung)..."></textarea>
+      </div>
+
+      <div id="deliveryFeeBox" style="background:var(--dp-surface); border:1px solid var(--dp-glass-border); border-radius:8px; padding:10px; margin-top:8px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+        <div>
+          <b style="color:var(--dp-text); display:block;">Ongkos Kirim (<span id="deliveryDistanceText">0 km</span>)</b>
+          <small style="color:var(--dp-muted); font-size:10px;" id="deliveryRadiusStatus">Dalam radius pengantaran</small>
+        </div>
+        <b id="deliveryFeeText" style="font-size:15px; color:var(--dp-red);">Rp 0</b>
+      </div>
+    </div>
+
+    <div class="fo-pickup-summary" style="margin-top:14px;">
       <div><span>Tipe</span><b id="pickupSummaryType">Ambil di Outlet</b></div>
-      <div><span>Tanggal</span><b id="pickupSummaryDate">-</b></div>
-      <div><span>Jam</span><b id="pickupSummaryTime">-</b></div>
+      <div id="pickupSummaryDateRow"><span>Tanggal</span><b id="pickupSummaryDate">-</b></div>
+      <div id="pickupSummaryTimeRow"><span>Jam</span><b id="pickupSummaryTime">-</b></div>
+      <div id="pickupSummaryFeeRow" style="display:none;"><span>Ongkos Kirim</span><b id="pickupSummaryFee">Rp0</b></div>
       <div><span>Total</span><b id="pickupSummaryTotal">Rp0</b></div>
     </div>
     <div class="fo-pickup-actions">
@@ -1008,7 +1164,10 @@ button,input,select,textarea{font:inherit}
 <div class="fo-drawer" id="checkoutDrawer"><div class="fo-panel">
   <h2>Checkout Online Order</h2>
   <div class="fo-cart-list" id="cartList"></div>
-  <div class="fo-payment-total-box"><small>Total yang harus dibayar</small><b id="checkoutTotalText">Rp0</b><div class="items" id="checkoutTotalDetail">Keranjang masih kosong.</div></div>
+  <div class="fo-payment-total-box">
+    <div id="checkoutFeeDetailRow" style="display:none; justify-content:space-between; margin-bottom:6px; font-size:12px; color:var(--dp-muted);"><span>Ongkos Kirim:</span> <b id="checkoutFeeDetailText" style="color:var(--dp-text);">Rp0</b></div>
+    <small>Total yang harus dibayar</small><b id="checkoutTotalText">Rp0</b><div class="items" id="checkoutTotalDetail">Keranjang masih kosong.</div>
+  </div>
   <div class="fo-checkout-grid">
     <div class="fo-field"><label>Nama Pemesan</label><input id="customerName" placeholder="Nama Anda" value="<?=fo_e($memberOnline['name'] ?? '')?>"></div>
     <div class="fo-field"><label>Nomor WhatsApp</label><input id="customerPhone" inputmode="tel" placeholder="08xxxxxxxxxx" value="<?=fo_e($memberOnline['phone'] ?? '')?>"></div>
@@ -1016,12 +1175,24 @@ button,input,select,textarea{font:inherit}
   <div class="fo-field"><label>Catatan</label><textarea id="customerNote" placeholder="Catatan untuk kasir, opsional"></textarea></div>
   <div class="fo-payment">
     <button type="button" class="payBtn active" data-pay="qris">QRIS (Midtrans)</button>
+    <button type="button" class="payBtn" data-pay="transfer">Transfer Bank</button>
   </div>
   <div class="fo-pay-preview active" id="qrisPreview">
     <b>Scan QRIS Lumero</b><br><br>
     <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero">
     <div style="margin-top:12px"><a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Dcelup.png">Download QRIS</a></div>
     <div class="fo-info" style="margin-top:10px"><?=fo_e($qrisInfo)?>. Simpan bukti pembayaran untuk diverifikasi kasir.</div>
+  </div>
+  <div class="fo-pay-preview" id="transferPreview">
+    <b>Transfer Bank</b><br><br>
+    <div style="font-size:14px; margin-bottom:12px; color:var(--dp-text);">
+      Silakan transfer ke rekening berikut:<br>
+      <b>Bank BCA</b><br>
+      No. Rekening: <b style="font-size:16px; color:var(--dp-primary);"><?=$bankAccountNo?></b> 
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-copy="<?=$bankAccountNo?>" style="padding:2px 8px; font-size:11px;">Copy</button><br>
+      Atas Nama: <b><?=$bankAccountName?></b>
+    </div>
+    <div class="fo-info" style="margin-top:10px">Pesanan akan diproses setelah bukti pembayaran diverifikasi kasir.</div>
   </div>
   <div class="fo-info" id="payInfo" style="margin-top:10px">Metode pembayaran otomatis: QRIS (Midtrans).</div>
   <form method="post" id="foForm">
@@ -1033,6 +1204,11 @@ button,input,select,textarea{font:inherit}
     <input type="hidden" name="customer_name" id="customerNameInput">
     <input type="hidden" name="customer_phone" id="customerPhoneInput">
     <input type="hidden" name="customer_note" id="customerNoteInput">
+    <input type="hidden" name="delivery_address" id="deliveryAddressHiddenInput">
+    <input type="hidden" name="delivery_lat" id="deliveryLatHiddenInput">
+    <input type="hidden" name="delivery_lng" id="deliveryLngHiddenInput">
+    <input type="hidden" name="delivery_fee" id="deliveryFeeHiddenInput" value="0">
+    <input type="hidden" name="delivery_distance_km" id="deliveryDistanceHiddenInput" value="0">
     <button class="fo-submit">Kirim Online Order</button>
   </form>
   <button class="fo-close" type="button" onclick="closeCheckout()">Tutup</button>
@@ -1047,13 +1223,13 @@ const serverNowTime = <?=json_encode($nowTime)?>;
 const priceMap = <?=json_encode($priceMap,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>;
 const aiNarratives = <?=json_encode($aiNarratives,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>;
 const aiNarrativeFallbacks = {
-  empty_cart:[{title:'Bingung Pilih Menu?',suggested_menu:'Ayam Crispy Varian Saus',message:'Tenang kak, jangan bingung! Kalau kaka bingung pilih menu, aku bantu ya. Di D’Celup, Kakak wajib coba menu ayam crispy dengan varian saus favorit. Kriuknya mantap, sausnya lumer, aromanya menggoda, dan rasanya bikin pengen nambah. Biar makin sedap, kaka juga bisa tambahkan kentang kriwil dan Matcha, cobain deh, gak akan nyesel!!!',cta_text:'Coba ayam saus favorit'}],
+  empty_cart:[{title:'Bingung Pilih Menu?',suggested_menu:'Ayam Crispy Varian Saus',message:'Tenang kak, jangan bingung! Kalau kaka bingung pilih menu, aku bantu ya. Di Lumero, Kakak wajib coba menu ayam crispy dengan varian saus favorit. Kriuknya mantap, sausnya lumer, aromanya menggoda, dan rasanya bikin pengen nambah. Biar makin sedap, kaka juga bisa tambahkan kentang kriwil dan Matcha, cobain deh, gak akan nyesel!!!',cta_text:'Coba ayam saus favorit'}],
   only_chicken_original:[{title:'Lengkapi Ayam Original',suggested_menu:'Kentang Kriuk dan Matcha',message:'Biar makin lengkap, tambahkan kentang kriuk dan minuman matcha segar sebagai penyempurna hidangan. Dijamin bikin ketagihan deh, hihihi...',cta_text:'Tambah kentang dan matcha'}],
   chicken_original_rice:[{title:'Ayam dan Nasi Sudah Pas',suggested_menu:'Saus Favorit + Minuman',message:'Ayam original plus nasi sudah mantap, Kak. Biar rasanya makin hidup, tambahkan varian saus favorit dan minuman segar. Sekali celup, kriuknya makin lumer di hati.',cta_text:'Tambah saus dan minuman'}],
   chicken_sauce:[{title:'Ayam Saus Sudah Mantap',suggested_menu:'Nasi + Kentang + Matcha',message:'Pilihan ayam saus Kakak sudah juara. Biar makin puas, tambahkan nasi hangat, kentang kriwil, atau Matcha segar. Lengkapnya dapet, nikmatnya makin nempel.',cta_text:'Lengkapi dengan nasi atau minuman'}],
   only_potato:[{title:'Kentang Kriwil Mantap',suggested_menu:'Ayam Crispy dan Minuman',message:'Kentangnya sudah cocok jadi teman ngemil. Biar lebih puas, pasangkan dengan ayam crispy dan minuman segar favorit Kakak.',cta_text:'Tambah ayam dan minuman'}],
   only_drink:[{title:'Minuman Segar Siap',suggested_menu:'Ayam Crispy Saus',message:'Minumannya sudah segar, Kak. Sekarang waktunya tambahkan ayam crispy varian saus favorit. Kriuknya mantap, sausnya lumer, cocok banget jadi pasangan minuman Kakak.',cta_text:'Tambah ayam crispy'}],
-  drink_potato:[{title:'Minuman dan Kentang Sudah Oke',suggested_menu:'Ayam Crispy Varian Saus',message:'Minuman dan kentang sudah jadi duet yang asik. Tapi biar makin lengkap, tambahkan ayam crispy saus D’Celup. Dijamin makin kenyang dan makin puas.',cta_text:'Tambah ayam saus'}],
+  drink_potato:[{title:'Minuman dan Kentang Sudah Oke',suggested_menu:'Ayam Crispy Varian Saus',message:'Minuman dan kentang sudah jadi duet yang asik. Tapi biar makin lengkap, tambahkan ayam crispy saus Lumero. Dijamin makin kenyang dan makin puas.',cta_text:'Tambah ayam saus'}],
   drink_chicken:[{title:'Ayam dan Minuman Sudah Mantap',suggested_menu:'Kentang Kriwil',message:'Ayam dan minuman Kakak sudah pas banget. Biar teksturnya makin rame, tambahkan kentang kriwil yang renyah. Jadi lengkap, gurih, segar, dan nagih.',cta_text:'Tambah kentang kriwil'}],
   all_menu:[{title:'Pesanan Sudah Lengkap',suggested_menu:'Tambahan Saus Favorit',message:'Wah, pilihan Kakak sudah lengkap banget! Ayam ada, kentang ada, minuman juga ada. Kalau mau makin lumer, tambahkan saus favorit ekstra biar setiap gigitan makin seru.',cta_text:'Tambah saus ekstra'}],
   only_sauce:[{title:'Sausnya Sudah Siap',suggested_menu:'Ayam Crispy Original',message:'Saus favoritnya sudah dipilih, Kak. Sekarang tinggal pasangkan dengan ayam crispy original yang kriuknya mantap. Biar sausnya punya pasangan terbaik.',cta_text:'Tambah ayam crispy'}],
@@ -1061,14 +1237,257 @@ const aiNarrativeFallbacks = {
   whole_chicken:[{title:'Ayam 1 Ekor Mantap',suggested_menu:'Saus Ekstra dan Minuman',message:'Wah, 1 ekor ayam sudah pilihan mantap untuk rame-rame. Biar makin seru, tambahkan saus ekstra dan minuman segar supaya semua kebagian rasa favorit.',cta_text:'Tambah saus dan minuman'}],
   whole_chicken_sauce:[{title:'Ayam 1 Ekor Saus Juara',suggested_menu:'Nasi dan Matcha',message:'Ayam 1 ekor plus saus sudah paket yang menggoda banget. Biar makin lengkap untuk disantap bareng, tambahkan nasi hangat dan Matcha segar.',cta_text:'Tambah nasi dan matcha'}],
   promo_window:[{title:'Jam Promo Spesial',suggested_menu:'Combo Hemat Jam Spesial',message:'Kakak lagi masuk jam promo nih! Ini waktu paling pas ambil paket combo hemat. Ayamnya nikmat, nasinya ada, harganya lebih bersahabat, dan rasanya tetap juara.',cta_text:'Ambil combo promo sekarang'}],
-  general:[{title:'Saran Menu D’Celup',suggested_menu:'Ayam Crispy Varian Saus',message:'Kakak bisa pilih ayam crispy varian saus favorit D’Celup. Kriuknya mantap, sausnya lumer, dan cocok dilengkapi kentang atau minuman segar.',cta_text:'Pilih menu favorit'}]
+  general:[{title:'Saran Menu Lumero',suggested_menu:'Ayam Crispy Varian Saus',message:'Kakak bisa pilih ayam crispy varian saus favorit Lumero. Kriuknya mantap, sausnya lumer, dan cocok dilengkapi kentang atau minuman segar.',cta_text:'Pilih menu favorit'}]
 };
 const comboWindowActive = <?=$comboWindowActive ? 'true' : 'false'?>;
 const sauces = <?=json_encode(array_values(array_map(fn($s)=>['id'=>(int)$s['id'],'name'=>(string)$s['name']],$data['sauces'])),JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>;
-let cart = [];
-let payment = '';
+window.cart = window.cart || [];
+let cart = window.cart;
+window.syncSharedCart = function(updatedCart) {
+  cart = updatedCart || window.cart || [];
+  window.cart = cart;
+  if(typeof renderCart === 'function') renderCart();
+};
+let payment = 'qris';
 let selectedPickupType = 'outlet';
 let lastAddedName = '';
+
+/* ── Delivery JS Configuration & State ── */
+const deliveryConfig = {
+  enabled: <?= $deliveryEnabled ? 'true' : 'false' ?>,
+  maxRadius: <?= (float)($deliverySettings['delivery_max_radius_km'] ?? 5) ?>,
+  feeModel: '<?= fo_e($deliverySettings['delivery_fee_model'] ?? 'per_km') ?>',
+  flatFee: <?= (int)($deliverySettings['delivery_flat_fee'] ?? 5000) ?>,
+  perKmFee: <?= (int)($deliverySettings['delivery_per_km_fee'] ?? 3000) ?>,
+  minFee: <?= (int)($deliverySettings['delivery_min_fee'] ?? 5000) ?>,
+  freeAbove: <?= (int)($deliverySettings['delivery_free_above'] ?? 0) ?>,
+  outletLat: <?= (float)($deliveryOutletCoords['lat'] ?? -6.9175) ?>,
+  outletLng: <?= (float)($deliveryOutletCoords['lng'] ?? 106.9275) ?>
+};
+let deliveryMapObj = null;
+let deliveryMarkerObj = null;
+let deliveryLat = 0;
+let deliveryLng = 0;
+let deliveryDistanceKm = 0;
+let deliveryFee = 0;
+
+function setPickupType(type){
+  if(type === 'delivery' && !deliveryConfig.enabled){
+    alert('Fitur Delivery Order saat ini belum aktif.');
+    return;
+  }
+  selectedPickupType = type || 'outlet';
+  document.querySelectorAll('.fo-pickup-option').forEach(x => {
+    x.classList.toggle('active', x.dataset.pickup === selectedPickupType);
+  });
+  const input = document.getElementById('pickupTypeInput');
+  if(input) input.value = selectedPickupType;
+  const ct = document.getElementById('customerType');
+  if(ct && ct.value !== selectedPickupType) ct.value = selectedPickupType;
+  const wrap = document.getElementById('deliverySectionWrap');
+  if(wrap) wrap.style.display = selectedPickupType === 'delivery' ? 'block' : 'none';
+  const sidePickupDateRow = document.getElementById('pickupDateRowSide');
+  if(sidePickupDateRow) sidePickupDateRow.style.display = selectedPickupType === 'delivery' ? 'none' : 'flex';
+  const dtGrid = document.getElementById('outletDateTimeGrid');
+  if(dtGrid) dtGrid.style.display = selectedPickupType === 'delivery' ? 'none' : 'grid';
+  if(selectedPickupType === 'delivery'){
+    setTimeout(() => { initDeliveryMap(); }, 180);
+  }
+  updatePickupSummary();
+  renderCart();
+}
+
+function initDeliveryMap() {
+  if (!deliveryConfig.enabled) return;
+  const mapEl = document.getElementById('deliveryMap');
+  if (!mapEl) return;
+  if (deliveryMapObj) {
+    deliveryMapObj.invalidateSize();
+    return;
+  }
+  const outletLat = Number(deliveryConfig.outletLat) || -6.9175;
+  const outletLng = Number(deliveryConfig.outletLng) || 106.9275;
+  
+  deliveryMapObj = L.map('deliveryMap').setView([outletLat, outletLng], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(deliveryMapObj);
+
+  const outletIcon = L.divIcon({
+    className: 'custom-outlet-pin',
+    html: '<div style="background:#ff2d55; border:2px solid #fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.5);">🏠</div>',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+  L.marker([outletLat, outletLng], {icon: outletIcon}).addTo(deliveryMapObj).bindPopup('<b>Outlet Lumero</b>').openPopup();
+
+  const startLat = deliveryLat || (outletLat + 0.005);
+  const startLng = deliveryLng || (outletLng + 0.005);
+  const pinIcon = L.divIcon({
+    className: 'custom-delivery-pin',
+    html: '<div style="background:#34d399; border:2px solid #fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:#1a1a2e; font-size:14px; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.6); cursor:move;">📍</div>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+  deliveryMarkerObj = L.marker([startLat, startLng], {icon: pinIcon, draggable: true}).addTo(deliveryMapObj);
+  deliveryMarkerObj.bindPopup('<b>Titik Pengantaran</b><br><small>Geser ke rumah Anda</small>');
+
+  deliveryMarkerObj.on('dragend', function(e){
+    const pos = e.target.getLatLng();
+    updateDeliveryMapInfo(pos.lat, pos.lng);
+  });
+
+  deliveryMapObj.on('click', function(e){
+    deliveryMarkerObj.setLatLng(e.latlng);
+    updateDeliveryMapInfo(e.latlng.lat, e.latlng.lng);
+  });
+
+  updateDeliveryMapInfo(startLat, startLng);
+}
+
+function updateDeliveryMapInfo(lat, lng) {
+  deliveryLat = lat;
+  deliveryLng = lng;
+  const outletLat = Number(deliveryConfig.outletLat) || -6.9175;
+  const outletLng = Number(deliveryConfig.outletLng) || 106.9275;
+  deliveryDistanceKm = haversineDistanceKmJS(outletLat, outletLng, lat, lng);
+  
+  const distEl = document.getElementById('deliveryDistanceText');
+  const badgeEl = document.getElementById('mapDistanceBadge');
+  const statusEl = document.getElementById('deliveryRadiusStatus');
+  const feeEl = document.getElementById('deliveryFeeText');
+
+  if (distEl) distEl.textContent = deliveryDistanceKm.toFixed(2) + ' km';
+  if (badgeEl) badgeEl.textContent = deliveryDistanceKm.toFixed(2) + ' km';
+
+  if (deliveryDistanceKm > deliveryConfig.maxRadius) {
+    if (statusEl) {
+      statusEl.textContent = `Melebihi batas radius maksimal (${deliveryConfig.maxRadius} km)`;
+      statusEl.style.color = '#ff2d55';
+    }
+    if (badgeEl) badgeEl.style.color = '#ff2d55';
+    if (feeEl) feeEl.textContent = 'Di Luar Jangkauan';
+    deliveryFee = 0;
+  } else {
+    if (statusEl) {
+      statusEl.textContent = `Dalam radius pengantaran (maks. ${deliveryConfig.maxRadius} km)`;
+      statusEl.style.color = '#34d399';
+    }
+    if (badgeEl) badgeEl.style.color = '#34d399';
+    const subtotal = currentCartTotal();
+    deliveryFee = calculateDeliveryFeeJS(subtotal, deliveryDistanceKm);
+    if (feeEl) feeEl.textContent = deliveryFee === 0 ? 'GRATIS' : rupiah(deliveryFee);
+  }
+  updatePickupSummary();
+  renderCart();
+}
+
+function haversineDistanceKmJS(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return Math.round((R * c) * 100) / 100;
+}
+
+function calculateDeliveryFeeJS(subtotal, distKm) {
+  const freeAbove = Number(deliveryConfig.freeAbove || 0);
+  if (freeAbove > 0 && subtotal >= freeAbove) return 0;
+  const model = deliveryConfig.feeModel || 'per_km';
+  const minFee = Number(deliveryConfig.minFee || 5000);
+  if (model === 'flat') return Math.max(minFee, Number(deliveryConfig.flatFee || 5000));
+  const perKm = Number(deliveryConfig.perKmFee || 3000);
+  return Math.max(minFee, Math.ceil(distKm * perKm));
+}
+
+function searchDeliveryAddress() {
+  const q = document.getElementById('deliverySearchInput')?.value?.trim();
+  if (!q) return;
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=id&limit=5`;
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      const box = document.getElementById('deliverySearchResults');
+      if (!box) return;
+      box.innerHTML = '';
+      if (!data || !data.length) {
+        box.innerHTML = '<div style="padding:8px 12px; font-size:12px; color:var(--dp-muted);">Alamat tidak ditemukan. Coba kata kunci lain atau geser pin langsung di peta.</div>';
+        box.style.display = 'block';
+        return;
+      }
+      data.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'fo-search-item';
+        div.textContent = item.display_name;
+        div.onclick = () => {
+          box.style.display = 'none';
+          const lat = parseFloat(item.lat);
+          const lon = parseFloat(item.lon);
+          if (deliveryMapObj && deliveryMarkerObj) {
+            deliveryMapObj.setView([lat, lon], 16);
+            deliveryMarkerObj.setLatLng([lat, lon]);
+            updateDeliveryMapInfo(lat, lon);
+          }
+        };
+        box.appendChild(div);
+      });
+      box.style.display = 'block';
+    })
+    .catch(() => {});
+}
+
+function useCurrentDeviceLocation() {
+  const btn = document.getElementById('btnUseGps');
+  if (!navigator.geolocation) {
+    alert('Perangkat atau browser Anda tidak mendukung fitur GPS.');
+    return;
+  }
+  const origText = btn ? btn.innerHTML : '🎯 Gunakan Lokasi Saat Ini (GPS)';
+  if (btn) btn.innerHTML = '⏳ Mengambil Titik GPS...';
+
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      if (deliveryMapObj && deliveryMarkerObj) {
+        deliveryMapObj.setView([lat, lon], 17);
+        deliveryMarkerObj.setLatLng([lat, lon]);
+        updateDeliveryMapInfo(lat, lon);
+      }
+      if (btn) btn.innerHTML = origText;
+
+      // Reverse geocode via Nominatim untuk mengisi alamat lengkap
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.display_name) {
+            const addrEl = document.getElementById('deliveryAddressInput');
+            if (addrEl && (!addrEl.value || addrEl.value.trim() === '')) {
+              addrEl.value = data.display_name;
+            }
+          }
+        })
+        .catch(() => {});
+    },
+    error => {
+      if (btn) btn.innerHTML = origText;
+      if (error.code === 1) {
+        alert('Izin akses lokasi ditolak. Silakan aktifkan izin lokasi/GPS pada browser atau pengaturan HP Anda.');
+      } else if (error.code === 2) {
+        alert('Posisi GPS tidak dapat ditentukan. Pastikan GPS menyala di tempat terbuka.');
+      } else if (error.code === 3) {
+        alert('Waktu pencarian lokasi habis (timeout). Silakan coba klik tombol GPS lagi.');
+      } else {
+        alert('Gagal mendeteksi koordinat GPS.');
+      }
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+  );
+}
 
 function rupiah(n){ return 'Rp'+Math.round(Number(n||0)).toLocaleString('id-ID'); }
 function pad(n){ return String(n).padStart(2,'0'); }
@@ -1157,6 +1576,8 @@ function buildPickupOptions(){
 }
 
 function renderCart(){
+  cart = window.cart || cart || [];
+  window.cart = cart;
   const list=document.getElementById('cartList'); list.innerHTML='';
   const sideList=document.getElementById('sideOrderItems');
   if(sideList) sideList.innerHTML='';
@@ -1184,22 +1605,35 @@ function renderCart(){
       sideList.innerHTML='<div class="fo-order-empty"><div class="icon">🛒</div><p>Belum ada menu dipilih</p><small>Klik menu di kiri untuk menambah pesanan</small></div>';
     }
   }
-  document.getElementById('cartCount').textContent=count;
-  document.getElementById('totalText').textContent=rupiah(total);
+  const ccEl = document.getElementById('cartCount'); if(ccEl) ccEl.textContent=count;
+  const ic2 = document.getElementById('itemCount2'); if(ic2) ic2.textContent=count;
+  const finalTotal = total + (selectedPickupType === 'delivery' ? deliveryFee : 0);
+  const ttEl = document.getElementById('totalText'); if(ttEl) ttEl.textContent=rupiah(finalTotal);
+  const tt2 = document.getElementById('totalText2'); if(tt2) tt2.textContent=rupiah(finalTotal);
   const sideBadge=document.getElementById('sideCartBadge'); if(sideBadge) sideBadge.textContent=count;
-  const sideTotal=document.getElementById('sideTotalText'); if(sideTotal) sideTotal.textContent=rupiah(total);
+  const sideTotal=document.getElementById('sideTotalText'); if(sideTotal) sideTotal.textContent=rupiah(finalTotal);
   const sideCount=document.getElementById('sideCountText'); if(sideCount) sideCount.textContent=count+' item';
 
   const checkoutTotal=document.getElementById('checkoutTotalText');
-  if(checkoutTotal) checkoutTotal.textContent=rupiah(total);
+  if(checkoutTotal) checkoutTotal.textContent=rupiah(finalTotal);
+  const checkoutFeeRow = document.getElementById('checkoutFeeDetailRow');
+  const checkoutFeeText = document.getElementById('checkoutFeeDetailText');
+  if(checkoutFeeRow && checkoutFeeText){
+    if(selectedPickupType === 'delivery'){
+      checkoutFeeRow.style.display = 'flex';
+      checkoutFeeText.textContent = deliveryFee === 0 ? 'GRATIS' : rupiah(deliveryFee);
+    } else {
+      checkoutFeeRow.style.display = 'none';
+    }
+  }
   const checkoutDetail=document.getElementById('checkoutTotalDetail');
   if(checkoutDetail){
     const names=cart.slice(0,4).map(it=>it.type==='chicken'?buildChickenText(it):it.name);
     checkoutDetail.textContent = count ? (names.join(', ')+(count>4?' + '+(count-4)+' item lainnya':'')) : 'Keranjang masih kosong.';
   }
   const pickupTotal=document.getElementById('pickupSummaryTotal');
-  if(pickupTotal) pickupTotal.textContent=rupiah(total);
-  updateFooterDetail(total,count);
+  if(pickupTotal) pickupTotal.textContent=rupiah(finalTotal);
+  updateFooterDetail(finalTotal,count);
   const aiPanel=document.getElementById('aiPanel'); if(aiPanel && aiPanel.classList.contains('show')) updateAiPanelContent();
 }
 function updateFooterDetail(total,count){
@@ -1217,9 +1651,12 @@ function showAddedModal(name){
 }
 function closeAddedModal(){ const m=document.getElementById('addedModal'); if(m) m.classList.remove('show'); setTimeout(showAiNudge,360); }
 function goToCheckoutFromAdded(){ closeAddedModal(); openCheckout(); }
-function chgQty(i,d){ cart[i].qty=(cart[i].qty||1)+d; if(cart[i].qty<=0) cart.splice(i,1); renderCart(); }
+function chgQty(i,d){ cart = window.cart || cart || []; cart[i].qty=(cart[i].qty||1)+d; if(cart[i].qty<=0) cart.splice(i,1); window.cart = cart; renderCart(); }
 function openCheckout(skipPickupConfirm=false){
+  cart = window.cart || cart || [];
+  window.cart = cart;
   if(!cart.length){
+    alert('Keranjang masih kosong (dari JS openCheckout).');
     const a=foPlay('foVoiceEmptyCart');
     if(!a){
       speakAiText('Maaf Kakak, keranjangnya masih kosong, silahkan pilih menu dulu', ()=>{});
@@ -1230,7 +1667,8 @@ function openCheckout(skipPickupConfirm=false){
   syncCustomerFields('top');
   document.getElementById('checkoutDrawer').classList.add('show');
   renderCart();
-  setPayment('qris');
+  const pm = document.getElementById('paymentMethod')?.value || 'qris';
+  setPayment(pm);
   if(cart.length) playCheckoutTotalFlow();
 }
 function closeCheckout(){ document.getElementById('checkoutDrawer').classList.remove('show'); }
@@ -1327,7 +1765,7 @@ function foPlay(id){
   if(!a) return null;
   try{ a.currentTime=0; a.volume=1; const p=a.play(); if(p&&p.catch) p.catch(()=>{}); return a; }catch(e){ return null; }
 }
-function currentCartTotal(){ return cart.reduce((sum,it)=>sum+(Number(it.price||0)*Number(it.qty||1)),0); }
+function currentCartTotal(){ cart = window.cart || cart || []; return cart.reduce((sum,it)=>sum+(Number(it.price||0)*Number(it.qty||1)),0); }
 
 let pickupConfirmedForSession = false;
 
@@ -1454,20 +1892,38 @@ function updatePickupSummary(){
   const dateEl=document.getElementById('pickupSummaryDate');
   const timeEl=document.getElementById('pickupSummaryTime');
   const totalEl=document.getElementById('pickupSummaryTotal');
-  if(typeEl) typeEl.textContent=selectedPickupType==='outlet'?'Ambil di Outlet':'Delivery';
+  if(typeEl) typeEl.textContent=selectedPickupType==='outlet'?'Ambil di Outlet':'Delivery (Diantar Kurir)';
   if(dateEl) dateEl.textContent=document.getElementById('pickupDate')?.value || '-';
   if(timeEl) timeEl.textContent=(document.getElementById('pickupTime')?.value || '-')+' WIB';
-  if(totalEl) totalEl.textContent=rupiah(currentCartTotal());
+  
+  const feeRow = document.getElementById('pickupSummaryFeeRow');
+  const feeEl = document.getElementById('pickupSummaryFee');
+  if(feeRow && feeEl) {
+    if(selectedPickupType === 'delivery') {
+      feeRow.style.display = '';
+      feeEl.textContent = deliveryFee === 0 ? 'GRATIS' : rupiah(deliveryFee);
+    } else {
+      feeRow.style.display = 'none';
+    }
+  }
+  const finalTotal = currentCartTotal() + (selectedPickupType === 'delivery' ? deliveryFee : 0);
+  if(totalEl) totalEl.textContent=rupiah(finalTotal);
 }
 function showPickupConfirm(){
   syncCustomerFields('top');
-  if(!cart.length){ alert('Keranjang masih kosong.'); return; }
+  cart = window.cart || cart || [];
+  window.cart = cart;
+  if(!cart.length){ alert('Keranjang masih kosong (dari JS showPickupConfirm).'); return; }
   const m=document.getElementById('pickupConfirmModal');
   buildPickupOptions();
+  setPickupType(selectedPickupType);
   renderCart();
   updatePickupSummary();
   if(m) m.classList.add('show');
   setTimeout(()=>{ const p=document.getElementById('customerPhoneTop'); if(p && !p.value) p.focus(); },120);
+  if(selectedPickupType === 'delivery'){
+    setTimeout(()=>{ initDeliveryMap(); }, 180);
+  }
   foPlay('foVoiceWaktuAmbil');
 }
 function closePickupConfirm(){ const m=document.getElementById('pickupConfirmModal'); if(m) m.classList.remove('show'); }
@@ -1476,7 +1932,18 @@ function continueToPayment(){
   const nameVal=(document.getElementById('customerNameTop')?.value || '').trim();
   const phoneVal=normalizePhoneClient(document.getElementById('customerPhoneTop')?.value || '');
   if(!nameVal || !phoneVal){ foPlay('foVoiceMaaf'); alert('Mohon isi nama dan nomor WhatsApp terlebih dahulu.'); return; }
-  if(!document.getElementById('pickupTime')?.value){ alert('Jam pengambilan belum tersedia. Silakan pilih tanggal yang valid.'); return; }
+  if(selectedPickupType === 'outlet' && !document.getElementById('pickupTime')?.value){ alert('Jam pengambilan belum tersedia. Silakan pilih tanggal yang valid.'); return; }
+  if(selectedPickupType === 'delivery'){
+    const addr = document.getElementById('deliveryAddressInput')?.value?.trim() || '';
+    if(!addr || deliveryLat == 0 || deliveryLng == 0){
+      alert('Mohon lengkapi titik lokasi pada peta dan alamat lengkap pengantaran.');
+      return;
+    }
+    if(deliveryDistanceKm > deliveryConfig.maxRadius){
+      alert(`Jarak pengantaran (${deliveryDistanceKm} km) melebihi batas maksimal (${deliveryConfig.maxRadius} km).`);
+      return;
+    }
+  }
   closePickupConfirm();
   pickupConfirmedForSession = true;
   openCheckout(true);
@@ -1708,8 +2175,8 @@ function showAiNudge(){
   if(!b) return;
   const title=document.getElementById('aiNudgeTitle');
   const text=document.getElementById('aiNudgeText');
-  if(title) title.textContent=rec.suggested_menu || rec.title || 'Saran Menu D’Celup';
-  if(text) text.textContent=(rec.scenario==='empty_cart' ? (rec.cta_text || 'Aku bantu pilihkan menu unggulan D’Celup.') : (rec.cta_text || 'Aku punya saran menu yang cocok untuk melengkapi pesanan Kakak.'));
+  if(title) title.textContent=rec.suggested_menu || rec.title || 'Saran Menu Lumero';
+  if(text) text.textContent=(rec.scenario==='empty_cart' ? (rec.cta_text || 'Aku bantu pilihkan menu unggulan Lumero.') : (rec.cta_text || 'Aku punya saran menu yang cocok untuk melengkapi pesanan Kakak.'));
   b.classList.add('show');
   clearTimeout(aiNudgeTimer);
   aiNudgeTimer=setTimeout(()=>b.classList.remove('show'),9000);
@@ -1827,7 +2294,7 @@ function pickAiNarrative(){
   const list=(aiNarratives[scenario] && aiNarratives[scenario].length)
     ? aiNarratives[scenario]
     : (aiNarrativeFallbacks[scenario] || aiNarrativeFallbacks.general || []);
-  const picked=list.length ? list[0] : {title:'Saran AI D’Celup',suggested_menu:'Ayam Crispy Varian Saus',message:'Kakak bisa pilih ayam crispy varian saus favorit D’Celup. Kriuknya mantap, sausnya lumer, dan cocok dilengkapi kentang atau minuman segar.',cta_text:'Pilih menu favorit'};
+  const picked=list.length ? list[0] : {title:'Saran AI Lumero',suggested_menu:'Ayam Crispy Varian Saus',message:'Kakak bisa pilih ayam crispy varian saus favorit Lumero. Kriuknya mantap, sausnya lumer, dan cocok dilengkapi kentang atau minuman segar.',cta_text:'Pilih menu favorit'};
   picked.scenario=scenario;
   return picked;
 }
@@ -1837,7 +2304,7 @@ function updateAiPanelContent(){
   const menuEl=document.getElementById('aiRecoMenu');
   const reasonEl=document.getElementById('aiRecoReason');
   if(textEl) textEl.textContent=rec.message || '';
-  if(menuEl) menuEl.textContent=rec.suggested_menu || rec.title || 'Saran AI D’Celup';
+  if(menuEl) menuEl.textContent=rec.suggested_menu || rec.title || 'Saran AI Lumero';
   if(reasonEl) reasonEl.textContent=rec.cta_text || 'Direkomendasikan sesuai isi keranjang dan jam order Kakak.';
   return rec;
 }
@@ -1854,7 +2321,7 @@ function playCheckoutTotalFlow(){
   stopAllVoices();
   startBgm();
 
-  const total=currentCartTotal();
+  const total=currentCartTotal() + (selectedPickupType === 'delivery' ? Number(deliveryFee||0) : 0);
   const audio=document.getElementById('foVoiceTotal');
   let moved=false;
 
@@ -1879,13 +2346,14 @@ function playCheckoutTotalFlow(){
     setTimeout(()=>{ if(!moved) next(); }, durationMs);
   }catch(e){ next(); }
 }
-function getCartTotal(){ return (cart||[]).reduce((sum,it)=>sum+(Number(it.price||0)*Number(it.qty||1)),0); }
+function getCartTotal(){ cart = window.cart || cart || []; return (cart||[]).reduce((sum,it)=>sum+(Number(it.price||0)*Number(it.qty||1)),0); }
 function setPayment(method){
   payment=method;
-  document.querySelectorAll('.payBtn').forEach(x=>x.classList.toggle('active',x.dataset.pay===method));
+  document.querySelectorAll('.payBtn, .payment-item').forEach(x=>x.classList.toggle('active',x.dataset.pay===method));
   document.querySelectorAll('.fo-pay-preview').forEach(x=>x.classList.remove('active'));
   const active=document.getElementById(method+'Preview'); if(active) active.classList.add('active');
-  document.getElementById('paymentInput').value=method;
+  const pi=document.getElementById('paymentInput'); if(pi) pi.value=method;
+  const pm=document.getElementById('paymentMethod'); if(pm) pm.value=method;
   const info=document.getElementById('payInfo');
   if(method==='transfer'){ info.innerHTML='Transfer BCA a.n. <b><?=$bankAccountName?></b> No. <b><?=$bankAccountNo?></b>. Nomor rekening bisa di-copy.'; foPlay('foVoiceTransfer'); }
   else if(method==='cash'){ info.innerHTML='Cash di outlet. Bayar tunai saat pesanan diambil.'; foPlay('foVoiceCash'); }
@@ -1904,18 +2372,13 @@ function fallbackCopy(val){ const ta=document.createElement('textarea'); ta.valu
 
 document.querySelectorAll('.fo-pickup-option[data-pickup]').forEach(btn=>btn.addEventListener('click',()=>{
   if(btn.disabled) return;
-  selectedPickupType=btn.dataset.pickup || 'outlet';
-  document.querySelectorAll('.fo-pickup-option').forEach(x=>x.classList.toggle('active',x===btn));
-  const input=document.getElementById('pickupTypeInput'); if(input) input.value=selectedPickupType;
+  setPickupType(btn.dataset.pickup);
 }));
 document.querySelectorAll('.payBtn').forEach(btn=>btn.addEventListener('click',()=>setPayment(btn.dataset.pay)));
-// pickup option delegated v9
 document.addEventListener('click',function(e){
   const btn=e.target.closest('.fo-pickup-option');
   if(!btn || btn.disabled) return;
-  selectedPickupType=btn.dataset.pickup || 'outlet';
-  document.querySelectorAll('.fo-pickup-option').forEach(x=>x.classList.toggle('active',x===btn));
-  updatePickupSummary();
+  setPickupType(btn.dataset.pickup);
 });
 
 document.querySelectorAll('.fo-tab[data-target]').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('.fo-tab').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); const target=document.getElementById(btn.dataset.target); if(target) target.scrollIntoView({behavior:'smooth',block:'start'}); }));
@@ -1925,22 +2388,51 @@ const pickupTimeEl=document.getElementById('pickupTime');
 if(pickupTimeEl) pickupTimeEl.addEventListener('change',updatePickupSummary);
 
 document.getElementById('foForm').addEventListener('submit',e=>{
+  cart = window.cart || cart || [];
+  window.cart = cart;
   syncCustomerFields('top');
   const nameVal=(document.getElementById('customerNameTop')?.value || document.getElementById('customerName')?.value || '').trim();
   const phoneVal=normalizePhoneClient(document.getElementById('customerPhoneTop')?.value || document.getElementById('customerPhone')?.value || '');
-  if(!cart.length){ e.preventDefault(); alert('Keranjang masih kosong.'); return; }
+  if(!cart.length){ e.preventDefault(); alert('Keranjang masih kosong (dari JS foForm).'); return; }
   if(!nameVal || !phoneVal){ e.preventDefault(); foPlay('foVoiceMaaf'); alert('Mohon isi nama dan nomor WhatsApp terlebih dahulu.'); return; }
   if(!payment){ e.preventDefault(); foPlay('foVoiceOpsiBayar'); alert('Mohon pilih metode pembayaran terlebih dahulu.'); return; }
   if(payment==='point'){ const need=Math.ceil(getCartTotal()/<?=max(1,(int)$memberPointValue)?>); const bal=<?=max(0,(int)$memberPointBalance)?>; if(need>bal){ e.preventDefault(); alert('Point belum mencukupi. Butuh '+need.toLocaleString('id-ID')+' point untuk membayar total belanja ini.'); return; } }
-  if(!document.getElementById('pickupTime').value){ e.preventDefault(); alert('Jam pengambilan belum tersedia. Silakan pilih tanggal yang valid.'); return; }
+  if(selectedPickupType === 'outlet' && !document.getElementById('pickupTime').value){ e.preventDefault(); alert('Jam pengambilan belum tersedia. Silakan pilih tanggal yang valid.'); return; }
+  
+  if(selectedPickupType === 'delivery'){
+    const addr = document.getElementById('deliveryAddressInput')?.value?.trim() || '';
+    if(!addr || deliveryLat == 0 || deliveryLng == 0){
+      e.preventDefault();
+      alert('Mohon lengkapi titik lokasi pada peta dan alamat lengkap pengantaran.');
+      return;
+    }
+    if(deliveryDistanceKm > deliveryConfig.maxRadius){
+      e.preventDefault();
+      alert(`Jarak pengantaran (${deliveryDistanceKm} km) melebihi batas maksimal (${deliveryConfig.maxRadius} km).`);
+      return;
+    }
+    document.querySelector('#foForm #deliveryAddressHiddenInput').value = addr;
+    document.querySelector('#foForm #deliveryLatHiddenInput').value = deliveryLat;
+    document.querySelector('#foForm #deliveryLngHiddenInput').value = deliveryLng;
+    document.querySelector('#foForm #deliveryFeeHiddenInput').value = deliveryFee;
+    document.querySelector('#foForm #deliveryDistanceHiddenInput').value = deliveryDistanceKm;
+  }
+
   try{ localStorage.setItem('dcelup_customer_phone', phoneVal); localStorage.setItem('dcelup_customer_name', nameVal); }catch(err){}
-  document.getElementById('cartInput').value=JSON.stringify(cart);
-  document.getElementById('pickupDateInput').value=document.getElementById('pickupDate').value;
-  document.getElementById('pickupTimeInput').value=document.getElementById('pickupTime').value;
-  document.getElementById('customerNameInput').value=nameVal;
-  document.getElementById('customerPhoneInput').value=phoneVal;
-  document.getElementById('customerNoteInput').value=document.getElementById('customerNote').value;
-  document.getElementById('pickupTypeInput').value=selectedPickupType;
+  const foCartInput = document.querySelector('#foForm #cartInput') || document.getElementById('cartInput');
+  if(foCartInput) foCartInput.value = JSON.stringify(cart);
+  const foPickupDate = document.querySelector('#foForm #pickupDateInput') || document.getElementById('pickupDateInput');
+  if(foPickupDate) foPickupDate.value = document.getElementById('pickupDate').value;
+  const foPickupTime = document.querySelector('#foForm #pickupTimeInput') || document.getElementById('pickupTimeInput');
+  if(foPickupTime) foPickupTime.value = document.getElementById('pickupTime').value;
+  const foCustomerName = document.querySelector('#foForm #customerNameInput') || document.getElementById('customerNameInput');
+  if(foCustomerName) foCustomerName.value = nameVal;
+  const foCustomerPhone = document.querySelector('#foForm #customerPhoneInput') || document.getElementById('customerPhoneInput');
+  if(foCustomerPhone) foCustomerPhone.value = phoneVal;
+  const foCustomerNote = document.querySelector('#foForm #customerNoteInput') || document.getElementById('customerNoteInput');
+  if(foCustomerNote) foCustomerNote.value = document.getElementById('customerNote').value;
+  const foPickupType = document.querySelector('#foForm #pickupTypeInput') || document.getElementById('pickupTypeInput');
+  if(foPickupType) foPickupType.value = selectedPickupType;
 });
 
 (function(){

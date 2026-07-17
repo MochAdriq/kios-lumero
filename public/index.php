@@ -75,6 +75,9 @@ $router->get('/central-settings/api/items', [CentralSettingsController::class,'a
 if (class_exists('LoyaltyController')) {
     $router->get('/loyalty/members', [LoyaltyController::class, 'members']);
     $router->get('/loyalty/rewards', [LoyaltyController::class, 'rewards']);
+    $router->post('/loyalty/rewards/save', [LoyaltyController::class, 'saveReward']);
+    $router->post('/loyalty/rewards/delete', [LoyaltyController::class, 'deleteReward']);
+    $router->post('/loyalty/rewards/toggle-status', [LoyaltyController::class, 'toggleStatusReward']);
     $router->get('/loyalty/redemptions', [LoyaltyController::class, 'redemptions']);
     $router->post('/loyalty/settings/update', [LoyaltyController::class, 'updateSettings']);
 }
@@ -136,6 +139,14 @@ $router->get('/api/user', [UserController::class,'apiDetail']);
 $router->get('/audit-logs', [AuditLogController::class,'index']);
 $router->get('/settings', [SettingController::class,'index']);
 $router->post('/settings', [SettingController::class,'save']);
+$router->get('/settings/delivery', function(){ header('Location: '.url('/delivery/settings')); exit; });
+$router->post('/settings/delivery', [DeliveryController::class,'saveSettings']);
+
+// Delivery & Kurir Module
+$router->get('/delivery', [DeliveryController::class,'index']);
+$router->get('/delivery/settings', [DeliveryController::class,'settings']);
+$router->post('/delivery/settings', [DeliveryController::class,'saveSettings']);
+$router->post('/delivery/update-status', [DeliveryController::class,'updateStatus']);
 
 // Costing Diagnostics
 $router->get('/costing-diagnostics', [CostingDiagnosticsController::class,'index']);

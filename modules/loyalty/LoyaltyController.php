@@ -35,14 +35,74 @@ class LoyaltyController extends Controller
         require_once __DIR__ . '/../../config/loyalty.php';
         loyalty_ensure_tables($pdo);
 
-        $stmt = $pdo->query("SELECT * FROM point_reward_products ORDER BY sort_order ASC, id ASC");
-        $rewards = $stmt->fetchAll();
+        $rewards = loyalty_get_reward_products($pdo, false);
+        $menuProducts = loyalty_get_active_menu_products($pdo);
 
         $this->view('loyalty/rewards', [
             'pageTitle' => 'Katalog Hadiah Poin',
-            'rewards' => $rewards
+            'rewards' => $rewards,
+            'menuProducts' => $menuProducts
         ]);
     }
+
+    public function saveReward()
+    {
+        Auth::requireLogin();
+        $pdo = Database::connection();
+        require_once __DIR__ . '/../../config/loyalty.php';
+        loyalty_ensure_tables($pdo);
+
+        $id = (int)($_POST['id'] ?? 0);
+        try {
+            loyalty_save_reward_product($pdo, $_POST, $id);
+            $_SESSION['flash_success'] = $id > 0 ? 'Hadiah poin berhasil diperbarui.' : 'Hadiah poin baru dari katalog berhasil ditambahkan.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        header('Location: ' . url('/loyalty/rewards'));
+        exit;
+    }
+
+    public function deleteReward()
+    {
+        Auth::requireLogin();
+        $pdo = Database::connection();
+        require_once __DIR__ . '/../../config/loyalty.php';
+        loyalty_ensure_tables($pdo);
+
+        $id = (int)($_POST['id'] ?? 0);
+        try {
+            if ($id > 0) {
+                $msg = loyalty_delete_or_deactivate_reward_product($pdo, $id);
+                $_SESSION['flash_success'] = $msg;
+            }
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        header('Location: ' . url('/loyalty/rewards'));
+        exit;
+    }
+
+    public function toggleStatusReward()
+    {
+        Auth::requireLogin();
+        $pdo = Database::connection();
+        require_once __DIR__ . '/../../config/loyalty.php';
+        loyalty_ensure_tables($pdo);
+
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id > 0) {
+            try {
+                $pdo->prepare("UPDATE point_reward_products SET is_active = IF(is_active=1, 0, 1), updated_at=NOW() WHERE id=?")->execute([$id]);
+                $_SESSION['flash_success'] = 'Status hadiah poin berhasil diubah.';
+            } catch (Throwable $e) {
+                $_SESSION['flash_error'] = $e->getMessage();
+            }
+        }
+        header('Location: ' . url('/loyalty/rewards'));
+        exit;
+    }
+
 
     public function redemptions()
     {

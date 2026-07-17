@@ -955,6 +955,13 @@ body.k2-body .sim-order-card .card-body {
   padding: 5px 28px 5px 10px;
 }
 
+.sim-order-type-toggle .form-select option,
+select.form-select option,
+#customerType option {
+  background-color: var(--dp-surface-2) !important;
+  color: var(--dp-text) !important;
+}
+
 /* Cart Items */
 .product-added {
   flex: 1;
@@ -1125,6 +1132,44 @@ body.k2-body .sim-order-card .card-body {
 .sim-summary-row .sim-summary-input:focus {
   border-color: var(--dp-red) !important;
   box-shadow: 0 0 0 2px var(--dp-red-soft) !important;
+}
+
+/* Right sidebar form labels & inputs (Nama Pemesan, No WhatsApp, Tgl Ambil, Jam, Notes) */
+.sim-summary-section .form-label,
+.fo-pos-right .form-label,
+.sim-pos-sidebar .form-label,
+.form-group .form-label {
+  color: var(--dp-text-2) !important;
+  font-weight: 600 !important;
+}
+
+.sim-summary-section .form-control,
+.fo-pos-right .form-control,
+.sim-pos-sidebar .form-control,
+.sim-notes-input,
+.form-group .form-control {
+  background: var(--dp-surface) !important;
+  border: 1px solid var(--dp-glass-border) !important;
+  color: var(--dp-text) !important;
+  border-radius: 8px !important;
+}
+
+.sim-summary-section .form-control:focus,
+.fo-pos-right .form-control:focus,
+.sim-pos-sidebar .form-control:focus,
+.sim-notes-input:focus,
+.form-group .form-control:focus {
+  border-color: var(--dp-red) !important;
+  box-shadow: 0 0 0 2px var(--dp-red-soft) !important;
+  color: var(--dp-text) !important;
+}
+
+.sim-summary-section .form-control::placeholder,
+.fo-pos-right .form-control::placeholder,
+.sim-pos-sidebar .form-control::placeholder,
+.sim-notes-input::placeholder,
+.form-group .form-control::placeholder {
+  color: var(--dp-muted) !important;
 }
 
 .sim-summary-total {

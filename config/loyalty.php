@@ -550,6 +550,22 @@ function loyalty_set_order_nominal_point(PDO $pdo, int $orderId, int $nominalPoi
 }
 function loyalty_get_active_menu_products(PDO $pdo): array {
     try{
+        if(loyalty_table_exists($pdo,'product_variants')) {
+            $sql = "SELECT pv.id, 
+                           CONCAT(p.name, IF(pv.variant_name != 'Default' AND pv.variant_name != '', CONCAT(' - ', pv.variant_name), '')) AS name, 
+                           p.description, 
+                           pv.selling_price AS price, 
+                           pv.hpp, 
+                           pv.image AS image_url, 
+                           p.category_id, 
+                           COALESCE(pc.name,'') AS category_name 
+                    FROM product_variants pv 
+                    JOIN products p ON p.id=pv.product_id 
+                    LEFT JOIN product_categories pc ON pc.id=p.category_id 
+                    WHERE p.is_active=1 AND pv.is_active=1 
+                    ORDER BY pc.name, p.name, pv.variant_name";
+            return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        }
         if(!loyalty_table_exists($pdo,'menu_items')) return [];
         $join = loyalty_table_exists($pdo,'menu_categories') ? " LEFT JOIN menu_categories mc ON mc.id=mi.category_id" : "";
         $catSel = loyalty_table_exists($pdo,'menu_categories') ? "COALESCE(mc.name,'')" : "''";
@@ -560,7 +576,14 @@ function loyalty_get_active_menu_products(PDO $pdo): array {
 }
 function loyalty_menu_product_by_id(PDO $pdo, int $id) {
     try{
-        if($id<=0 || !loyalty_table_exists($pdo,'menu_items')) return false;
+        if($id<=0) return false;
+        if(loyalty_table_exists($pdo,'product_variants')) {
+            $st=$pdo->prepare("SELECT pv.id, CONCAT(p.name, IF(pv.variant_name != 'Default' AND pv.variant_name != '', CONCAT(' - ', pv.variant_name), '')) AS name, p.description, pv.selling_price AS price, pv.hpp, pv.image AS image_url, p.category_id, pv.is_active, COALESCE(pc.name,'') AS category_name FROM product_variants pv JOIN products p ON p.id=pv.product_id LEFT JOIN product_categories pc ON pc.id=p.category_id WHERE pv.id=? LIMIT 1");
+            $st->execute([$id]);
+            $res = $st->fetch(PDO::FETCH_ASSOC);
+            if ($res) return $res;
+        }
+        if(!loyalty_table_exists($pdo,'menu_items')) return false;
         $join = loyalty_table_exists($pdo,'menu_categories') ? " LEFT JOIN menu_categories mc ON mc.id=mi.category_id" : "";
         $catSel = loyalty_table_exists($pdo,'menu_categories') ? "COALESCE(mc.name,'')" : "''";
         $st=$pdo->prepare("SELECT mi.id, mi.name, mi.description, mi.price, mi.hpp, mi.image_url, mi.category_id, mi.is_active, $catSel AS category_name FROM menu_items mi $join WHERE mi.id=? LIMIT 1");
@@ -590,6 +613,19 @@ function loyalty_reward_nominal_value(PDO $pdo, array $reward, int $pointsUsed=0
     return loyalty_nominal_point_value($pdo, max(0,$points));
 }
 function loyalty_reward_select_sql(PDO $pdo): string {
+    if(loyalty_table_exists($pdo,'product_variants')) {
+        return "SELECT prp.*, 
+                       CONCAT(p.name, IF(pv.variant_name != 'Default' AND pv.variant_name != '', CONCAT(' - ', pv.variant_name), '')) AS source_menu_name, 
+                       pv.selling_price AS source_menu_price, 
+                       pv.hpp AS source_menu_hpp, 
+                       pv.image AS source_menu_image_url, 
+                       pv.is_active AS source_menu_active, 
+                       COALESCE(pc.name,'') AS source_menu_category 
+                FROM point_reward_products prp 
+                LEFT JOIN product_variants pv ON pv.id=prp.source_menu_item_id 
+                LEFT JOIN products p ON p.id=pv.product_id 
+                LEFT JOIN product_categories pc ON pc.id=p.category_id";
+    }
     if(loyalty_table_exists($pdo,'menu_items')){
         $joinCat = loyalty_table_exists($pdo,'menu_categories') ? " LEFT JOIN menu_categories mc ON mc.id=mi.category_id" : "";
         $catSel = loyalty_table_exists($pdo,'menu_categories') ? "COALESCE(mc.name,'')" : "''";
@@ -601,7 +637,8 @@ function loyalty_get_reward_products(PDO $pdo, bool $onlyActive=true): array {
     loyalty_ensure_tables($pdo);
     try {
         $where = $onlyActive ? "WHERE prp.is_active=1 AND (prp.visible_from IS NULL OR prp.visible_from<=NOW()) AND (prp.visible_until IS NULL OR prp.visible_until>=NOW())" : "";
-        if($onlyActive && loyalty_table_exists($pdo,'menu_items')) $where .= " AND (prp.source_menu_item_id IS NULL OR mi.is_active=1)";
+        if($onlyActive && loyalty_table_exists($pdo,'product_variants')) $where .= " AND (prp.source_menu_item_id IS NULL OR (pv.is_active=1 AND p.is_active=1))";
+        else if($onlyActive && loyalty_table_exists($pdo,'menu_items')) $where .= " AND (prp.source_menu_item_id IS NULL OR mi.is_active=1)";
         return $pdo->query(loyalty_reward_select_sql($pdo)." $where ORDER BY prp.sort_order ASC, prp.id ASC")->fetchAll(PDO::FETCH_ASSOC);
     } catch (Throwable $e) { return []; }
 }
@@ -876,7 +913,9 @@ function loyalty_sync_completed_reward_redemptions(PDO $pdo, ?int $redemptionId=
 }
 function loyalty_request_reward_redemption(PDO $pdo, int $memberId, int $rewardId, $createdBy=null): array {
     loyalty_ensure_tables($pdo);
-    if(loyalty_table_exists($pdo,'menu_items')){
+    if(loyalty_table_exists($pdo,'product_variants')){
+        $st=$pdo->prepare("SELECT prp.* FROM point_reward_products prp LEFT JOIN product_variants pv ON pv.id=prp.source_menu_item_id LEFT JOIN products p ON p.id=pv.product_id WHERE prp.id=? AND prp.is_active=1 AND (prp.visible_from IS NULL OR prp.visible_from<=NOW()) AND (prp.visible_until IS NULL OR prp.visible_until>=NOW()) AND (prp.source_menu_item_id IS NULL OR (pv.is_active=1 AND p.is_active=1)) LIMIT 1");
+    }else if(loyalty_table_exists($pdo,'menu_items')){
         $st=$pdo->prepare("SELECT prp.* FROM point_reward_products prp LEFT JOIN menu_items mi ON mi.id=prp.source_menu_item_id WHERE prp.id=? AND prp.is_active=1 AND (prp.visible_from IS NULL OR prp.visible_from<=NOW()) AND (prp.visible_until IS NULL OR prp.visible_until>=NOW()) AND (prp.source_menu_item_id IS NULL OR mi.is_active=1) LIMIT 1");
     }else{
         $st=$pdo->prepare("SELECT * FROM point_reward_products WHERE id=? AND is_active=1 AND (visible_from IS NULL OR visible_from<=NOW()) AND (visible_until IS NULL OR visible_until>=NOW()) LIMIT 1");
@@ -970,6 +1009,24 @@ function loyalty_void_order(PDO $pdo, int $orderId, $createdBy=null): void {
     }
     try{ $pdo->prepare("UPDATE receipt_claims SET status='cancelled' WHERE transaction_id=? AND status='unclaimed'")->execute([$orderId]); }catch(Throwable $e){}
     try{ $pdo->prepare("UPDATE orders SET loyalty_claim_status='cancelled' WHERE id=? AND loyalty_claim_status='unclaimed'")->execute([$orderId]); }catch(Throwable $e){}
+}
+
+function loyalty_resolve_image_url(?string $imgUrl): string {
+    if (empty($imgUrl)) return '';
+    $imgUrl = trim($imgUrl);
+    if (str_starts_with($imgUrl, 'http://') || str_starts_with($imgUrl, 'https://') || str_starts_with($imgUrl, 'data:image')) {
+        return $imgUrl;
+    }
+    if (str_starts_with($imgUrl, 'assets/img/')) {
+        $imgUrl = 'images/pos-products/' . substr($imgUrl, strlen('assets/img/'));
+    }
+    if (str_starts_with($imgUrl, 'public/assets/')) {
+        $imgUrl = substr($imgUrl, strlen('public/assets/'));
+    }
+    if (function_exists('asset')) {
+        return asset($imgUrl);
+    }
+    return rtrim(app_base_url(), '/') . '/public/assets/' . ltrim($imgUrl, '/');
 }
 
 }
