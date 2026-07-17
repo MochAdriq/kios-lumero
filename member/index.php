@@ -6,6 +6,10 @@ require_once __DIR__ . '/../config/loyalty.php';
 loyalty_ensure_tables($pdo);
 
 $claimCode = strtoupper(trim((string)($_GET['claim'] ?? '')));
+$claimCheck = ['valid' => false];
+if ($claimCode !== '') {
+    $claimCheck = loyalty_check_claim_code($pdo, $claimCode);
+}
 
 $stmt = $pdo->query("SELECT * FROM point_reward_products WHERE is_active = 1 ORDER BY sort_order ASC, id ASC LIMIT 4");
 $highlights = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -644,6 +648,76 @@ function hook_reward_image(array $rw): string {
         </div>
     </section>
 </div>
+
+<?php if (isset($claimCheck) && $claimCheck['valid'] === true): ?>
+<style>
+/* Claim Modal Styles */
+.claim-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 14, 13, 0.85); backdrop-filter: blur(8px);
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+    padding: 24px; opacity: 0; animation: fadeIn 0.4s forwards;
+}
+@keyframes fadeIn { to { opacity: 1; } }
+.claim-modal {
+    background: #fff; width: 100%; max-width: 420px;
+    border-radius: 32px; padding: 40px 32px; text-align: center;
+    position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+    transform: translateY(40px) scale(0.95); opacity: 0;
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+    overflow: hidden;
+}
+@keyframes slideUp { to { transform: translateY(0) scale(1); opacity: 1; } }
+.claim-modal::before {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, var(--gold-glow) 0%, transparent 60%);
+    animation: rotateGlow 10s linear infinite; pointer-events: none; z-index: 0;
+}
+@keyframes rotateGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.claim-modal-content { position: relative; z-index: 1; }
+.claim-modal-icon {
+    font-size: 64px; margin-bottom: 16px; animation: bounceIcon 2s infinite ease-in-out;
+}
+@keyframes bounceIcon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.claim-modal-title {
+    font-size: 28px; font-weight: 900; color: var(--ink);
+    letter-spacing: -0.04em; margin-bottom: 12px; line-height: 1.1;
+}
+.claim-modal-desc {
+    font-size: 15px; font-weight: 500; color: var(--muted);
+    line-height: 1.5; margin-bottom: 24px;
+}
+.claim-modal-points {
+    display: inline-block; background: var(--red-bg); color: var(--red);
+    font-size: 24px; font-weight: 900; padding: 12px 24px; border-radius: 99px;
+    border: 2px dashed rgba(196, 18, 48, 0.3); margin-bottom: 32px;
+}
+.claim-modal-btn {
+    display: block; width: 100%; padding: 18px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    color: #fff; font-size: 16px; font-weight: 800; text-decoration: none;
+    box-shadow: 0 12px 24px rgba(196, 18, 48, 0.25);
+    transition: all 0.3s; margin-bottom: 16px;
+}
+.claim-modal-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(196, 18, 48, 0.35); }
+.claim-modal-close {
+    background: none; border: none; font-size: 14px; font-weight: 700;
+    color: var(--muted); cursor: pointer; text-decoration: underline;
+}
+</style>
+<div class="claim-modal-overlay" id="claimModal">
+    <div class="claim-modal">
+        <div class="claim-modal-content">
+            <div class="claim-modal-icon">🎉</div>
+            <div class="claim-modal-title">Selamat!</div>
+            <div class="claim-modal-desc">Transaksi Anda di Lumero bernilai poin loyalty. Silakan masuk atau daftar sekarang untuk mengklaimnya!</div>
+            <div class="claim-modal-points"><?= number_format($claimCheck['points'], 0, ',', '.') ?> Poin</div>
+            <a href="login.php?claim=<?= urlencode($claimCode) ?>" class="claim-modal-btn">Klaim Poin Sekarang &rarr;</a>
+            <button class="claim-modal-close" onclick="document.getElementById('claimModal').remove()">Nanti Saja</button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 </body>
 </html>

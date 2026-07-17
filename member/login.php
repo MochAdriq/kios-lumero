@@ -67,7 +67,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       if(strlen($phone)<9) throw new Exception('Sesi nomor HP tidak ditemukan. Masukkan nomor HP kembali.');
       if($savedOtp==='' || $inputOtp!==$savedOtp) throw new Exception('Kode OTP salah. Periksa kembali pesan WhatsApp Anda.');
       $_SESSION['member_login_mode']='register';
-      $msg='OTP WhatsApp valid! Silakan buat 6 digit PIN untuk akun member Anda.';
+      $msg='OTP WhatsApp valid! Silakan buat 4 digit PIN untuk akun member Anda.';
     }elseif($action==='login_pin'){
       $phone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $pin=trim((string)($_POST['pin'] ?? ''));
       if(strlen($phone)<9) throw new Exception('Sesi nomor HP tidak ditemukan. Masukkan nomor HP kembali.');
@@ -79,7 +79,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     }elseif($action==='create_pin'){
       $phone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $mode=(string)($_SESSION['member_login_mode'] ?? 'register'); $pin=trim((string)($_POST['pin'] ?? '')); $pin2=trim((string)($_POST['pin_confirm'] ?? ''));
       if(strlen($phone)<9) throw new Exception('Sesi nomor HP tidak ditemukan. Masukkan nomor HP kembali.');
-      if(strlen($pin)<4) throw new Exception('PIN minimal 4 digit.'); if($pin!==$pin2) throw new Exception('Konfirmasi PIN belum sama.');
+      if(strlen($pin)!==4) throw new Exception('PIN harus 4 digit.'); if($pin!==$pin2) throw new Exception('Konfirmasi PIN belum sama.');
       $m=loyalty_find_member_by_phone($pdo,$phone);
       if($m){ if(!empty($m['pin_hash']) && $mode==='register') throw new Exception('Nomor ini sudah memiliki PIN. Silakan masuk dengan PIN.'); $pdo->prepare("UPDATE members SET pin_hash=?, updated_at=NOW() WHERE id=?")->execute([password_hash($pin,PASSWORD_DEFAULT),(int)$m['id']]); $_SESSION['member_id']=(int)$m['id']; loyalty_activity($pdo,(int)$m['id'],$phone,'member_pin_setup','Membuat PIN dari halaman member'); }
       else{ $m=loyalty_create_member($pdo,$phone,'',$pin,null); $_SESSION['member_id']=(int)$m['id']; loyalty_activity($pdo,(int)$m['id'],$phone,'member_register','Registrasi nomor dan PIN dari halaman member'); }

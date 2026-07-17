@@ -463,6 +463,24 @@ function loyalty_create_receipt_claim(PDO $pdo, int $orderId, int $points): ?arr
     try{ $pdo->prepare("UPDATE orders SET loyalty_claim_code=?, loyalty_claim_points=?, loyalty_claim_status='unclaimed' WHERE id=?")->execute([$code,$points,$orderId]); }catch(Throwable $e){}
     return ['id'=>(int)$pdo->lastInsertId(),'claim_code'=>$code,'claim_points'=>$points,'expired_days'=>$days];
 }
+// --- KLAIM POIN DARI STRUK ---
+function loyalty_check_claim_code(PDO $pdo, string $code): array {
+    loyalty_ensure_tables($pdo);
+    $code=strtoupper(trim($code));
+    if($code==='') return ['valid'=>false,'message'=>'Kode struk wajib diisi.'];
+    try{
+        $st=$pdo->prepare("SELECT rc.*, o.order_number AS order_no, o.payment_status, o.order_status, o.member_id AS order_member_id FROM receipt_claims rc JOIN orders o ON o.id=rc.transaction_id WHERE rc.claim_code=?");
+        $st->execute([$code]);
+        $rc=$st->fetch(PDO::FETCH_ASSOC);
+        if(!$rc) return ['valid'=>false,'message'=>'Kode struk tidak ditemukan.'];
+        if($rc['status']!=='unclaimed') return ['valid'=>false,'message'=>'Kode struk sudah diklaim atau hangus.'];
+        if(!empty($rc['expired_at']) && strtotime($rc['expired_at']) < time()) return ['valid'=>false,'message'=>'Kode struk sudah kedaluwarsa.'];
+        if($rc['payment_status']!=='paid' || $rc['order_status']==='cancelled') return ['valid'=>false,'message'=>'Transaksi belum lunas/batal.'];
+        if((int)($rc['order_member_id'] ?? 0)>0) return ['valid'=>false,'message'=>'Poin transaksi ini sudah terhubung ke member.'];
+        return ['valid'=>true,'points'=>(int)$rc['claim_points'],'order_no'=>$rc['order_no']];
+    }catch(Throwable $e){ return ['valid'=>false,'message'=>$e->getMessage()]; }
+}
+
 function loyalty_claim_receipt(PDO $pdo, int $memberId, string $code): array {
     loyalty_ensure_tables($pdo);
     $code=strtoupper(trim($code));

@@ -118,8 +118,8 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
                         <input type="hidden" name="csrf" value="<?=mem_e($csrf)?>">
                         <input type="hidden" name="action" value="login_pin">
                         <div class="input-group">
-                            <label>PIN Keamanan (6 Digit)</label>
-                            <input name="pin" type="password" inputmode="numeric" required placeholder="••••••" autofocus>
+                            <label>PIN Keamanan (4 Digit)</label>
+                            <input name="pin" type="password" inputmode="numeric" required placeholder="••••" maxlength="4" pattern="\d{4}" autofocus>
                         </div>
                         <button class="btn-primary">Masuk Sekarang</button>
                     </form>
@@ -146,11 +146,11 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
                         <input type="hidden" name="action" value="create_pin">
                         <div class="input-group">
                             <label>Buat PIN Baru</label>
-                            <input name="pin" type="password" inputmode="numeric" required placeholder="Minimal 4 digit" autofocus>
+                            <input name="pin" type="password" inputmode="numeric" required placeholder="4 digit PIN" maxlength="4" pattern="\d{4}" autofocus>
                         </div>
                         <div class="input-group">
                             <label>Konfirmasi PIN</label>
-                            <input name="pin_confirm" type="password" inputmode="numeric" required placeholder="Masukkan kembali PIN">
+                            <input name="pin_confirm" type="password" inputmode="numeric" required placeholder="Masukkan kembali PIN 4 digit" maxlength="4" pattern="\d{4}">
                         </div>
                         <button class="btn-primary">Simpan PIN & Masuk</button>
                     </form>
