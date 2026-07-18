@@ -5,7 +5,7 @@ class PurchaseModel extends Model
     public function list(string $from, string $to): array
     {
         return $this->all("SELECT po.*, v.name vendor_name,
-               (SELECT GROUP_CONCAT(CONCAT(rm.name, ' (', CAST(poi.qty AS CHAR), ' ', COALESCE(u.symbol,''), ')') SEPARATOR ', ')
+               (SELECT GROUP_CONCAT(CONCAT(rm.name, ' (', TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(poi.qty AS CHAR))), ' ', COALESCE(u.symbol,''), ')') SEPARATOR ', ')
                 FROM purchase_order_items poi
                 JOIN raw_materials rm ON rm.id=poi.raw_material_id
                 LEFT JOIN units u ON u.id=rm.unit_id
