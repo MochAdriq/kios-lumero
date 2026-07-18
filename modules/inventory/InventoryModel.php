@@ -3,11 +3,13 @@ class InventoryModel extends Model
 {
     public function categories(): array
     {
+        $outletId = $this->outletId();
         return $this->all("SELECT rmc.*, COUNT(rm.id) AS material_count 
             FROM raw_material_categories rmc 
-            LEFT JOIN raw_materials rm ON rm.category_id = rmc.id AND rm.is_active = 1
+            LEFT JOIN raw_materials rm ON rm.category_id = rmc.id AND rm.is_active = 1 AND rm.outlet_id = rmc.outlet_id
+            WHERE rmc.outlet_id IN (?, 1)
             GROUP BY rmc.id
-            ORDER BY rmc.sort_order, rmc.name");
+            ORDER BY rmc.sort_order, rmc.name", [$outletId]);
     }
 
     public function units(): array
@@ -29,7 +31,7 @@ class InventoryModel extends Model
     {
         if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);
         $outletId = $this->outletId();
-        $where = 'WHERE rm.is_active=1';
+        $where = 'WHERE rm.is_active=1 AND rm.outlet_id = ?';
         $params = [$outletId, $outletId];
         if ($categoryId > 0) {
             $where .= ' AND rm.category_id = ?';
@@ -43,7 +45,7 @@ class InventoryModel extends Model
         }
         return $this->all("
             SELECT rm.id, rm.category_id, rm.unit_id, rm.sku, rm.name, rm.lead_time_days, rm.is_long_lead_time, rm.is_active,
-                   COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) AS stock_qty,
+                   COALESCE(orm.stock_qty, rm.stock_qty, 0) AS stock_qty,
                    COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0) AS min_stock_qty,
                    COALESCE(orm.average_cost, rm.average_cost, 0) AS average_cost,
                    rmc.name category_name, u.symbol unit_symbol
@@ -62,7 +64,7 @@ class InventoryModel extends Model
         $outletId = $this->outletId();
         return $this->all("
             SELECT rm.id, rm.category_id, rm.unit_id, rm.sku, rm.name, rm.lead_time_days, rm.is_long_lead_time, rm.is_active,
-                   COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) AS stock_qty,
+                   COALESCE(orm.stock_qty, rm.stock_qty, 0) AS stock_qty,
                    COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0) AS min_stock_qty,
                    COALESCE(orm.average_cost, rm.average_cost, 0) AS average_cost,
                    rmc.name category_name, u.symbol unit_symbol
@@ -70,10 +72,10 @@ class InventoryModel extends Model
             JOIN raw_material_categories rmc ON rmc.id = rm.category_id
             JOIN units u ON u.id = rm.unit_id
             LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
-            WHERE rm.is_active = 1 AND COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) <= COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0)
-            ORDER BY (COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) - COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0)) ASC
+            WHERE rm.is_active = 1 AND rm.outlet_id = ? AND COALESCE(orm.stock_qty, rm.stock_qty, 0) <= COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0)
+            ORDER BY (COALESCE(orm.stock_qty, rm.stock_qty, 0) - COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0)) ASC
             LIMIT 100
-        ", [$outletId, $outletId, $outletId, $outletId]);
+        ", [$outletId, $outletId]);
     }
 
     /**
@@ -81,23 +83,30 @@ class InventoryModel extends Model
      */
     public function createCategory(string $name, int $sortOrder = 0): int
     {
+        $outletId = $this->outletId();
         $this->execSql(
-            "INSERT INTO raw_material_categories (name, sort_order) VALUES (?, ?)",
-            [$name, $sortOrder]
+            "INSERT INTO raw_material_categories (outlet_id, name, sort_order) VALUES (?, ?, ?)",
+            [$outletId, $name, $sortOrder]
         );
         return (int)$this->db->lastInsertId();
     }
 
     public function createRawMaterial(array $data): int
     {
+        $outletId = $this->outletId();
+        $sku = trim($data['sku'] ?? '');
+        if ($sku === '') {
+            $sku = 'RM-' . time() . '-' . mt_rand(100, 999);
+        }
         $this->execSql(
-            "INSERT INTO raw_materials (category_id, unit_id, name, sku, min_stock_qty, is_active, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())",
+            "INSERT INTO raw_materials (outlet_id, category_id, unit_id, name, sku, min_stock_qty, is_active, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())",
             [
+                $outletId,
                 $data['category_id'] ?: null,
                 $data['unit_id'] ?: null,
                 trim($data['name'] ?? ''),
-                trim($data['sku'] ?? ''),
+                $sku,
                 (float)($data['min_stock_qty'] ?? 0)
             ]
         );
@@ -146,7 +155,8 @@ class InventoryModel extends Model
     {
         $name = trim($name);
         if ($name === '') return 0;
-        $row = $this->one("SELECT id FROM raw_material_categories WHERE name = ? LIMIT 1", [$name]);
+        $outletId = $this->outletId();
+        $row = $this->one("SELECT id FROM raw_material_categories WHERE name = ? AND outlet_id IN (?, 1) ORDER BY (outlet_id = ?) DESC LIMIT 1", [$name, $outletId, $outletId]);
         if ($row) return (int)$row['id'];
         return $this->createCategory($name, 0);
     }
@@ -196,18 +206,18 @@ class InventoryModel extends Model
     {
         if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);
         $outletId = $this->outletId();
-        $total = $this->one("SELECT COUNT(*) AS cnt FROM raw_materials WHERE is_active = 1");
+        $total = $this->one("SELECT COUNT(*) AS cnt FROM raw_materials WHERE is_active = 1 AND outlet_id = ?", [$outletId]);
         $lowStock = $this->one("
             SELECT COUNT(*) AS cnt FROM raw_materials rm
             LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
-            WHERE rm.is_active = 1 AND COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) <= COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0)
+            WHERE rm.is_active = 1 AND rm.outlet_id = ? AND COALESCE(orm.stock_qty, rm.stock_qty, 0) <= COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0)
         ", [$outletId, $outletId]);
         $outOfStock = $this->one("
             SELECT COUNT(*) AS cnt FROM raw_materials rm
             LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
-            WHERE rm.is_active = 1 AND COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) <= 0
+            WHERE rm.is_active = 1 AND rm.outlet_id = ? AND COALESCE(orm.stock_qty, rm.stock_qty, 0) <= 0
         ", [$outletId, $outletId]);
-        $categories = $this->one("SELECT COUNT(*) AS cnt FROM raw_material_categories");
+        $categories = $this->one("SELECT COUNT(*) AS cnt FROM raw_material_categories WHERE outlet_id IN (?, 1)", [$outletId]);
 
         return [
             'total_materials' => (int)($total['cnt'] ?? 0),

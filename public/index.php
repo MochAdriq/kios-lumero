@@ -31,6 +31,19 @@ $router->get('/', function(){ header('Location: '.url(Auth::check()?'/dashboard'
 $router->get('/login', [AuthController::class,'loginForm']);
 $router->post('/login', [AuthController::class,'login']);
 $router->get('/logout', [AuthController::class,'logout']);
+$router->get('/switch-db', function() {
+    $mode = trim($_GET['mode'] ?? 'local');
+    if (in_array($mode, ['local', 'production'], true)) {
+        $_SESSION['kios_db_mode'] = $mode;
+        setcookie('kios_db_mode', $mode, time() + (86400 * 30), '/');
+        if (class_exists('Database')) {
+            Database::resetConnection();
+        }
+    }
+    $ref = $_SERVER['HTTP_REFERER'] ?? url('/dashboard');
+    header('Location: ' . $ref);
+    exit;
+});
 $router->get('/dashboard', [DashboardController::class,'index']);
 $router->get('/api/dashboard/summary', [DashboardController::class,'apiSummary']);
 $router->get('/store', [StoreController::class,'index']);

@@ -95,7 +95,7 @@ class POSModel extends Model
 
         $discount = max(0, (float)($payload['discount_amount'] ?? 0));
         $cashReceived = max(0, (float)($payload['paid_amount'] ?? 0));
-        $taxPercent = (float)$this->setting($outletId, 'pb1_tax_percent', 0);
+        $taxPercent = 0;
         $servicePercent = (float)$this->setting($outletId, 'service_charge_percent', 0);
 
         $normalized = [];
@@ -140,7 +140,7 @@ class POSModel extends Model
 
         $discount = min($discount, $subtotal);
         $taxable = max(0, $subtotal - $discount);
-        $tax = round($taxable * $taxPercent / 100, 0);
+        $tax = 0;
         $service = round($taxable * $servicePercent / 100, 0);
         $grandTotal = max(0, $taxable + $tax + $service);
         if ($paymentMethod === 'cash' && $cashReceived < $grandTotal) {
@@ -170,7 +170,7 @@ class POSModel extends Model
 
             foreach ($normalized as $ni) {
                 $lineDiscount = $subtotal > 0 ? round($discount * ($ni['line_total'] / $subtotal), 2) : 0;
-                $lineTax = $taxable > 0 ? round($tax * (max(0, $ni['line_total'] - $lineDiscount) / $taxable), 2) : 0;
+                $lineTax = 0;
                 $lineProfit = ($ni['line_total'] - $lineDiscount) - $ni['line_hpp'];
                 $itemStmt->execute([$orderId,$ni['variant_id'],$ni['product_name'],$ni['variant_name'],$ni['qty'],$ni['price'],$lineDiscount,$lineTax,$ni['line_total'],$ni['hpp'],$ni['line_hpp'],$lineProfit,null]);
                 $orderItemId = (int)$this->db->lastInsertId();

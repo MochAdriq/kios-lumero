@@ -24,7 +24,7 @@ $quickMenus = [
     ['Rencana Belanja', '/forecasting', 'ti ti-chart-line', 'Rencana belanja otomatis', ['super_admin','administrator']],
     ['Pengguna', '/users', 'ti ti-users', 'Akun dan akses', ['super_admin','administrator']],
     ['Jejak Aktivitas', '/audit-logs', 'ti ti-history', 'Riwayat perubahan', ['super_admin']],
-    ['Setting Sistem', '/settings', 'ti ti-settings', 'Pajak, printer, gateway', ['super_admin']],
+    ['Setting Sistem', '/settings', 'ti ti-settings', 'Printer, gateway, profil', ['super_admin']],
 ];
 $quickMenus = array_values(array_filter($quickMenus, fn($m) => $role === 'super_admin' || in_array($role, $m[4], true)));
 $status = strtolower($store['status'] ?? 'closed');

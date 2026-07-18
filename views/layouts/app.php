@@ -188,7 +188,10 @@ if ($isHQUser) {
         <div class="d-flex align-items-center gap-3 min-w-0">
             <button class="sim-toggle" id="sidebarToggle" type="button" aria-label="Toggle menu"><?= sim_icon('ti-menu-2') ?></button>
             <div class="min-w-0">
-                <h1 class="sim-page-title mb-0"><?= htmlspecialchars($pageTitle ?? 'Dashboard') ?></h1>
+                <div class="d-flex align-items-center flex-wrap">
+                    <h1 class="sim-page-title mb-0"><?= htmlspecialchars($pageTitle ?? 'Dashboard') ?></h1>
+                    <?= function_exists('render_db_switcher') ? render_db_switcher() : '' ?>
+                </div>
                 <div class="sim-page-subtitle">
                     <?php if ($isHQContext): ?>
                         <span class="badge bg-warning text-dark" style="font-size:.7rem;vertical-align:middle"><?= sim_icon('ti-star', '', 'width:14px; height:14px;') ?> PUSAT</span>

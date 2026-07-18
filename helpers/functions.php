@@ -526,3 +526,42 @@ function check_variant_stock(PDO $pdo, int $variantId, ?int $outletId = null): b
 
     return true;
 }
+
+/**
+ * Mengembalikan mode database yang sedang aktif: 'local' atau 'production'.
+ * Toggle hanya berlaku jika APP_ENV=local.
+ */
+function active_db_mode(): string
+{
+    if (app_env('APP_ENV', 'local') !== 'local') {
+        return 'production';
+    }
+    $mode = $_SESSION['kios_db_mode'] ?? $_COOKIE['kios_db_mode'] ?? 'local';
+    return $mode === 'production' ? 'production' : 'local';
+}
+
+/**
+ * Menampilkan badge/tombol toggle switch database di header ketika APP_ENV=local.
+ */
+function render_db_switcher(): string
+{
+    if (app_env('APP_ENV', 'local') !== 'local') {
+        return '';
+    }
+
+    $mode = active_db_mode();
+    if ($mode === 'production') {
+        $switchUrl = url('/switch-db?mode=local');
+        return '<span class="badge bg-danger text-white d-inline-flex align-items-center gap-1 px-3 py-2 border border-light shadow-sm ms-2" style="font-size:0.82rem;border-radius:20px;">'
+             . sim_icon('ti-database', 'me-1') . ' DB: HOSTINGER / PROD '
+             . '<a href="javascript:void(0);" onclick="if(confirm(\'Kembali gunakan Database LOKAL (XAMPP)?\')) window.location.href=\'' . $switchUrl . '\'" class="ms-2 btn btn-xs btn-light text-danger rounded-pill px-2 py-0 fw-bold" style="font-size:0.72rem;text-decoration:none;">Ganti ke Lokal 🔀</a>'
+             . '</span>';
+    } else {
+        $switchUrl = url('/switch-db?mode=production');
+        return '<span class="badge bg-success text-white d-inline-flex align-items-center gap-1 px-3 py-2 border border-light shadow-sm ms-2" style="font-size:0.82rem;border-radius:20px;">'
+             . sim_icon('ti-database', 'me-1') . ' DB: LOKAL (XAMPP) '
+             . '<a href="javascript:void(0);" onclick="if(confirm(\'Ganti ke Database HOSTINGER (PRODUKSI)?\\nPastikan kredensial PROD_DB_* di .env sudah terisi dengan benar!\')) window.location.href=\'' . $switchUrl . '\'" class="ms-2 btn btn-xs btn-light text-success rounded-pill px-2 py-0 fw-bold" style="font-size:0.72rem;text-decoration:none;">Ganti ke Prod 🔀</a>'
+             . '</span>';
+    }
+}
+

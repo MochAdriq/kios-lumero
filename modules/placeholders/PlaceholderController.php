@@ -16,7 +16,7 @@ class PlaceholderController extends Controller
         'forecasting' => ['Forecast Belanja', 'ti ti-chart-line', 'admin', 'Rekomendasi belanja harian/mingguan berdasarkan target penjualan dan lead time bahan.', ['super_admin','administrator']],
         'users' => ['User & HR', 'ti ti-users', 'owner', 'User management, role access, gaji harian, staf bertugas, dan payroll otomatis.', ['super_admin']],
         'audit-logs' => ['Audit Trail', 'ti ti-history', 'owner', 'Riwayat aktivitas user, perubahan stok, perubahan harga, void order, dan perubahan data penting.', ['super_admin']],
-        'settings' => ['Setting Sistem', 'ti ti-settings', 'owner', 'Profil outlet, pajak PB1, printer, payment gateway, backup database, dan general setting.', ['super_admin']],
+        'settings' => ['Setting Sistem', 'ti ti-settings', 'owner', 'Profil outlet, printer, payment gateway, backup database, dan general setting.', ['super_admin']],
         'recipes' => ['Daftar Resep / BOM', 'ti ti-list-details', 'admin', 'Index recipe engine untuk semua varian produk dan perhitungan ulang HPP massal.', ['super_admin','administrator']],
     ];
 

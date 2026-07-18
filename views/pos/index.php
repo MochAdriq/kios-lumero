@@ -37,7 +37,10 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                             <!-- Top bar: Category Title + Search -->
                             <div class="sim-pos-topbar">
                                 <div class="sim-pos-topbar-left">
-                                    <h2 id="activeCategoryLabel">Semua Menu</h2>
+                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                        <h2 id="activeCategoryLabel" class="mb-0">Semua Menu</h2>
+                                        <?= function_exists('render_db_switcher') ? render_db_switcher() : '' ?>
+                                    </div>
                                     <small id="visibleProductInfo" class="sim-item-count"><?= (int)$totalVariants ?> item tersedia</small>
                                 </div>
                                 <div class="sim-pos-topbar-right">
@@ -127,7 +130,6 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                                 <input type="hidden" name="cart" id="cartJson"><input type="hidden" name="payment_method" id="paymentMethod" value="cash"><input type="hidden" name="order_source" id="orderSource" value="cashier"><input type="hidden" name="order_type" id="orderType" value="takeaway">
                                 <div class="sim-summary-section">
                                     <div class="sim-summary-row"><span>Subtotal</span><span id="subtotalText">Rp 0</span></div>
-                                    <div class="sim-summary-row"><span>Pajak (11%)</span><span id="taxPreview">Rp 0</span></div>
                                     <div class="sim-summary-row sim-summary-discount"><span>Diskon</span><span class="text-danger">- <input type="number" class="form-control form-control-sm text-end sim-summary-input" name="discount_amount" id="discountAmount" value="0" min="0" step="500"></span></div>
                                     <div class="sim-summary-row sim-summary-total"><span>Total</span><strong id="totalText">Rp 0</strong></div>
                                 </div>

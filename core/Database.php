@@ -31,4 +31,9 @@ class Database
         }
         return self::$pdo;
     }
+
+    public static function resetConnection(): void
+    {
+        self::$pdo = null;
+    }
 }

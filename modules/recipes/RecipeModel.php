@@ -13,8 +13,6 @@ class RecipeModel extends Model
     public function listRecipes(): array
     {
         $outletId = $this->outletId();
-        $pScope = outlet_scope_sql('p.outlet_id', $outletId);
-        $pvScope = outlet_scope_sql('pv.outlet_id', $outletId);
         
         return $this->all("
             SELECT r.id as recipe_id, 
@@ -29,15 +27,16 @@ class RecipeModel extends Model
             LEFT JOIN product_categories pc ON pc.id = p.category_id
             LEFT JOIN recipes r ON r.product_variant_id = pv.id
             WHERE p.is_active = 1 AND pv.is_active = 1
-              AND {$pScope['sql']}
-              AND {$pvScope['sql']}
+              AND (p.outlet_id = ? OR p.outlet_id IS NULL)
+              AND (pv.outlet_id = ? OR pv.outlet_id IS NULL)
             ORDER BY pc.sort_order, p.name, pv.variant_name
-        ", array_merge($pScope['params'], $pvScope['params']));
+        ", [$outletId, $outletId]);
     }
 
     public function listSubRecipes(): array
     {
-        return $this->all("SELECT r.*, u.name as yield_unit_label FROM recipes r LEFT JOIN units u ON u.id = r.yield_unit_id WHERE r.recipe_type = 'sub_recipe' ORDER BY r.name ASC");
+        $outletId = $this->outletId();
+        return $this->all("SELECT r.*, u.name as yield_unit_label FROM recipes r LEFT JOIN units u ON u.id = r.yield_unit_id WHERE r.recipe_type = 'sub_recipe' AND (r.outlet_id = ? OR r.outlet_id = 1) ORDER BY r.name ASC", [$outletId]);
     }
 
     public function getRecipe(int $id): ?array
@@ -88,18 +87,20 @@ class RecipeModel extends Model
         $v = $this->one("SELECT pv.id, p.name, pv.variant_name FROM product_variants pv JOIN products p ON p.id=pv.product_id WHERE pv.id = ?", [$variantId]);
         if (!$v) throw new Exception("Variant produk tidak ditemukan.");
         
+        $outletId = $this->outletId();
         $name = $v['name'] . ' - ' . ($v['variant_name'] ?: 'Default');
-        $stmt = $this->db->prepare("INSERT INTO recipes (product_variant_id, name, recipe_type, yield_qty, yield_unit_id, is_active, created_at, updated_at) VALUES (?, ?, 'final', 1, 4, 1, NOW(), NOW())");
-        $stmt->execute([$variantId, $name]);
+        $stmt = $this->db->prepare("INSERT INTO recipes (outlet_id, product_variant_id, name, recipe_type, yield_qty, yield_unit_id, is_active, created_at, updated_at) VALUES (?, ?, ?, 'final', 1, 4, 1, NOW(), NOW())");
+        $stmt->execute([$outletId, $variantId, $name]);
         return (int)$this->db->lastInsertId();
     }
 
     public function createSubRecipe(string $name, float $yieldQty, int $unitId): int
     {
+        $outletId = $this->outletId();
         $this->execSql("
-            INSERT INTO recipes (name, recipe_type, yield_qty, yield_unit_id, is_active, created_at, updated_at)
-            VALUES (?, 'sub_recipe', ?, ?, 1, NOW(), NOW())
-        ", [$name, $yieldQty, $unitId]);
+            INSERT INTO recipes (outlet_id, name, recipe_type, yield_qty, yield_unit_id, is_active, created_at, updated_at)
+            VALUES (?, ?, 'sub_recipe', ?, ?, 1, NOW(), NOW())
+        ", [$outletId, $name, $yieldQty, $unitId]);
         return (int)$this->db->lastInsertId();
     }
 
