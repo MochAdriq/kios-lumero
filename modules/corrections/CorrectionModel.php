@@ -242,17 +242,18 @@ class CorrectionModel extends Model
         $outletId = $this->outletId();
         return $this->all("
             SELECT rm.id, rm.name, rm.sku,
-                   COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) AS stock_qty,
+                   COALESCE(orm.stock_qty, rm.stock_qty, 0) AS stock_qty,
                    COALESCE(orm.average_cost, rm.average_cost, 0) AS average_cost,
                    rmc.name AS category_name, u.symbol AS unit_symbol
             FROM raw_materials rm
             LEFT JOIN raw_material_categories rmc ON rmc.id = rm.category_id
             LEFT JOIN units u ON u.id = rm.unit_id
             LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
-            WHERE rm.is_active = 1
+            WHERE rm.is_active = 1 AND rm.outlet_id = ?
             ORDER BY rmc.sort_order, rm.name
         ", [$outletId, $outletId]);
     }
+    public function materials(): array { return $this->rawMaterials(); }
 
     /**
      * Apply a manual stock correction.

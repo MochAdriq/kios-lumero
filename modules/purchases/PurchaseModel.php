@@ -12,7 +12,23 @@ class PurchaseModel extends Model
                 WHERE poi.purchase_order_id=po.id) AS item_details
             FROM purchase_orders po LEFT JOIN vendors v ON v.id=po.vendor_id WHERE po.outlet_id=? AND po.purchase_date BETWEEN ? AND ? ORDER BY po.purchase_date DESC, po.id DESC LIMIT 200", [$this->outletId(), $from, $to]);
     }
-    public function materials(): array { return $this->all("SELECT rm.*, u.symbol unit_symbol, c.name category_name FROM raw_materials rm JOIN units u ON u.id=rm.unit_id LEFT JOIN raw_material_categories c ON c.id=rm.category_id WHERE rm.is_active=1 ORDER BY c.sort_order, c.name, rm.name"); }
+    public function materials(): array
+    {
+        if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);
+        $outletId = $this->outletId();
+        return $this->all("
+            SELECT rm.id, rm.name, rm.sku, rm.category_id, rm.unit_id,
+                   COALESCE(orm.stock_qty, rm.stock_qty, 0) AS stock_qty,
+                   COALESCE(orm.average_cost, rm.average_cost, 0) AS average_cost,
+                   u.symbol unit_symbol, c.name category_name
+            FROM raw_materials rm
+            JOIN units u ON u.id=rm.unit_id
+            LEFT JOIN raw_material_categories c ON c.id=rm.category_id
+            LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
+            WHERE rm.is_active=1 AND rm.outlet_id = ?
+            ORDER BY c.sort_order, c.name, rm.name
+        ", [$outletId, $outletId]);
+    }
     public function vendors(): array { return $this->all("SELECT id,name FROM vendors WHERE is_active=1 ORDER BY name"); }
     public function store(array $d): int
     {

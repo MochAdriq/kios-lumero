@@ -5,7 +5,7 @@ class DashboardModel extends Model
     {
         $date = business_date($outletId);
         $sales = $this->one("SELECT COUNT(*) trx, COALESCE(SUM(grand_total),0) omzet, COALESCE(SUM(total_hpp),0) hpp, COALESCE(SUM(gross_profit),0) laba FROM orders WHERE outlet_id=? AND business_date=? AND payment_status='paid'", [$outletId,$date]);
-        $low = $this->one("SELECT COUNT(*) total FROM raw_materials WHERE is_active=1 AND stock_qty <= min_stock_qty");
+        $low = $this->one("SELECT COUNT(*) total FROM raw_materials rm LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ? WHERE rm.is_active=1 AND rm.outlet_id = ? AND COALESCE(orm.stock_qty, rm.stock_qty, 0) <= COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0)", [$outletId, $outletId]);
         $store = $this->one("SELECT * FROM daily_store_sessions WHERE outlet_id=? AND business_date=? ORDER BY id DESC LIMIT 1", [$outletId,$date]);
         return ['sales'=>$sales,'low_stock'=>$low['total'] ?? 0,'store'=>$store];
     }

@@ -369,9 +369,10 @@ class RecipeModel extends Model
 
         $stocks = [];
         $stmt = $this->db->prepare("
-            SELECT rm.id, COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) AS stock_qty
+            SELECT rm.id, COALESCE(orm.stock_qty, rm.stock_qty, 0) AS stock_qty
             FROM raw_materials rm
             LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
+            WHERE rm.outlet_id = ?
         ");
         $stmt->execute([$outletId, $outletId]);
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
