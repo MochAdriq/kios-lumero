@@ -7,7 +7,7 @@ class InventoryModel extends Model
         return $this->all("SELECT rmc.*, COUNT(rm.id) AS material_count 
             FROM raw_material_categories rmc 
             LEFT JOIN raw_materials rm ON rm.category_id = rmc.id AND rm.is_active = 1 AND rm.outlet_id = rmc.outlet_id
-            WHERE rmc.outlet_id IN (?, 1)
+            WHERE rmc.outlet_id = ?
             GROUP BY rmc.id
             ORDER BY rmc.sort_order, rmc.name", [$outletId]);
     }
@@ -161,7 +161,7 @@ class InventoryModel extends Model
         $name = trim($name);
         if ($name === '') return 0;
         $outletId = $this->outletId();
-        $row = $this->one("SELECT id FROM raw_material_categories WHERE name = ? AND outlet_id IN (?, 1) ORDER BY (outlet_id = ?) DESC LIMIT 1", [$name, $outletId, $outletId]);
+        $row = $this->one("SELECT id FROM raw_material_categories WHERE name = ? AND outlet_id = ? LIMIT 1", [$name, $outletId]);
         if ($row) return (int)$row['id'];
         return $this->createCategory($name, 0);
     }
@@ -222,7 +222,7 @@ class InventoryModel extends Model
             LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
             WHERE rm.is_active = 1 AND rm.outlet_id = ? AND COALESCE(orm.stock_qty, rm.stock_qty, 0) <= 0
         ", [$outletId, $outletId]);
-        $categories = $this->one("SELECT COUNT(*) AS cnt FROM raw_material_categories WHERE outlet_id IN (?, 1)", [$outletId]);
+        $categories = $this->one("SELECT COUNT(*) AS cnt FROM raw_material_categories WHERE outlet_id = ?", [$outletId]);
 
         return [
             'total_materials' => (int)($total['cnt'] ?? 0),
