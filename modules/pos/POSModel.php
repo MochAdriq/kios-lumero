@@ -18,7 +18,7 @@ class POSModel extends Model
 
     public function categoriesWithProducts(int $outletId): array
     {
-        $pcScope = outlet_scope_sql('pc.outlet_id', $outletId);
+        $pcScope = ['sql' => 'pc.outlet_id = ?', 'params' => [$outletId]];
         $categories = $this->all("SELECT pc.id, pc.name, pc.slug, pc.sort_order
             FROM product_categories pc
             WHERE pc.is_active=1 AND {$pcScope['sql']}
@@ -30,28 +30,27 @@ class POSModel extends Model
         $mRecipe = new RecipeModel();
 
         foreach ($categories as $cat) {
-            $pScope = outlet_scope_sql('p.outlet_id', $outletId);
-            $pvScope = outlet_scope_sql('pv.outlet_id', $outletId);
-            $pcScope = outlet_scope_sql('pc.outlet_id', $outletId);
+            $pScope = ['sql' => 'p.outlet_id = ?', 'params' => [$outletId]];
+            $pvScope = ['sql' => 'pv.outlet_id = ?', 'params' => [$outletId]];
+            $pcScope = ['sql' => 'pc.outlet_id = ?', 'params' => [$outletId]];
             $items = $this->all("SELECT
                     pv.id AS variant_id,
                     pv.sku,
                     p.name AS product_name,
                     pv.variant_name,
-                    COALESCE(pbo.selling_price, NULLIF(pv.selling_price,0), p.base_price, 0) AS price,
-                    COALESCE(pbo.hpp, pv.hpp, p.base_hpp, 0) AS hpp,
+                    COALESCE(NULLIF(pv.selling_price,0), p.base_price, 0) AS price,
+                    COALESCE(pv.hpp, p.base_hpp, 0) AS hpp,
                     COALESCE(pv.image, p.image) AS image
                 FROM product_variants pv
                 JOIN products p ON p.id=pv.product_id
                 JOIN product_categories pc ON pc.id=p.category_id
-                LEFT JOIN product_branch_overrides pbo ON pbo.product_variant_id=pv.id AND pbo.outlet_id=?
                 WHERE p.category_id=? AND p.is_active=1
-                    AND COALESCE(pbo.is_active, pv.is_active) = 1
+                    AND pv.is_active = 1
                     AND pc.is_active=1
                     AND {$pScope['sql']}
                     AND {$pvScope['sql']}
                     AND {$pcScope['sql']}
-                ORDER BY p.name ASC, pv.is_default DESC, pv.variant_name ASC", array_merge([$outletId, $cat['id']], $pScope['params'], $pvScope['params'], $pcScope['params']));
+                ORDER BY p.name ASC, pv.is_default DESC, pv.variant_name ASC", array_merge([$cat['id']], $pScope['params'], $pvScope['params'], $pcScope['params']));
             
             if ($items) {
                 foreach ($items as &$it) {
@@ -106,9 +105,9 @@ class POSModel extends Model
         foreach ($items as $it) {
             $variantId = (int)($it['variant_id'] ?? 0);
             $qty = max(0.001, (float)($it['qty'] ?? 1));
-            $pScope = outlet_scope_sql('p.outlet_id', $outletId);
-            $pvScope = outlet_scope_sql('pv.outlet_id', $outletId);
-            $pcScope = outlet_scope_sql('pc.outlet_id', $outletId);
+            $pScope = ['sql' => 'p.outlet_id = ?', 'params' => [$outletId]];
+            $pvScope = ['sql' => 'pv.outlet_id = ?', 'params' => [$outletId]];
+            $pcScope = ['sql' => 'pc.outlet_id = ?', 'params' => [$outletId]];
             $variant = $this->one("SELECT pv.*, p.name AS product_name, p.id AS product_id
                 FROM product_variants pv
                 JOIN products p ON p.id=pv.product_id

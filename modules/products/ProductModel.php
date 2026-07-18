@@ -13,7 +13,8 @@ class ProductModel extends Model
 
     public function categories(): array
     {
-        $scope = outlet_scope_sql('outlet_id', $this->outletId());
+        $outletId = $this->outletId();
+        $scope = ['sql' => 'outlet_id = ?', 'params' => [$outletId]];
         return $this->all(
             "SELECT * FROM product_categories
             WHERE is_active=1 AND {$scope['sql']}
@@ -64,9 +65,9 @@ class ProductModel extends Model
     {
         $this->ensureImageColumnsAndSeed();
         $outletId = $this->outletId();
-        $pScope = outlet_scope_sql('p.outlet_id', $outletId);
-        $pvScope = outlet_scope_sql('pv.outlet_id', $outletId);
-        $pcScope = outlet_scope_sql('pc.outlet_id', $outletId);
+        $pScope = ['sql' => 'p.outlet_id = ?', 'params' => [$outletId]];
+        $pvScope = ['sql' => 'pv.outlet_id = ?', 'params' => [$outletId]];
+        $pcScope = ['sql' => 'pc.outlet_id = ?', 'params' => [$outletId]];
         $params = array_merge($pScope['params'], $pvScope['params'], $pcScope['params']);
         $where = 'WHERE p.is_active=1 AND pv.is_active=1 AND pc.is_active=1
             AND ' . $pScope['sql'] . '
@@ -186,78 +187,4 @@ class ProductModel extends Model
         }
     }
 
-    /**
-     * List all product variants with override data for a specific outlet.
-     */
-    public function listWithOverrides(int $outletId, string $search = ''): array
-    {
-        $params = [$outletId];
-        $where = "WHERE p.is_active = 1 AND pv.is_active = 1";
-        if ($search !== '') {
-            $where .= " AND (p.name LIKE ? OR pv.variant_name LIKE ? OR pv.sku LIKE ?)";
-            $s = '%' . $search . '%';
-            $params[] = $s; $params[] = $s; $params[] = $s;
-        }
-        return $this->all("
-            SELECT
-                pv.id AS variant_id,
-                pv.sku,
-                p.name AS product_name,
-                pv.variant_name,
-                pv.selling_price AS master_price,
-                pv.hpp AS master_hpp,
-                pv.is_active AS master_active,
-                pbo.selling_price AS override_price,
-                pbo.hpp AS override_hpp,
-                pbo.is_active AS override_active
-            FROM product_variants pv
-            JOIN products p ON p.id = pv.product_id
-            LEFT JOIN product_branch_overrides pbo ON pbo.product_variant_id = pv.id AND pbo.outlet_id = ?
-            $where
-            ORDER BY p.name, pv.variant_name
-            LIMIT 500
-        ", $params);
-    }
 
-    /**
-     * Save product overrides for a specific outlet.
-     */
-    public function saveOverrides(int $outletId, array $items): int
-    {
-        $saved = 0;
-        $inTrans = $this->db->inTransaction();
-        if (!$inTrans) $this->db->beginTransaction();
-        try {
-            foreach ($items as $item) {
-                $variantId = (int)($item['variant_id'] ?? 0);
-                if ($variantId <= 0) continue;
-
-                $price  = trim($item['selling_price'] ?? '');
-                $hpp    = trim($item['hpp'] ?? '');
-                $active = trim($item['is_active'] ?? '');
-
-                // If all empty, delete any existing override
-                if ($price === '' && $hpp === '' && $active === '') {
-                    $this->execSql("DELETE FROM product_branch_overrides WHERE outlet_id = ? AND product_variant_id = ?", [$outletId, $variantId]);
-                    continue;
-                }
-
-                $priceVal  = $price !== '' ? (float)$price : null;
-                $hppVal    = $hpp !== '' ? (float)$hpp : null;
-                $activeVal = $active !== '' ? (int)$active : null;
-
-                $this->execSql("
-                    INSERT INTO product_branch_overrides (outlet_id, product_variant_id, selling_price, hpp, is_active, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())
-                    ON DUPLICATE KEY UPDATE selling_price = VALUES(selling_price), hpp = VALUES(hpp), is_active = VALUES(is_active), updated_at = NOW()
-                ", [$outletId, $variantId, $priceVal, $hppVal, $activeVal]);
-                $saved++;
-            }
-            if (!$inTrans) $this->db->commit();
-            return $saved;
-        } catch (Throwable $e) {
-            if (!$inTrans) $this->db->rollBack();
-            throw $e;
-        }
-    }
-}

@@ -193,6 +193,19 @@
         </div>
     </div>
 
+    <!-- SECTION 4: DISTRIBUSI CABANG -->
+    <?php if (Auth::can(['super_admin'])): ?>
+    <div class="sim-card shadow-sm border-0 p-4 mb-4 bg-primary-subtle">
+        <div class="form-check form-switch fs-5">
+            <input class="form-check-input" type="checkbox" role="switch" id="pushToBranches" name="push_to_branches" value="1" checked>
+            <label class="form-check-label fw-bold text-primary-emphasis" for="pushToBranches">
+                <?= sim_icon('ti-building-broadcast', 'me-1') ?> Push ke Semua Cabang
+            </label>
+            <small class="d-block text-muted mt-1 fs-6">Aktifkan untuk otomatis menyalin (kloning) produk ini ke semua cabang yang ada. Jika dimatikan, produk hanya tersedia di Pusat.</small>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- SUBMIT BUTTON -->
     <div class="d-flex justify-content-between align-items-center py-4 border-top">
         <a href="<?= url('/products') ?>" class="btn btn-outline-secondary px-4 py-3 rounded-pill fw-bold">

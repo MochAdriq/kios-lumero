@@ -121,8 +121,44 @@ class BranchModel extends Model
             "INSERT INTO outlets (company_id, name, slug, outlet_code, type, address, phone, closing_hour, is_hq, is_active, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
             [$companyId, $name, $slug ?: null, $code, $type, $address, $phone, $closingHour, $isHQ, $isActive]
         );
-        return (int)Database::connection()->lastInsertId();
+        $newBranchId = (int)Database::connection()->lastInsertId();
+
+        if ($newBranchId > 0 && empty($isHQ)) {
+            $this->cloneProductsToBranch($newBranchId);
+        }
+
+        return $newBranchId;
     }
+
+    private function cloneProductsToBranch(int $branchId): void
+    {
+        // 1. Clone Categories
+        $masterCategories = $this->all("SELECT * FROM product_categories WHERE outlet_id = 1");
+        $catMap = [];
+        foreach ($masterCategories as $cat) {
+            $slug = $cat['slug'] . '-b' . $branchId;
+            $this->execSql("INSERT INTO product_categories (outlet_id, name, slug, sort_order, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+                [$branchId, $cat['name'], $slug, $cat['sort_order'], $cat['is_active']]);
+            $catMap[$cat['id']] = (int)Database::connection()->lastInsertId();
+        }
+
+        // 2. Clone Products
+        $masterProducts = $this->all("SELECT * FROM products WHERE outlet_id = 1");
+        $prodMap = [];
+        foreach ($masterProducts as $p) {
+            $newCatId = $catMap[$p['category_id']] ?? $p['category_id'];
+            $this->execSql("INSERT INTO products (category_id, outlet_id, sku, name, description, image, product_type, unit_name, base_hpp, base_price, margin_amount, margin_percent, lifetime_qty_sold, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                [$newCatId, $branchId, $p['sku'], $p['name'], $p['description'], $p['image'], $p['product_type'], $p['unit_name'], $p['base_hpp'], $p['base_price'], $p['margin_amount'], $p['margin_percent'], 0, $p['is_active']]);
+            $prodMap[$p['id']] = (int)Database::connection()->lastInsertId();
+        }
+
+        // 3. Clone Variants
+        $masterVariants = $this->all("SELECT pv.* FROM product_variants pv JOIN products p ON p.id = pv.product_id WHERE p.outlet_id = 1");
+        foreach ($masterVariants as $v) {
+            $newProdId = $prodMap[$v['product_id']] ?? $v['product_id'];
+            $this->execSql("INSERT INTO product_variants (product_id, outlet_id, sku, variant_name, image, hpp, selling_price, margin_amount, margin_percent, is_default, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                [$newProdId, $branchId, $v['sku'], $v['variant_name'], $v['image'], $v['hpp'], $v['selling_price'], $v['margin_amount'], $v['margin_percent'], $v['is_default'], $v['is_active']]);
+        }
 
     /**
      * Delete an outlet (soft-delete: deactivate + clear slug).
