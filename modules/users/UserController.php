@@ -162,6 +162,10 @@ class UserController extends Controller
         Audit::log('stop_impersonating');
         $_SESSION['flash_success'] = 'Berhasil kembali ke Akun Owner / Pusat.';
 
-        $this->redirect('/users');
+        $outletId = (int)($_SESSION['user']['outlet_id'] ?? 1);
+        $slug = function_exists('branch_slug_for_outlet_id') ? branch_slug_for_outlet_id($outletId) : null;
+        $target = ($slug !== null && $slug !== '') ? branch_url($slug, '/users') : url('/users', false);
+        header('Location: ' . $target);
+        exit;
     }
 }
