@@ -152,23 +152,6 @@ if ($isHQUser) {
         </div>
     </div>
 
-    <?php if ($role === 'super_admin' && count($branchLinks) > 1): ?>
-        <div class="px-3 pb-2">
-            <small class="text-white-50 d-block mb-2 fw-bold">Pindah Cabang</small>
-            <div class="d-flex flex-wrap gap-2">
-                <?php foreach ($branchLinks as $branchLink): ?>
-                    <?php
-                        $targetUrl = branch_url($branchLink['slug'], $relativePath);
-                        $isCurrentBranch = $currentBranchSlug === $branchLink['slug'];
-                    ?>
-                    <a href="<?= htmlspecialchars($targetUrl) ?>" class="badge rounded-pill <?= $isCurrentBranch ? 'bg-warning text-dark' : 'bg-light text-dark' ?>">
-                        <?= htmlspecialchars($branchLink['name']) ?>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    <?php endif; ?>
-
     <nav class="sim-menu" aria-label="Sidebar Menu">
         <?php foreach ($menuGroups as $groupName => $items): ?>
             <?php $visibleItems = array_filter($items, fn($item) => $canSee($item['roles'])); ?>
@@ -187,6 +170,20 @@ if ($isHQUser) {
 </aside>
 
 <main class="sim-main">
+    <?php if (!empty($_SESSION['impersonator'])): ?>
+    <div class="alert alert-warning mb-0 rounded-0 d-flex justify-content-between align-items-center py-2 px-3 fw-medium shadow-sm" style="background-color: #fff3cd; border-bottom: 2px solid #ffecb5; z-index: 1050;">
+        <div class="d-flex align-items-center gap-2">
+            <?= sim_icon('ti-alert-triangle', 'text-warning', 'width:20px;height:20px;') ?>
+            <span><strong>Mode Login As:</strong> Anda sedang menjelajah sebagai <u><?= htmlspecialchars($user['name'] ?? '') ?></u> (<?= htmlspecialchars($user['role_name'] ?? '') ?> - <?= htmlspecialchars($user['outlet_name'] ?? 'Global') ?>).</span>
+        </div>
+        <form action="<?= url('/users/stop-impersonation') ?>" method="post" class="m-0">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-sm btn-danger fw-bold rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+                <?= sim_icon('ti-arrow-back-up', '', 'width:16px;height:16px;') ?> Kembali ke Akun Owner / Pusat
+            </button>
+        </form>
+    </div>
+    <?php endif; ?>
     <header class="sim-topbar">
         <div class="d-flex align-items-center gap-3 min-w-0">
             <button class="sim-toggle" id="sidebarToggle" type="button" aria-label="Toggle menu"><?= sim_icon('ti-menu-2') ?></button>

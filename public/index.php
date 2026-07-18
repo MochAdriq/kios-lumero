@@ -141,6 +141,8 @@ $router->get('/users', [UserController::class,'index']);
 $router->post('/users', [UserController::class,'store']);
 $router->post('/users/toggle', [UserController::class,'toggleActive']);
 $router->post('/users/reset-password', [UserController::class,'resetPassword']);
+$router->post('/users/impersonate', [UserController::class,'impersonate']);
+$router->post('/users/stop-impersonation', [UserController::class,'stopImpersonation']);
 $router->get('/api/user', [UserController::class,'apiDetail']);
 $router->get('/audit-logs', [AuditLogController::class,'index']);
 $router->get('/settings', [SettingController::class,'index']);

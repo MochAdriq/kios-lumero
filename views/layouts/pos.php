@@ -47,6 +47,19 @@ $storeName = current_outlet_name();
 <div id="global-loader" style="display:none"><div class="whirly-loader"></div></div>
 
 <div class="main-wrapper pos-five">
+    <?php if (!empty($_SESSION['impersonator'])): ?>
+    <div class="alert alert-warning mb-0 rounded-0 d-flex justify-content-between align-items-center py-2 px-3 fw-medium shadow-sm" style="background-color: #fff3cd; border-bottom: 2px solid #ffecb5; z-index: 1050;">
+        <div class="d-flex align-items-center gap-2 text-dark">
+            <span><strong>Mode Login As:</strong> Anda sedang menjelajah sebagai <u><?= htmlspecialchars($user['name'] ?? '') ?></u> (<?= htmlspecialchars($user['role_name'] ?? '') ?> - <?= htmlspecialchars($user['outlet_name'] ?? 'Global') ?>).</span>
+        </div>
+        <form action="<?= url('/users/stop-impersonation') ?>" method="post" class="m-0">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-sm btn-danger fw-bold rounded-pill px-3 shadow-sm">
+                Kembali ke Akun Owner / Pusat
+            </button>
+        </form>
+    </div>
+    <?php endif; ?>
     <?php if (!isset($_GET['embed'])): ?>
     <header class="header pos-header sim-pos-header">
         <div class="header-left active sim-pos-brand-wrap">

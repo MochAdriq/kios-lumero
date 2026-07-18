@@ -123,7 +123,16 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="d-flex gap-1">
+                                <div class="d-flex gap-1 align-items-center">
+                                    <?php if ((Auth::role() === 'super_admin' || !empty($_SESSION['impersonator'])) && (int)$u['id'] !== (int)Auth::id() && (empty($_SESSION['impersonator']['id']) || (int)$u['id'] !== (int)$_SESSION['impersonator']['id']) && !empty($u['is_active'])): ?>
+                                    <form action="<?= url('/users/impersonate') ?>" method="post" class="d-inline m-0" onsubmit="return confirm('Login sebagai <?= htmlspecialchars(addslashes($u['name'])) ?>?');">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= (int)$u['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-info" title="Login As <?= htmlspecialchars($u['name']) ?>">
+                                            <?= sim_icon('ti-user-check') ?> Login As
+                                        </button>
+                                    </form>
+                                    <?php endif; ?>
                                     <button class="btn btn-sm btn-outline-primary" title="Edit"
                                         onclick="editUser(<?= htmlspecialchars(json_encode($u)) ?>)">
                                         <?= sim_icon('ti-pencil') ?>
