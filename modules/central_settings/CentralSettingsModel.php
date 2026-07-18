@@ -82,7 +82,7 @@ class CentralSettingsModel extends Model
         $v = $this->one("SELECT product_id FROM product_variants WHERE id=?", [$variantId]);
         if (!$v) return;
 
-        $uploadDir = __DIR__ . '/../../public/uploads/products/';
+        $uploadDir = __DIR__ . '/../../public/assets/uploads/products/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }

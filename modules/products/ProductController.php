@@ -41,7 +41,7 @@ class ProductController extends Controller
                 $file = $_FILES['image_file'];
                 $allowed = ['image/jpeg', 'image/png', 'image/webp'];
                 if (in_array($file['type'], $allowed)) {
-                    $uploadDir = __DIR__ . '/../../public/uploads/products/';
+                    $uploadDir = __DIR__ . '/../../public/assets/uploads/products/';
                     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
                     $ext = pathinfo($file['name'], PATHINFO_EXTENSION) ?: 'png';
                     $filename = 'product_' . $id . '_' . time() . '.' . $ext;
@@ -192,7 +192,7 @@ class ProductController extends Controller
                 $file = $_FILES['image'];
                 $allowed = ['image/jpeg', 'image/png', 'image/webp'];
                 if (in_array($file['type'], $allowed)) {
-                    $uploadDir = __DIR__ . '/../../public/uploads/products/';
+                    $uploadDir = __DIR__ . '/../../public/assets/uploads/products/';
                     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
                     $ext = pathinfo($file['name'], PATHINFO_EXTENSION) ?: 'png';
                     $filename = 'product_' . $productId . '_' . time() . '.' . $ext;
