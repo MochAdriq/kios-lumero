@@ -345,7 +345,7 @@ class ExecutiveModel extends Model
         return $this->safeAll("SELECT * FROM menu_experiment_plans WHERE outlet_id=? ORDER BY FIELD(status,'running','planned','completed','stopped'), start_date DESC, id DESC LIMIT 10", [$this->outletId()]);
     }
 
-    public function saveExperiment(array $d): void
+    public function saveExperiment(array $d): int
     {
         $start = $d['start_date'] ?: today();
         $end = $d['end_date'] ?: (new DateTime($start))->modify('+6 days')->format('Y-m-d');
@@ -355,6 +355,12 @@ class ExecutiveModel extends Model
             max(0, (float)($d['target_margin_pct'] ?? 35)), max(0, (int)($d['estimated_hpp'] ?? 0)),
             max(0, (int)($d['suggested_price'] ?? 0)), 'planned', trim($d['notes'] ?? ''),
         ]);
+        return (int)$this->db->lastInsertId();
+    }
+
+    public function linkExperimentProduct(int $id, int $productId): void
+    {
+        $this->execSql("UPDATE menu_experiment_plans SET linked_product_id=?, status='running' WHERE id=? AND outlet_id=?", [$productId, $id, $this->outletId()]);
     }
 
     public function updateExperimentStatus(int $id, string $status, string $decision): void
@@ -362,6 +368,13 @@ class ExecutiveModel extends Model
         if (!in_array($status, ['planned','running','completed','stopped'], true)) $status = 'running';
         if (!in_array($decision, ['pending','make_permanent','continue_test','stop'], true)) $decision = 'pending';
         $this->execSql("UPDATE menu_experiment_plans SET status=?, decision=? WHERE id=? AND outlet_id=?", [$status, $decision, $id, $this->outletId()]);
+        
+        if ($decision === 'stop') {
+            $exp = $this->safeAll("SELECT linked_product_id FROM menu_experiment_plans WHERE id=?", [$id])[0] ?? null;
+            if ($exp && $exp['linked_product_id']) {
+                $this->execSql("UPDATE products SET is_active=0 WHERE id=? AND outlet_id=?", [$exp['linked_product_id'], $this->outletId()]);
+            }
+        }
     }
 
     // ── Targets ────────────────────────────────────────────────

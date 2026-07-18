@@ -95,6 +95,7 @@ if (class_exists('POSController')) {
     $router->post('/pos/checkout', [POSController::class,'checkout']);
     $router->get('/pos/receipt/{id}', [POSController::class,'receipt']);
     $router->get('/orders', [POSController::class,'orders']);
+    $router->post('/orders/update-status', [POSController::class,'updateOrderStatus']);
     $router->get('/payments', [POSController::class,'payments']);
     $router->post('/payments/verify', [POSController::class,'verifyPayment']);
     if (class_exists('MidtransController')) {
@@ -122,13 +123,17 @@ $router->post('/reports/daily/generate', [ReportController::class,'generateDaily
 $router->get('/reports/financial', [ReportController::class,'financial']);
 $router->get('/executive', [ExecutiveController::class,'index']);
 $router->get('/executive/print', [ExecutiveController::class,'printReport']);
-$router->post('/executive/capital', [ExecutiveController::class,'storeCapital']);
-$router->post('/executive/capital/delete', [ExecutiveController::class,'deleteCapital']);
 $router->post('/executive/target', [ExecutiveController::class,'storeTarget']);
 $router->post('/executive/settings', [ExecutiveController::class,'saveSettings']);
-$router->post('/executive/experiment', [ExecutiveController::class,'saveExperiment']);
-$router->post('/executive/experiment/update', [ExecutiveController::class,'updateExperiment']);
-$router->post('/executive/trend', [ExecutiveController::class,'saveTrend']);
+
+$router->get('/capital', [CapitalController::class,'index']);
+$router->post('/capital/store', [CapitalController::class,'store']);
+$router->post('/capital/delete', [CapitalController::class,'delete']);
+
+$router->get('/innovation', [InnovationController::class,'index']);
+$router->post('/innovation/trend', [InnovationController::class,'saveTrend']);
+$router->post('/innovation/experiment', [InnovationController::class,'saveExperiment']);
+$router->post('/innovation/experiment/update', [InnovationController::class,'updateExperiment']);
 $router->get('/forecasting', [ForecastingController::class,'index']);
 $router->post('/forecasting/generate', [ForecastingController::class,'generate']);
 $router->post('/forecasting/status', [ForecastingController::class,'status']);

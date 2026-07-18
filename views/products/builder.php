@@ -17,6 +17,17 @@
 <form method="post" action="<?= url('/products/builder/save') ?>" enctype="multipart/form-data" id="builderForm">
     <?= csrf_field() ?>
     
+    <?php if(!empty($exp_id)): ?>
+        <div class="alert alert-info d-flex align-items-center mb-4 shadow-sm border-info">
+            <span class="fs-2 me-3"><?= sim_icon('ti-bulb') ?></span>
+            <div>
+                <h5 class="alert-heading mb-1 fw-bold">Setup Eksperimen 7 Hari</h5>
+                <p class="mb-0">Anda sedang menyiapkan menu kasir untuk uji coba eksperimen <b><?= htmlspecialchars($exp_name) ?></b>.</p>
+            </div>
+        </div>
+        <input type="hidden" name="exp_id" value="<?= (int)$exp_id ?>">
+    <?php endif; ?>
+    
     <!-- SECTION 1: IDENTITAS & DISPLAY PRODUK -->
     <div class="sim-card shadow-sm border-0 p-4 mb-4">
         <div class="d-flex align-items-center gap-2 border-bottom pb-3 mb-4">
@@ -27,7 +38,7 @@
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <label class="form-label fw-bold">Nama Produk / Menu <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control form-control-lg" required placeholder="Contoh: Ayam Crispy Saus Keju">
+                <input type="text" name="name" class="form-control form-control-lg" required placeholder="Contoh: Ayam Crispy Saus Keju" value="<?= htmlspecialchars($exp_name ?? '') ?>">
                 <small class="text-muted">Nama utama produk yang akan muncul di menu kasir.</small>
             </div>
             <div class="col-md-6">
@@ -152,7 +163,7 @@
                 <label class="form-label fw-bold fs-5">Harga Jual per Porsi (Rp) <span class="text-danger">*</span></label>
                 <div class="input-group input-group-lg shadow-sm">
                     <span class="input-group-text bg-light fw-bold text-muted">Rp</span>
-                    <input type="number" name="selling_price" id="selling_price_input" class="form-control fw-bold text-dark fs-4" required min="0" value="0" oninput="calculateMargin()">
+                    <input type="number" name="selling_price" id="selling_price_input" class="form-control fw-bold text-dark fs-4" required min="0" value="<?= isset($exp_price) && $exp_price > 0 ? (int)$exp_price : 0 ?>" oninput="calculateMargin()">
                 </div>
                 <small class="text-muted d-block mt-2">Harga jual akhir kepada pelanggan sebelum diskon atau pajak (jika ada).</small>
             </div>

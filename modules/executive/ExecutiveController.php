@@ -71,35 +71,7 @@ class ExecutiveController extends Controller
         ]);
     }
 
-    public function storeCapital(): void
-    {
-        $this->requireAuth();
-        verify_csrf();
-        $m = new ExecutiveModel();
-        $m->saveCapital([
-            'id' => $this->post('id'),
-            'capital_date' => $this->validDate($this->post('capital_date', today())) ? $this->post('capital_date') : today(),
-            'category' => $this->post('category', 'Modal Awal'),
-            'component_name' => $this->post('component_name'),
-            'description' => $this->post('description'),
-            'amount' => (int)preg_replace('/[^0-9]/', '', $this->post('amount', '0')),
-            'payment_method' => $this->post('payment_method') ?: null,
-            'supplier' => $this->post('supplier') ?: null,
-            'invoice_no' => $this->post('invoice_no') ?: null,
-            'is_active' => (int)($this->post('is_active', '1')),
-        ]);
-        $_SESSION['flash_success'] = 'Komponen modal berhasil disimpan.';
-        $this->redirect('/executive');
-    }
 
-    public function deleteCapital(): void
-    {
-        $this->requireAuth();
-        verify_csrf();
-        $id = (int)($this->post('id', '0'));
-        if ($id > 0) { (new ExecutiveModel())->deactivateCapital($id); $_SESSION['flash_success'] = 'Komponen modal dinonaktifkan.'; }
-        $this->redirect('/executive');
-    }
 
     public function storeTarget(): void
     {
@@ -129,35 +101,7 @@ class ExecutiveController extends Controller
         $this->redirect('/executive');
     }
 
-    public function saveExperiment(): void
-    {
-        $this->requireAuth();
-        verify_csrf();
-        (new ExecutiveModel())->saveExperiment($_POST);
-        $_SESSION['flash_success'] = 'Eksperimen menu 7 hari berhasil dibuat.';
-        $this->redirect('/executive');
-    }
 
-    public function updateExperiment(): void
-    {
-        $this->requireAuth();
-        verify_csrf();
-        $id = (int)($this->post('id', '0'));
-        if ($id > 0) {
-            (new ExecutiveModel())->updateExperimentStatus($id, $this->post('status', 'running'), $this->post('decision', 'pending'));
-            $_SESSION['flash_success'] = 'Status eksperimen berhasil diperbarui.';
-        }
-        $this->redirect('/executive');
-    }
-
-    public function saveTrend(): void
-    {
-        $this->requireAuth();
-        verify_csrf();
-        (new ExecutiveModel())->saveTrendKeyword($_POST);
-        $_SESSION['flash_success'] = 'Keyword trend berhasil disimpan.';
-        $this->redirect('/executive');
-    }
 
     public function printReport(): void
     {

@@ -98,13 +98,17 @@ $menuGroups += [
 if ($isHQUser) {
     $menuGroups['Analisis & Pengaturan'] = [
         ['label' => 'Analisis Bisnis',      'icon' => 'ti ti-presentation-analytics', 'url' => '/executive',  'roles' => $OWNER],
+        ['label' => 'Manajemen Modal',      'icon' => 'ti ti-wallet',                 'url' => '/capital',    'roles' => $OWNER],
+        ['label' => 'Inovasi & Tren',       'icon' => 'ti ti-bulb',                   'url' => '/innovation', 'roles' => $OWNER],
         ['label' => 'Pengguna & HR',        'icon' => 'ti ti-users',                  'url' => '/users',      'roles' => $OWNER],
         ['label' => 'Jejak Aktivitas',      'icon' => 'ti ti-history',                'url' => '/audit-logs', 'roles' => $OWNER],
         ['label' => 'Setting Sistem',       'icon' => 'ti ti-settings',               'url' => '/settings',   'roles' => $OWNER],
     ];
 } else {
     $menuGroups['Pengaturan Cabang'] = [
-        ['label' => 'Analisis ROI & Modal Toko', 'icon' => 'ti ti-presentation-analytics', 'url' => '/executive',  'roles' => $ADMIN],
+        ['label' => 'Analisis Bisnis & KPI',     'icon' => 'ti ti-presentation-analytics', 'url' => '/executive',  'roles' => $ADMIN],
+        ['label' => 'Manajemen Modal Outlet',    'icon' => 'ti ti-wallet',                 'url' => '/capital',    'roles' => $ADMIN],
+        ['label' => 'Inovasi & Uji Coba Menu',   'icon' => 'ti ti-bulb',                   'url' => '/innovation', 'roles' => $ADMIN],
         ['label' => 'Karyawan & Gaji Toko',      'icon' => 'ti ti-users',                  'url' => '/users',      'roles' => $ADMIN],
     ];
 }

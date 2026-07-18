@@ -147,7 +147,11 @@ class ProductController extends Controller
             'pageTitle'  => 'Product Builder (Racik Produk Final)',
             'categories' => $catModel->productCategories(),
             'units'      => $invModel->units(),
-            'compItems'  => $csModel->getAllItems()
+            'compItems'  => $csModel->getAllItems(),
+            'exp_id'     => (int)($_GET['exp_id'] ?? 0),
+            'exp_name'   => $_GET['exp_name'] ?? '',
+            'exp_hpp'    => (int)($_GET['exp_hpp'] ?? 0),
+            'exp_price'  => (int)($_GET['exp_price'] ?? 0),
         ]);
     }
 
@@ -231,6 +235,12 @@ class ProductController extends Controller
             Audit::log('create_product_builder', 'product_variants', $variantId, null, [
                 'name' => $name, 'variant_name' => $variant, 'selling_price' => $sellPrice
             ]);
+
+            $expId = (int)($_POST['exp_id'] ?? 0);
+            if ($expId > 0 && $productId > 0) {
+                require_once __DIR__ . '/../executive/ExecutiveModel.php';
+                (new ExecutiveModel())->linkExperimentProduct($expId, $productId);
+            }
 
             $_SESSION['flash_success'] = 'Produk Jual Final beserta komposisi resep berhasil dibuat!';
             $this->redirect('/products');
