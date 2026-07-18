@@ -27,10 +27,10 @@ class InventoryModel extends Model
         return (int)($user['outlet_id'] ?? 1) ?: 1;
     }
 
-    public function list(string $search = '', int $categoryId = 0): array
+    public function list(string $search = '', int $categoryId = 0, ?int $forceOutletId = null): array
     {
         if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);
-        $outletId = $this->outletId();
+        $outletId = $forceOutletId > 0 ? (int)$forceOutletId : $this->outletId();
         $where = 'WHERE rm.is_active=1 AND rm.outlet_id = ?';
         $params = [$outletId, $outletId];
         if ($categoryId > 0) {

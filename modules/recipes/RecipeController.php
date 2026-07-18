@@ -40,11 +40,12 @@ class RecipeController extends Controller
             return;
         }
 
+        $recipeOutletId = (int)($recipe['outlet_id'] ?? 1);
         $invModel = new InventoryModel();
         $this->view('recipes/show', [
             'recipe'       => $recipe,
-            'rawMaterials' => $invModel->list(),
-            'subRecipes'   => $m->listSubRecipes(),
+            'rawMaterials' => $invModel->list('', 0, $recipeOutletId),
+            'subRecipes'   => $m->listSubRecipes($recipeOutletId),
             'units'        => $invModel->units(),
             'pageTitle'    => 'Detail Resep / HPP'
         ]);

@@ -33,9 +33,9 @@ class RecipeModel extends Model
         ", [$outletId, $outletId]);
     }
 
-    public function listSubRecipes(): array
+    public function listSubRecipes(?int $forceOutletId = null): array
     {
-        $outletId = $this->outletId();
+        $outletId = $forceOutletId > 0 ? (int)$forceOutletId : $this->outletId();
         return $this->all("SELECT r.*, u.name as yield_unit_label FROM recipes r LEFT JOIN units u ON u.id = r.yield_unit_id WHERE r.recipe_type = 'sub_recipe' AND r.outlet_id = ? ORDER BY r.name ASC", [$outletId]);
     }
 
@@ -205,6 +205,32 @@ class RecipeModel extends Model
 
     public function addItem(int $recipeId, string $itemType, int $itemId, float $qty, int $unitId): void
     {
+        $recipe = $this->one("SELECT * FROM recipes WHERE id = ?", [$recipeId]);
+        if (!$recipe) throw new RuntimeException('Resep tidak ditemukan.');
+        $targetOutlet = (int)($recipe['outlet_id'] ?? 1);
+
+        if ($itemType === 'raw_material') {
+            $rm = $this->one("SELECT id, name, outlet_id FROM raw_materials WHERE id = ?", [$itemId]);
+            if ($rm && (int)$rm['outlet_id'] !== $targetOutlet && (int)$rm['outlet_id'] !== 0) {
+                $localRm = $this->one("SELECT id FROM raw_materials WHERE name = ? AND outlet_id = ? LIMIT 1", [trim($rm['name']), $targetOutlet]);
+                if ($localRm) {
+                    $itemId = (int)$localRm['id'];
+                } else {
+                    throw new RuntimeException("Bahan baku '{$rm['name']}' tidak ditemukan di cabang ini. Silakan tambahkan bahan ke cabang terlebih dahulu.");
+                }
+            }
+        } elseif ($itemType === 'sub_recipe') {
+            $sr = $this->one("SELECT id, name, outlet_id FROM recipes WHERE id = ?", [$itemId]);
+            if ($sr && (int)$sr['outlet_id'] !== $targetOutlet && (int)$sr['outlet_id'] !== 0) {
+                $localSr = $this->one("SELECT id FROM recipes WHERE name = ? AND recipe_type = 'sub_recipe' AND outlet_id = ? LIMIT 1", [trim($sr['name']), $targetOutlet]);
+                if ($localSr) {
+                    $itemId = (int)$localSr['id'];
+                } else {
+                    throw new RuntimeException("Sub-resep '{$sr['name']}' tidak ditemukan di cabang ini.");
+                }
+            }
+        }
+
         $rawId = $itemType === 'raw_material' ? $itemId : null;
         $subId = $itemType === 'sub_recipe' ? $itemId : null;
 
