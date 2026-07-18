@@ -95,12 +95,13 @@ class ProductModel extends Model
 
     public function findVariant(int $id): ?array
     {
+        $outletId = $this->outletId();
         return $this->one("SELECT pv.*, p.name product_name, COALESCE(pv.image, p.image) AS image, p.category_id, COALESCE(pc.name,'Umum') category_name, p.outlet_id product_outlet_id, pv.outlet_id variant_outlet_id, pc.outlet_id category_outlet_id
             FROM product_variants pv
             JOIN products p ON p.id=pv.product_id
             LEFT JOIN product_categories pc ON pc.id=p.category_id
-            WHERE pv.id=?
-            LIMIT 1", [$id]);
+            WHERE pv.id=? AND pv.outlet_id=?
+            LIMIT 1", [$id, $outletId]);
     }
 
     public function createVariant(array $d): int
@@ -148,17 +149,18 @@ class ProductModel extends Model
             $margin = $selling - $hpp;
             $mp = ($selling > 0) ? ($margin / $selling * 100) : 0;
             
+            $outletId = $this->outletId();
             if (isset($d['image'])) {
                 $img = trim((string)$d['image']);
-                $stmt=$this->db->prepare("UPDATE products SET category_id=?, name=?, image=?, base_hpp=?, base_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=?");
-                $stmt->execute([$catId, $prodName, $img, $hpp, $selling, $margin, $mp, now(), $pid]);
-                $stmt=$this->db->prepare("UPDATE product_variants SET variant_name=?, image=?, hpp=?, selling_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=?");
-                $stmt->execute([$variantName, $img, $hpp, $selling, $margin, $mp, now(), $vid]);
+                $stmt=$this->db->prepare("UPDATE products SET category_id=?, name=?, image=?, base_hpp=?, base_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=? AND outlet_id=?");
+                $stmt->execute([$catId, $prodName, $img, $hpp, $selling, $margin, $mp, now(), $pid, $outletId]);
+                $stmt=$this->db->prepare("UPDATE product_variants SET variant_name=?, image=?, hpp=?, selling_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=? AND outlet_id=?");
+                $stmt->execute([$variantName, $img, $hpp, $selling, $margin, $mp, now(), $vid, $outletId]);
             } else {
-                $stmt=$this->db->prepare("UPDATE products SET category_id=?, name=?, base_hpp=?, base_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=?");
-                $stmt->execute([$catId, $prodName, $hpp, $selling, $margin, $mp, now(), $pid]);
-                $stmt=$this->db->prepare("UPDATE product_variants SET variant_name=?, hpp=?, selling_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=?");
-                $stmt->execute([$variantName, $hpp, $selling, $margin, $mp, now(), $vid]);
+                $stmt=$this->db->prepare("UPDATE products SET category_id=?, name=?, base_hpp=?, base_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=? AND outlet_id=?");
+                $stmt->execute([$catId, $prodName, $hpp, $selling, $margin, $mp, now(), $pid, $outletId]);
+                $stmt=$this->db->prepare("UPDATE product_variants SET variant_name=?, hpp=?, selling_price=?, margin_amount=?, margin_percent=?, updated_at=? WHERE id=? AND outlet_id=?");
+                $stmt->execute([$variantName, $hpp, $selling, $margin, $mp, now(), $vid, $outletId]);
             }
             
             if (!$inTrans) $this->db->commit();
@@ -177,9 +179,10 @@ class ProductModel extends Model
         $inTrans = $this->db->inTransaction();
         if (!$inTrans) $this->db->beginTransaction();
         try {
+            $outletId = $this->outletId();
             // Soft delete
-            $this->db->prepare("UPDATE product_variants SET is_active=0, updated_at=? WHERE id=?")->execute([now(), $vid]);
-            $this->db->prepare("UPDATE products SET is_active=0, updated_at=? WHERE id=?")->execute([now(), $pid]);
+            $this->db->prepare("UPDATE product_variants SET is_active=0, updated_at=? WHERE id=? AND outlet_id=?")->execute([now(), $vid, $outletId]);
+            $this->db->prepare("UPDATE products SET is_active=0, updated_at=? WHERE id=? AND outlet_id=?")->execute([now(), $pid, $outletId]);
             if (!$inTrans) $this->db->commit();
         } catch(Throwable $e){
             if (!$inTrans) $this->db->rollBack();

@@ -27,8 +27,8 @@ class RecipeModel extends Model
             LEFT JOIN product_categories pc ON pc.id = p.category_id
             LEFT JOIN recipes r ON r.product_variant_id = pv.id
             WHERE p.is_active = 1 AND pv.is_active = 1
-              AND (p.outlet_id = ? OR p.outlet_id IS NULL)
-              AND (pv.outlet_id = ? OR pv.outlet_id IS NULL)
+              AND p.outlet_id = ?
+              AND pv.outlet_id = ?
             ORDER BY pc.sort_order, p.name, pv.variant_name
         ", [$outletId, $outletId]);
     }
@@ -36,7 +36,7 @@ class RecipeModel extends Model
     public function listSubRecipes(): array
     {
         $outletId = $this->outletId();
-        return $this->all("SELECT r.*, u.name as yield_unit_label FROM recipes r LEFT JOIN units u ON u.id = r.yield_unit_id WHERE r.recipe_type = 'sub_recipe' AND (r.outlet_id = ? OR r.outlet_id = 1) ORDER BY r.name ASC", [$outletId]);
+        return $this->all("SELECT r.*, u.name as yield_unit_label FROM recipes r LEFT JOIN units u ON u.id = r.yield_unit_id WHERE r.recipe_type = 'sub_recipe' AND r.outlet_id = ? ORDER BY r.name ASC", [$outletId]);
     }
 
     public function getRecipe(int $id): ?array
@@ -63,11 +63,13 @@ class RecipeModel extends Model
                        ELSE sr.name 
                    END as material_name,
                    CASE 
-                       WHEN ri.item_type = 'raw_material' THEN rm.average_cost 
+                       WHEN ri.item_type = 'raw_material' THEN COALESCE(NULLIF(orm.average_cost, 0), rm.average_cost, 0)
                        ELSE (sr.total_hpp / sr.yield_qty) 
                    END as current_unit_cost
             FROM recipe_items ri
+            JOIN recipes r ON r.id = ri.recipe_id
             LEFT JOIN raw_materials rm ON rm.id = ri.raw_material_id
+            LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND (orm.outlet_id = r.outlet_id OR (r.outlet_id IS NULL AND orm.outlet_id = 1))
             LEFT JOIN recipes sr ON sr.id = ri.sub_recipe_id
             LEFT JOIN units u ON u.id = ri.unit_id
             WHERE ri.recipe_id = ?
@@ -166,8 +168,9 @@ class RecipeModel extends Model
 
             if ($targetName === '' || $itemName === '' || $qty <= 0) continue;
 
+            $outletId = $this->outletId();
             $recipeTypeDb = (strtolower($targetType) === 'sub-resep' || strtolower($targetType) === 'sub_recipe') ? 'sub_recipe' : 'final';
-            $recipeRow = $this->one("SELECT id FROM recipes WHERE name = ? AND recipe_type = ? LIMIT 1", [$targetName, $recipeTypeDb]);
+            $recipeRow = $this->one("SELECT id FROM recipes WHERE name = ? AND recipe_type = ? AND outlet_id = ? LIMIT 1", [$targetName, $recipeTypeDb, $outletId]);
             if (!$recipeRow) continue;
             $recipeId = (int)$recipeRow['id'];
 
@@ -175,11 +178,11 @@ class RecipeModel extends Model
             $itemId = 0;
 
             if ($itemTypeDb === 'raw_material') {
-                $rawRow = $this->one("SELECT id FROM raw_materials WHERE name = ? LIMIT 1", [$itemName]);
+                $rawRow = $this->one("SELECT id FROM raw_materials WHERE name = ? AND outlet_id = ? LIMIT 1", [$itemName, $outletId]);
                 if (!$rawRow) continue;
                 $itemId = (int)$rawRow['id'];
             } else {
-                $subRow = $this->one("SELECT id FROM recipes WHERE name = ? AND recipe_type = 'sub_recipe' LIMIT 1", [$itemName]);
+                $subRow = $this->one("SELECT id FROM recipes WHERE name = ? AND recipe_type = 'sub_recipe' AND outlet_id = ? LIMIT 1", [$itemName, $outletId]);
                 if (!$subRow) continue;
                 $itemId = (int)$subRow['id'];
             }
@@ -283,6 +286,7 @@ class RecipeModel extends Model
     public function recalculateAll(int $userId): int
     {
         $count = 0;
+        $outletId = $this->outletId();
         
         $subRecipes = $this->listSubRecipes();
         foreach ($subRecipes as $sr) {
@@ -290,7 +294,7 @@ class RecipeModel extends Model
             $count++;
         }
         
-        $finalRecipes = $this->all("SELECT id FROM recipes WHERE recipe_type = 'final'");
+        $finalRecipes = $this->all("SELECT id FROM recipes WHERE recipe_type = 'final' AND outlet_id = ?", [$outletId]);
         foreach ($finalRecipes as $fr) {
             $this->recalculate((int)$fr['id'], $userId);
             $count++;
@@ -381,13 +385,13 @@ class RecipeModel extends Model
 
         $results = array_fill_keys($productVariantIds, 0.0);
         
-        $allRecipes = $this->all("SELECT * FROM recipes");
+        $allRecipes = $this->all("SELECT * FROM recipes WHERE outlet_id = ?", [$outletId]);
         $recipeMap = [];
         foreach ($allRecipes as $r) {
             $recipeMap[(int)$r['id']] = $r;
         }
 
-        $allRecipeItems = $this->all("SELECT * FROM recipe_items");
+        $allRecipeItems = $this->all("SELECT ri.* FROM recipe_items ri JOIN recipes r ON r.id = ri.recipe_id WHERE r.outlet_id = ?", [$outletId]);
         $itemsByRecipe = [];
         foreach ($allRecipeItems as $i) {
             $itemsByRecipe[(int)$i['recipe_id']][] = $i;

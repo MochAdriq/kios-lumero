@@ -35,5 +35,5 @@ class StoreModel extends Model
         $this->execSql("UPDATE daily_store_sessions SET status='closed', closed_by=?, closed_at=?, closing_cash_system=?, closing_cash_physical=?, cash_difference=?, notes=?, updated_at=? WHERE id=?", [$userId,now(),$systemCash,$physicalCash,$diff,$notes,now(),$session['id']]);
         Audit::log('close_store','daily_store_sessions',(int)$session['id'], $session, ['physical_cash'=>$physicalCash]);
     }
-    public function activeStaff(int $outletId): array { return $this->all("SELECT id,name,daily_salary FROM users WHERE is_active=1 AND (outlet_id=? OR outlet_id IS NULL) ORDER BY name", [$outletId]); }
+    public function activeStaff(int $outletId): array { return $this->all("SELECT id,name,daily_salary FROM users WHERE is_active=1 AND outlet_id=? ORDER BY name", [$outletId]); }
 }
