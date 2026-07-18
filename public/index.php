@@ -85,7 +85,7 @@ if (class_exists('LoyaltyController')) {
 $router->get('/member', function() {
     $claim = trim((string)($_GET['claim'] ?? ''));
     $query = $claim !== '' ? '?claim=' . rawurlencode($claim) : '';
-    header('Location: ' . url('/member/hook.php', false) . $query);
+    header('Location: ' . url('/member/index.php', false) . $query);
     exit;
 });
 

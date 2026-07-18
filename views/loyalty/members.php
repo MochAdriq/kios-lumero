@@ -5,7 +5,7 @@
                 <h3 class="fw-bold mb-1"><i class="ti ti-award me-2 text-warning"></i>Data Member & Loyalty Poin</h3>
                 <p class="text-muted mb-0">Kelola pelanggan terdaftar, saldo poin, dan aturan perolehan poin.</p>
             </div>
-            <a href="<?= url('/member/hook.php', false) ?>" target="_blank" class="btn btn-outline-primary rounded-pill">
+            <a href="<?= url('/member/index.php', false) ?>" target="_blank" class="btn btn-outline-primary rounded-pill">
                 <i class="ti ti-external-link me-1"></i> Buka Portal Member
             </a>
         </div>

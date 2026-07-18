@@ -86,7 +86,7 @@ $menuGroups += [
         ['label' => 'Data Member & Poin',    'icon' => 'ti ti-award',            'url' => '/loyalty/members',     'roles' => $ALL],
         ['label' => 'Katalog Hadiah Poin',   'icon' => 'ti ti-gift',             'url' => '/loyalty/rewards',     'roles' => $ADMIN],
         ['label' => 'Validasi Penukaran',    'icon' => 'ti ti-checkup-list',     'url' => '/loyalty/redemptions', 'roles' => $ALL],
-        ['label' => 'Buka Portal Member',    'icon' => 'ti ti-external-link',    'url' => '/member/hook.php', 'root' => true, 'roles' => $ALL],
+        ['label' => 'Buka Portal Member',    'icon' => 'ti ti-external-link',    'url' => '/member/index.php', 'root' => true, 'roles' => $ALL],
     ],
     'Keuangan & Laporan' => [
         ['label' => 'Biaya Operasional',     'icon' => 'ti ti-wallet',                 'url' => '/expenses',          'roles' => $ADMIN],
