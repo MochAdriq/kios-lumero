@@ -14,6 +14,11 @@
             <a href="<?= url('/recipes') ?>" class="btn btn-outline-primary bg-white">
                 <?= sim_icon('ti-flask', 'me-1') ?> Atur HPP via Resep
             </a>
+            <?php if (Auth::can(['super_admin'])): ?>
+            <a href="<?= url('/products/overrides') ?>" class="btn btn-outline-primary bg-white">
+                <?= sim_icon('ti-adjustments', 'me-1') ?> Harga Cabang
+            </a>
+            <?php endif; ?>
         </div>
     </div>
 </div>
