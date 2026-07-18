@@ -419,35 +419,10 @@ function sim_icon(string $name, string $class = '', string $style = ''): string
  */
 function inventory_ensure_outlet_stocks(PDO $pdo): void
 {
-    static $ensured = false;
-    if ($ensured) return;
-    $ensured = true;
-
-    try {
-        $pdo->exec("CREATE TABLE IF NOT EXISTS outlet_raw_materials (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            outlet_id BIGINT UNSIGNED NOT NULL,
-            raw_material_id BIGINT UNSIGNED NOT NULL,
-            stock_qty DECIMAL(18,4) DEFAULT 0.0000,
-            min_stock_qty DECIMAL(18,4) DEFAULT 0.0000,
-            average_cost DECIMAL(15,4) DEFAULT 0.0000,
-            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY uq_outlet_material (outlet_id, raw_material_id),
-            KEY idx_orm_outlet (outlet_id),
-            KEY idx_orm_material (raw_material_id),
-            CONSTRAINT fk_orm_outlet FOREIGN KEY (outlet_id) REFERENCES outlets(id) ON DELETE CASCADE ON UPDATE CASCADE,
-            CONSTRAINT fk_orm_material FOREIGN KEY (raw_material_id) REFERENCES raw_materials(id) ON DELETE CASCADE ON UPDATE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-        // Backfill initial rows for all outlets and raw materials without overwriting existing stock
-        $pdo->exec("INSERT INTO outlet_raw_materials (outlet_id, raw_material_id, stock_qty, min_stock_qty, average_cost, created_at, updated_at)
-            SELECT o.id, rm.id, (CASE WHEN o.id = 1 THEN rm.stock_qty ELSE 0.0000 END), rm.min_stock_qty, rm.average_cost, NOW(), NOW()
-            FROM outlets o CROSS JOIN raw_materials rm
-            ON DUPLICATE KEY UPDATE id = id");
-    } catch (Throwable $e) {
-        // Table or constraints already exist or being handled
-    }
+    // The outlet_raw_materials table is now part of the permanent schema.
+    // Migration is already done in scratch_migrate.php.
+    // We do not run CREATE TABLE here to avoid implicit commits which break transactions.
+    return;
 }
 
 /**

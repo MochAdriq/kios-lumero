@@ -15,4 +15,37 @@ class PurchaseController extends Controller
         catch(Throwable $e){ $_SESSION['flash_error']=$e->getMessage(); }
         $this->redirect('/purchases');
     }
+
+    public function edit(string $id): void
+    {
+        Auth::requireRoles(['super_admin','administrator']);
+        $m = new PurchaseModel();
+        $po = $m->getWithItems((int)$id);
+        if (!$po) {
+            $_SESSION['flash_error'] = 'Data belanja tidak ditemukan.';
+            $this->redirect('/purchases');
+            return;
+        }
+        $this->view('purchases/edit', [
+            'pageTitle' => 'Edit Belanja',
+            'po' => $po,
+            'materials' => $m->materials(),
+            'vendors' => $m->vendors()
+        ]);
+    }
+
+    public function update(string $id): void
+    {
+        Auth::requireRoles(['super_admin','administrator']); verify_csrf();
+        try { 
+            (new PurchaseModel())->update((int)$id, $_POST); 
+            Audit::log('update_purchase','purchase_orders',(int)$id,null,$_POST); 
+            $_SESSION['flash_success']='Belanja berhasil diperbarui dan stok bahan dikalkulasi ulang.'; 
+        } catch(Throwable $e) { 
+            $_SESSION['flash_error']=$e->getMessage(); 
+            $this->redirect('/purchases/edit/' . $id);
+            return;
+        }
+        $this->redirect('/purchases');
+    }
 }

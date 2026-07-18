@@ -155,12 +155,13 @@ $total = array_sum(array_map(fn($x) => (float)$x['grand_total'], $items ?? []));
                             <th class="text-end">Total Nilai</th>
                             <th class="text-end">Hutang</th>
                             <th class="text-center">Status</th>
+                            <th class="text-end">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($items)): ?>
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="8" class="text-center py-5 text-muted">
                                 <?= sim_icon('ti-receipt', 'fs-1 text-light d-block mb-2') ?>
                                 Belum ada riwayat belanja pada periode ini.
                             </td>
@@ -196,6 +197,11 @@ $total = array_sum(array_map(fn($x) => (float)$x['grand_total'], $items ?? []));
                                     <span class="badge <?= $badgeClass ?> px-2 py-1">
                                         <?= htmlspecialchars($it['payment_status']) ?>
                                     </span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="<?= url('/purchases/edit/' . $it['id']) ?>" class="btn btn-sm btn-outline-primary" title="Edit Belanja">
+                                        <?= sim_icon('ti-edit') ?>
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

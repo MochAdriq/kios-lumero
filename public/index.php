@@ -105,6 +105,8 @@ $router->get('/daily-stock', [DailyStockController::class,'index']);
 $router->post('/daily-stock/save', [DailyStockController::class,'save']);
 $router->get('/purchases', [PurchaseController::class,'index']);
 $router->post('/purchases', [PurchaseController::class,'store']);
+$router->get('/purchases/edit/{id}', [PurchaseController::class,'edit']);
+$router->post('/purchases/update/{id}', [PurchaseController::class,'update']);
 $router->get('/expenses', [ExpenseController::class,'index']);
 $router->post('/expenses', [ExpenseController::class,'store']);
 $router->get('/categories', [CategoryController::class,'index']);
