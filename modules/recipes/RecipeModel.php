@@ -358,6 +358,96 @@ class RecipeModel extends Model
         return $maxYield === PHP_FLOAT_MAX ? 0.0 : max(0.0, $maxYield);
     }
 
+    public function calculateBulkMaxYield(array $productVariantIds, ?int $outletId = null): array
+    {
+        if (empty($productVariantIds)) return [];
+        if ($outletId === null) {
+            $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+        }
+        if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);
+
+        $stocks = [];
+        $stmt = $this->db->prepare("
+            SELECT rm.id, COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) AS stock_qty
+            FROM raw_materials rm
+            LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
+        ");
+        $stmt->execute([$outletId, $outletId]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $stocks[(int)$row['id']] = (float)$row['stock_qty'];
+        }
+
+        $results = array_fill_keys($productVariantIds, 0.0);
+        
+        $allRecipes = $this->all("SELECT * FROM recipes");
+        $recipeMap = [];
+        foreach ($allRecipes as $r) {
+            $recipeMap[(int)$r['id']] = $r;
+        }
+
+        $allRecipeItems = $this->all("SELECT * FROM recipe_items");
+        $itemsByRecipe = [];
+        foreach ($allRecipeItems as $i) {
+            $itemsByRecipe[(int)$i['recipe_id']][] = $i;
+        }
+
+        foreach ($recipeMap as $id => &$r) {
+            $r['items'] = $itemsByRecipe[$id] ?? [];
+        }
+        unset($r);
+
+        $variantToRecipeId = [];
+        foreach ($recipeMap as $id => $r) {
+            if ($r['product_variant_id']) {
+                $variantToRecipeId[(int)$r['product_variant_id']] = $id;
+            }
+        }
+
+        $explodeMem = function($recipeId, $qtyMultiplier, &$visited = []) use (&$explodeMem, &$recipeMap) {
+            if (in_array($recipeId, $visited)) return [];
+            $visited[] = $recipeId;
+            if (!isset($recipeMap[$recipeId])) {
+                array_pop($visited);
+                return [];
+            }
+            $recipe = $recipeMap[$recipeId];
+            $ratio = $qtyMultiplier / (float)($recipe['yield_qty'] > 0 ? $recipe['yield_qty'] : 1.0);
+            $bom = [];
+            foreach ($recipe['items'] as $item) {
+                $reqQty = (float)$item['qty'] * $ratio;
+                if ($item['item_type'] === 'raw_material') {
+                    $rmId = (int)$item['raw_material_id'];
+                    $bom[$rmId] = ($bom[$rmId] ?? 0) + $reqQty;
+                } elseif ($item['item_type'] === 'sub_recipe') {
+                    $subBom = $explodeMem((int)$item['sub_recipe_id'], $reqQty, $visited);
+                    foreach ($subBom as $rmId => $subQty) {
+                        $bom[$rmId] = ($bom[$rmId] ?? 0) + $subQty;
+                    }
+                }
+            }
+            array_pop($visited);
+            return $bom;
+        };
+
+        foreach ($productVariantIds as $vid) {
+            if (!isset($variantToRecipeId[$vid])) continue;
+            $recipeId = $variantToRecipeId[$vid];
+            $bom = $explodeMem($recipeId, 1.0);
+            if (empty($bom)) continue;
+
+            $maxYield = PHP_FLOAT_MAX;
+            foreach ($bom as $rmId => $qtyNeeded) {
+                if ($qtyNeeded <= 0) continue;
+                $stock = $stocks[$rmId] ?? 0.0;
+                $possible = floor($stock / $qtyNeeded);
+                if ($possible < $maxYield) $maxYield = $possible;
+            }
+            $results[$vid] = $maxYield === PHP_FLOAT_MAX ? 0.0 : max(0.0, $maxYield);
+        }
+
+        return $results;
+    }
+
     public function backflushRawMaterials(int $productVariantId, float $qtySold, int $orderItemId, int $userId, string $businessDate, int $outletId): void
     {
         if (function_exists('inventory_ensure_outlet_stocks')) inventory_ensure_outlet_stocks($this->db);

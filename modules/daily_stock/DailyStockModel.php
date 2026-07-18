@@ -68,9 +68,12 @@ class DailyStockModel extends Model
         require_once __DIR__ . '/../recipes/RecipeModel.php';
         $mRecipe = new RecipeModel();
 
+        $vids = array_map(function($it) { return (int)$it['product_variant_id']; }, $items);
+        $bulkYields = $mRecipe->calculateBulkMaxYield($vids, $outletId);
+
         foreach ($items as &$it) {
             $vid = (int)$it['product_variant_id'];
-            $maxYield = $mRecipe->calculateMaxYield($vid);
+            $maxYield = $bulkYields[$vid] ?? 0.0;
             $it['closing_qty'] = $maxYield;
             $it['stock_status'] = $maxYield > 0 ? ($maxYield <= 3 ? 'low' : 'available') : 'sold_out';
             $it['opening_qty'] = 0; // Read-only projection
