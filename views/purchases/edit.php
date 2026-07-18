@@ -64,7 +64,7 @@
                                             $currentCategory = $cat;
                                         endif;
                                     ?>
-                                    <option value="<?= $r['id'] ?>" data-cost="<?= (float)$r['average_cost'] ?>" <?= $it['raw_material_id'] == $r['id'] ? 'selected' : '' ?>>
+                                    <option value="<?= $r['id'] ?>" data-cost="<?= (float)$r['average_cost'] ?>" data-unit="<?= htmlspecialchars($r['unit_symbol']) ?>" <?= $it['raw_material_id'] == $r['id'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($r['name']) ?> - Stok: <?= (float)$r['stock_qty'] ?> <?= htmlspecialchars($r['unit_symbol']) ?>
                                     </option>
                                     <?php endforeach; 
@@ -74,18 +74,33 @@
                             </div>
                             
                             <div class="row g-2">
-                                <div class="col-4">
-                                    <label class="form-label small fw-medium mb-1">Qty <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.0001" name="qty[]" value="<?= (float)$it['qty'] ?>" class="form-control form-control-sm item-qty" placeholder="0" required>
+                                <div class="col-6">
+                                    <label class="form-label small fw-medium mb-1">Qty & Satuan Beli <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.0001" value="<?= (float)$it['qty'] ?>" class="form-control item-qty-input" placeholder="0" required>
+                                        <select class="form-select item-unit-multiplier" style="max-width: 140px;">
+                                            <option value="1">x1 (Satuan Dasar)</option>
+                                            <option value="1000">x1.000 (Kg/L/Paket)</option>
+                                            <option value="100">x100 (Ons/Ratusan)</option>
+                                            <option value="12">x12 (Lusin)</option>
+                                            <option value="24">x24 (Karton 24)</option>
+                                            <option value="40">x40 (Karton 40)</option>
+                                            <option value="48">x48 (Karton 48)</option>
+                                            <option value="50000">x50.000 (Karung 50Kg)</option>
+                                            <option value="25000">x25.000 (Karung 25Kg)</option>
+                                        </select>
+                                        <input type="hidden" name="qty[]" value="<?= (float)$it['qty'] ?>" class="item-qty">
+                                    </div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Masuk ke gudang: <strong class="text-real-qty text-primary"><?= (float)$it['qty'] ?></strong> <span class="text-unit-symbol"><?= htmlspecialchars($it['unit_symbol'] ?? 'Pcs/gr') ?></span></small>
                                 </div>
-                                <div class="col-8">
+                                <div class="col-6">
                                     <label class="form-label small fw-medium mb-1">Total Harga <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text bg-light text-muted">Rp</span>
                                         <input type="number" step="0.01" class="form-control item-total" value="<?= (float)$it['total_cost'] ?>" placeholder="0" required>
                                         <input type="hidden" name="unit_cost[]" class="item-cost" value="<?= (float)$it['unit_cost'] ?>">
                                     </div>
-                                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Satuan: Rp <span class="text-unit-cost"><?= number_format($it['unit_cost'], 2, ',', '.') ?></span></small>
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Satuan Dasar: Rp <span class="text-unit-cost"><?= number_format($it['unit_cost'], 2, ',', '.') ?></span></small>
                                 </div>
                             </div>
                         </div>
@@ -149,15 +164,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize initial selects
     container.querySelectorAll('.item-select').forEach(initTomSelect);
 
-    // Fungsi menghitung subtotal
+    // Fungsi menghitung subtotal & konversi satuan beli
     function calculateTotal() {
         let total = 0;
         container.querySelectorAll('.purchase-item-row').forEach(row => {
-            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-            const itemTotal = parseFloat(row.querySelector('.item-total').value) || 0;
+            const qtyInput = row.querySelector('.item-qty-input');
+            const multiplier = row.querySelector('.item-unit-multiplier');
+            const hiddenQty = row.querySelector('.item-qty');
+            const itemTotalInput = row.querySelector('.item-total');
             
-            // Hitung otomatis harga satuan
-            const unitCost = qty > 0 ? (itemTotal / qty) : 0;
+            const rawQty = parseFloat(qtyInput.value) || 0;
+            const mult = parseFloat(multiplier.value) || 1;
+            const realQty = rawQty * mult;
+            
+            hiddenQty.value = realQty;
+            const realQtyEl = row.querySelector('.text-real-qty');
+            if (realQtyEl) realQtyEl.textContent = realQty.toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2});
+            
+            const itemTotal = parseFloat(itemTotalInput.value) || 0;
+            const unitCost = realQty > 0 ? (itemTotal / realQty) : 0;
             row.querySelector('.item-cost').value = unitCost;
             row.querySelector('.text-unit-cost').textContent = unitCost.toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2});
             
@@ -169,27 +194,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     container.addEventListener('input', function(e) {
-        if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-total')) {
+        if (e.target.classList.contains('item-qty-input') || e.target.classList.contains('item-total')) {
             calculateTotal();
         }
     });
 
-    // Auto-fill harga total berdasarkan average cost saat pilih bahan
     container.addEventListener('change', function(e) {
+        if (e.target.classList.contains('item-unit-multiplier')) {
+            calculateTotal();
+        }
         if (e.target.classList.contains('item-select')) {
             const row = e.target.closest('.purchase-item-row');
-            const qtyInput = row.querySelector('.item-qty');
+            const qtyInput = row.querySelector('.item-qty-input');
             const totalInput = row.querySelector('.item-total');
             const selectedOpt = e.target.options[e.target.selectedIndex];
             
             if (selectedOpt && selectedOpt.dataset.cost) {
+                const unitSymbol = selectedOpt.getAttribute('data-unit') || 'Pcs/gr';
+                const unitEl = row.querySelector('.text-unit-symbol');
+                if (unitEl) unitEl.textContent = unitSymbol;
+
                 const avgCost = parseFloat(selectedOpt.dataset.cost) || 0;
-                const qty = parseFloat(qtyInput.value) || 0;
-                if (qty > 0 && !totalInput.value) {
-                    totalInput.value = avgCost * qty;
-                } else if (qty === 0) {
+                const rawQty = parseFloat(qtyInput.value) || 0;
+                const mult = parseFloat(row.querySelector('.item-unit-multiplier').value) || 1;
+                const realQty = rawQty * mult;
+
+                if (realQty > 0 && !totalInput.value) {
+                    totalInput.value = avgCost * realQty;
+                } else if (realQty === 0) {
                     qtyInput.value = 1;
-                    totalInput.value = avgCost;
+                    totalInput.value = avgCost * mult;
                 }
                 calculateTotal();
             }
@@ -222,10 +256,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const newRow = firstRow.cloneNode(true);
         
         // Reset values
+        newRow.querySelector('.item-qty-input').value = '';
         newRow.querySelector('.item-qty').value = '';
         newRow.querySelector('.item-total').value = '';
         newRow.querySelector('.item-cost').value = '';
         newRow.querySelector('.text-unit-cost').textContent = '0';
+        newRow.querySelector('.text-real-qty').textContent = '0';
+        newRow.querySelector('.item-unit-multiplier').selectedIndex = 0;
         
         // TomSelect needs to be re-initialized on cloned element
         const select = newRow.querySelector('.item-select');

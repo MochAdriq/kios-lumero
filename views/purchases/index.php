@@ -56,7 +56,7 @@ $total = array_sum(array_map(fn($x) => (float)$x['grand_total'], $items ?? []));
                                             $currentCategory = $cat;
                                         endif;
                                     ?>
-                                    <option value="<?= $r['id'] ?>" data-cost="<?= (float)$r['average_cost'] ?>">
+                                    <option value="<?= $r['id'] ?>" data-cost="<?= (float)$r['average_cost'] ?>" data-unit="<?= htmlspecialchars($r['unit_symbol']) ?>">
                                         <?= htmlspecialchars($r['name']) ?> - Stok: <?= (float)$r['stock_qty'] ?> <?= htmlspecialchars($r['unit_symbol']) ?>
                                     </option>
                                     <?php endforeach; 
@@ -66,18 +66,33 @@ $total = array_sum(array_map(fn($x) => (float)$x['grand_total'], $items ?? []));
                             </div>
                             
                             <div class="row g-2">
-                                <div class="col-4">
-                                    <label class="form-label small fw-medium mb-1">Qty <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.0001" name="qty[]" class="form-control form-control-sm item-qty" placeholder="0" required>
+                                <div class="col-6">
+                                    <label class="form-label small fw-medium mb-1">Qty & Satuan Beli <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.0001" class="form-control item-qty-input" placeholder="0" required>
+                                        <select class="form-select item-unit-multiplier" style="max-width: 140px;">
+                                            <option value="1">x1 (Satuan Dasar)</option>
+                                            <option value="1000">x1.000 (Kg/L/Paket)</option>
+                                            <option value="100">x100 (Ons/Ratusan)</option>
+                                            <option value="12">x12 (Lusin)</option>
+                                            <option value="24">x24 (Karton 24)</option>
+                                            <option value="40">x40 (Karton 40)</option>
+                                            <option value="48">x48 (Karton 48)</option>
+                                            <option value="50000">x50.000 (Karung 50Kg)</option>
+                                            <option value="25000">x25.000 (Karung 25Kg)</option>
+                                        </select>
+                                        <input type="hidden" name="qty[]" class="item-qty">
+                                    </div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Masuk ke gudang: <strong class="text-real-qty text-primary">0</strong> <span class="text-unit-symbol">Pcs/gr</span></small>
                                 </div>
-                                <div class="col-8">
+                                <div class="col-6">
                                     <label class="form-label small fw-medium mb-1">Total Harga <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text bg-light text-muted">Rp</span>
                                         <input type="number" step="0.01" class="form-control item-total" placeholder="0" required>
                                         <input type="hidden" name="unit_cost[]" class="item-cost">
                                     </div>
-                                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Satuan: Rp <span class="text-unit-cost">0</span></small>
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Satuan Dasar: Rp <span class="text-unit-cost">0</span></small>
                                 </div>
                             </div>
                         </div>
@@ -237,14 +252,25 @@ document.addEventListener('DOMContentLoaded', function() {
     container.querySelectorAll('.item-select').forEach(initTomSelect);
 
     // Fungsi menghitung subtotal
+    // Fungsi menghitung subtotal & konversi satuan beli
     function calculateTotal() {
         let total = 0;
         container.querySelectorAll('.purchase-item-row').forEach(row => {
-            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-            const itemTotal = parseFloat(row.querySelector('.item-total').value) || 0;
+            const qtyInput = row.querySelector('.item-qty-input');
+            const multiplier = row.querySelector('.item-unit-multiplier');
+            const hiddenQty = row.querySelector('.item-qty');
+            const itemTotalInput = row.querySelector('.item-total');
             
-            // Hitung otomatis harga satuan
-            const unitCost = qty > 0 ? (itemTotal / qty) : 0;
+            const rawQty = parseFloat(qtyInput.value) || 0;
+            const mult = parseFloat(multiplier.value) || 1;
+            const realQty = rawQty * mult;
+            
+            hiddenQty.value = realQty;
+            const realQtyEl = row.querySelector('.text-real-qty');
+            if (realQtyEl) realQtyEl.textContent = realQty.toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2});
+            
+            const itemTotal = parseFloat(itemTotalInput.value) || 0;
+            const unitCost = realQty > 0 ? (itemTotal / realQty) : 0;
             row.querySelector('.item-cost').value = unitCost;
             row.querySelector('.text-unit-cost').textContent = unitCost.toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2});
             
@@ -260,27 +286,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Trigger hitung ulang setiap ada input angka
+    // Trigger hitung ulang setiap ada input angka atau dropdown pengali
     container.addEventListener('input', function(e) {
-        if(e.target.classList.contains('item-qty') || e.target.classList.contains('item-total')) {
+        if(e.target.classList.contains('item-qty-input') || e.target.classList.contains('item-total')) {
             calculateTotal();
         }
     });
     
-    // Auto-fill saat memilih bahan
     container.addEventListener('change', function(e) {
+        if(e.target.classList.contains('item-unit-multiplier')) {
+            calculateTotal();
+        }
         if(e.target.classList.contains('item-select')) {
             const row = e.target.closest('.purchase-item-row');
-            const qtyInput = row.querySelector('.item-qty');
+            const qtyInput = row.querySelector('.item-qty-input');
             const totalInput = row.querySelector('.item-total');
             const option = e.target.options[e.target.selectedIndex];
             
             if (option && option.value) {
+                const unitSymbol = option.getAttribute('data-unit') || 'Pcs/gr';
+                const unitEl = row.querySelector('.text-unit-symbol');
+                if (unitEl) unitEl.textContent = unitSymbol;
+                
                 if (!qtyInput.value) qtyInput.value = 1;
                 const cost = option.getAttribute('data-cost');
                 if (cost) {
-                    const qty = parseFloat(qtyInput.value) || 1;
-                    totalInput.value = (parseFloat(cost) * qty);
+                    const rawQty = parseFloat(qtyInput.value) || 1;
+                    const mult = parseFloat(row.querySelector('.item-unit-multiplier').value) || 1;
+                    totalInput.value = (parseFloat(cost) * (rawQty * mult));
                 }
                 calculateTotal();
             }
@@ -309,7 +342,13 @@ document.addEventListener('DOMContentLoaded', function() {
         delete sel.tomselect; // Remove the property just in case
         sel.selectedIndex = 0;
 
-        newRow.querySelectorAll('input').forEach(input => input.value = '');
+        newRow.querySelector('.item-qty-input').value = '';
+        newRow.querySelector('.item-qty').value = '';
+        newRow.querySelector('.item-total').value = '';
+        newRow.querySelector('.item-cost').value = '';
+        newRow.querySelector('.text-unit-cost').textContent = '0';
+        newRow.querySelector('.text-real-qty').textContent = '0';
+        newRow.querySelector('.item-unit-multiplier').selectedIndex = 0;
         
         container.appendChild(newRow);
         initTomSelect(sel);
