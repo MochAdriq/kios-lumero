@@ -126,6 +126,11 @@ class InventoryModel extends Model
 
     public function updateRawMaterial(int $id, array $data): void
     {
+        $sku = trim($data['sku'] ?? '');
+        if ($sku === '') {
+            $existing = $this->one("SELECT sku FROM raw_materials WHERE id=?", [$id]);
+            $sku = !empty($existing['sku']) ? $existing['sku'] : 'SKU-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
+        }
         $this->execSql(
             "UPDATE raw_materials 
              SET category_id=?, unit_id=?, name=?, sku=?, min_stock_qty=?, updated_at=NOW() 
@@ -134,7 +139,7 @@ class InventoryModel extends Model
                 $data['category_id'] ?: null,
                 $data['unit_id'] ?: null,
                 trim($data['name'] ?? ''),
-                trim($data['sku'] ?? ''),
+                $sku,
                 (float)($data['min_stock_qty'] ?? 0),
                 $id
             ]

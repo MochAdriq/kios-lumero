@@ -49,4 +49,26 @@ class InventoryController extends Controller
         $this->redirect('/inventory');
     }
 
+    public function updateRaw(): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator']);
+        verify_csrf();
+
+        $id = (int)($_POST['id'] ?? 0);
+        $name = trim($_POST['name'] ?? '');
+        if ($id <= 0 || $name === '') {
+            $_SESSION['flash_error'] = 'ID atau Nama bahan tidak valid.';
+            $this->redirect('/inventory');
+            return;
+        }
+
+        try {
+            (new InventoryModel())->updateRawMaterial($id, $_POST);
+            Audit::log('update_raw_material', 'raw_materials', $id, null, $_POST);
+            $_SESSION['flash_success'] = "Info bahan baku \"$name\" berhasil diperbarui.";
+        } catch (Exception $e) {
+            $_SESSION['flash_error'] = 'Gagal memperbarui bahan: ' . $e->getMessage();
+        }
+        $this->redirect('/inventory');
+    }
 }

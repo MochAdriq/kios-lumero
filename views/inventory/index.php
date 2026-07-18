@@ -144,6 +144,7 @@
                             <th class="text-end" style="width: 15%;">Stok Gudang</th>
                             <th class="text-end" style="width: 20%;">HPP / Satuan</th>
                             <th class="text-center" style="width: 15%;">Status</th>
+                            <th class="text-end" style="width: 10%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -202,6 +203,18 @@
                                         <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Aman</span>
                                     <?php endif; ?>
                                 </td>
+                                <td class="text-end <?= $rowClass ?>">
+                                    <button type="button" class="btn btn-sm btn-outline-primary btn-edit-raw"
+                                            data-id="<?= $item['id'] ?>"
+                                            data-name="<?= htmlspecialchars($item['name']) ?>"
+                                            data-sku="<?= htmlspecialchars($item['sku']) ?>"
+                                            data-category-id="<?= $item['category_id'] ?>"
+                                            data-unit-id="<?= $item['unit_id'] ?>"
+                                            data-min-stock="<?= (float)$item['min_stock_qty'] ?>"
+                                            title="Edit Info Bahan">
+                                        <?= sim_icon('ti-edit') ?>
+                                    </button>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -218,3 +231,82 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Edit Info Bahan Baku -->
+<div class="modal fade" id="modalEditRaw" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="<?= url('/inventory/raw/update') ?>" class="modal-content border-0 shadow">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="editRawId">
+            
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-dark"><?= sim_icon('ti-edit', 'me-2 text-primary') ?>Edit Info Bahan Baku</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-medium text-dark mb-1">Nama Bahan Baku <span class="text-danger">*</span></label>
+                    <input type="text" name="name" id="editRawName" class="form-control" required placeholder="Misal: Bubuk Coklat Premium">
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-medium text-dark mb-1">Kode SKU</label>
+                        <input type="text" name="sku" id="editRawSku" class="form-control form-control-sm" placeholder="Opsional">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-medium text-dark mb-1">Stok Minimum Peringatan</label>
+                        <input type="number" step="0.01" name="min_stock_qty" id="editRawMinStock" class="form-control form-control-sm" value="0">
+                    </div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-medium text-dark mb-1">Kategori</label>
+                        <select name="category_id" id="editRawCategory" class="form-select form-select-sm">
+                            <option value="">-- Tanpa Kategori --</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-medium text-dark mb-1">Satuan Dasar</label>
+                        <select name="unit_id" id="editRawUnit" class="form-select form-select-sm">
+                            <option value="">-- Tanpa Satuan --</option>
+                            <?php foreach ($units as $u): ?>
+                                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['name']) ?> (<?= htmlspecialchars($u['symbol']) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="alert alert-warning border-0 bg-warning-subtle text-warning-emphasis small mb-0 p-2">
+                    <?= sim_icon('ti-alert-circle', 'me-1') ?> Stok & HPP tidak dapat diubah di sini (dihitung otomatis oleh modul Procurement / Belanja PO).
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-primary btn-sm fw-medium shadow-sm"><?= sim_icon('ti-device-floppy', 'me-1') ?>Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editButtons = document.querySelectorAll('.btn-edit-raw');
+    const modalEl = document.getElementById('modalEditRaw');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+        const modal = new bootstrap.Modal(modalEl);
+        editButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.getElementById('editRawId').value = this.dataset.id || '';
+                document.getElementById('editRawName').value = this.dataset.name || '';
+                document.getElementById('editRawSku').value = this.dataset.sku || '';
+                document.getElementById('editRawMinStock').value = this.dataset.minStock || '0';
+                document.getElementById('editRawCategory').value = this.dataset.categoryId || '';
+                document.getElementById('editRawUnit').value = this.dataset.unitId || '';
+                modal.show();
+            });
+        });
+    }
+});
+</script>
