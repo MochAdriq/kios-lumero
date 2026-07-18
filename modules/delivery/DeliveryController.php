@@ -121,6 +121,10 @@ class DeliveryController extends Controller
                     $posModel = new POSModel($pdo);
                     $posModel->verifyFreeOrderPayment($orderId, null);
                 }
+                $fo = $pdo->query("SELECT pre_order_no FROM free_orders WHERE id = " . (int)$orderId)->fetch(PDO::FETCH_ASSOC);
+                if ($fo) {
+                    $pdo->prepare("UPDATE orders SET order_status = 'completed', updated_at = NOW() WHERE order_number = ?")->execute([$fo['pre_order_no']]);
+                }
             } catch (Throwable $e) {}
         }
 

@@ -316,7 +316,7 @@ class POSModel extends Model
         }
 
         if ($fo['payment_status'] !== 'paid') {
-            $this->execSql("UPDATE free_orders SET payment_status='paid', order_status='completed', updated_at=? WHERE id=?", [now(), $freeOrderId]);
+            $this->execSql("UPDATE free_orders SET payment_status='paid', order_status='processing', updated_at=? WHERE id=?", [now(), $freeOrderId]);
             $fo['payment_status'] = 'paid';
         }
 
@@ -335,7 +335,7 @@ class POSModel extends Model
             $grossProfit = $total - $totalHpp;
             $stmt->execute([
                 $outletId,(int)$session['id'],null,$fo['pre_order_no'],'online_order',($fo['pickup_type'] ?: 'dine_in'),$orderBizDate,$subtotal,$discount,0,0,$total,$totalHpp,$grossProfit,
-                'paid','completed',Auth::id(),($fo['customer_note'] ?? null),now(),now()
+                'paid','processing',Auth::id(),($fo['customer_note'] ?? null),now(),now()
             ]);
             $orderId = (int)$this->db->lastInsertId();
 
@@ -358,6 +358,9 @@ class POSModel extends Model
                     $itemStmt->execute([
                         $orderId, (int)($ni['menu_item_id'] ?? 0), ($ni['item_name'] ?? 'Item Menu'), '', (int)($ni['qty'] ?? 1), (int)($ni['price'] ?? 0), $lineDiscount, 0, (int)($ni['line_total'] ?? 0), (int)($ni['hpp'] ?? 0), (int)($ni['line_hpp'] ?? 0), $lineProfit, null
                     ]);
+                    $orderItemId = (int)$this->db->lastInsertId();
+                    $this->deductDailyReadyStock($outletId, (int)($ni['menu_item_id'] ?? 0), (float)($ni['qty'] ?? 1), (float)($ni['hpp'] ?? 0), $orderItemId);
+                    $this->execSql("UPDATE products SET lifetime_qty_sold = lifetime_qty_sold + ?, updated_at=? WHERE id= (SELECT product_id FROM product_variants WHERE id=? LIMIT 1)", [(int)($ni['qty'] ?? 1), now(), (int)($ni['menu_item_id'] ?? 0)]);
                 }
             }
 

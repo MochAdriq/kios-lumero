@@ -85,6 +85,14 @@
                     <td class="text-end fw-bold" data-sort="<?= $o['grand_total'] ?>"><?= rupiah($o['grand_total']) ?></td>
                     <td class="text-end">
                         <a class="btn btn-light btn-sm rounded-pill" href="<?= url('/pos/receipt/'.$o['id']) ?>">Struk</a>
+                        <?php if($o['order_status'] === 'processing'): ?>
+                            <form action="<?= url('/orders/update-status') ?>" method="post" class="d-inline" onsubmit="return confirm('Tandai pesanan ini selesai?');">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                                <input type="hidden" name="status" value="completed">
+                                <button type="submit" class="btn btn-success btn-sm rounded-pill ms-1 text-white">✔ Selesai</button>
+                            </form>
+                        <?php endif; ?>
                         <?php if($o['order_type'] === 'delivery'): ?>
                         <a class="btn btn-info btn-sm rounded-pill text-white ms-1" href="<?= url('/delivery?q='.urlencode($o['order_number'])) ?>" title="Buka di Monitoring Kurir">Kurir</a>
                         <?php endif; ?>

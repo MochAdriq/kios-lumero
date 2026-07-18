@@ -159,6 +159,16 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     fo_upsert_customer($pdo,$customerPhone,$customerName,$no);
     $pdo->commit();
 
+    if ($paymentMethod === 'point') {
+        try {
+            require_once __DIR__.'/../modules/pos/POSModel.php';
+            if (class_exists('POSModel')) {
+                $posModel = new POSModel($pdo);
+                $posModel->verifyFreeOrderPayment($freeOrderId, null);
+            }
+        } catch (Throwable $e) {}
+    }
+
     header('Location: ../order-online/lacak.php?no='.urlencode($no).'&success=1'); exit;
   }catch(Throwable $e){
     if(isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();

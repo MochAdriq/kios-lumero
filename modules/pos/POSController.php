@@ -141,6 +141,32 @@ class POSController extends Controller
         ]);
     }
 
+    public function updateOrderStatus(): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
+        verify_csrf();
+        $orderId = (int)($_POST['id'] ?? 0);
+        $status = trim($_POST['status'] ?? '');
+        if ($orderId > 0 && in_array($status, ['completed'], true)) {
+            $pdo = Database::connection();
+            $st = $pdo->prepare("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?");
+            $st->execute([$status, $orderId]);
+            
+            $st2 = $pdo->prepare("
+                UPDATE free_orders fo
+                JOIN orders o ON fo.pre_order_no = o.order_number
+                SET fo.order_status = ?
+                WHERE o.id = ?
+            ");
+            $st2->execute([$status, $orderId]);
+            
+            $_SESSION['flash_success'] = 'Status pesanan berhasil diupdate menjadi ' . strtoupper($status) . '.';
+        } else {
+            $_SESSION['flash_error'] = 'Gagal mengupdate status pesanan.';
+        }
+        $this->redirect('/orders');
+    }
+
     public function payments(): void
     {
         Auth::requireRoles(['super_admin','administrator','cashier']);
