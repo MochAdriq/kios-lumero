@@ -232,16 +232,152 @@ class ProductController extends Controller
                 [$bProdId, $branchId, $masterVar['sku'], $masterVar['variant_name'], $masterVar['image'], $masterVar['hpp'], $masterVar['selling_price'], $masterVar['margin_amount'], $masterVar['margin_percent']]);
             $bVarId = (int)Database::connection()->lastInsertId();
 
-            // Clone recipe (simplified, assuming ingredients are globally referenced by ID anyway)
-            // Wait, recipe items reference raw_material_id which are global master data! So this is safe.
+            // Clone recipe along with branch-scoped raw materials and sub-recipes
             if ($masterRecipeId > 0) {
-                $m->execSql("INSERT INTO recipes (product_variant_id, total_cost, created_at, updated_at) VALUES (?, ?, NOW(), NOW())", [$bVarId, $masterVar['hpp']]);
-                $bRecipeId = (int)Database::connection()->lastInsertId();
-                
-                $recipeItems = $m->all("SELECT * FROM recipe_items WHERE recipe_id = ?", [$masterRecipeId]);
-                foreach ($recipeItems as $ri) {
-                    $m->execSql("INSERT INTO recipe_items (recipe_id, component_type, component_id, qty, unit_id, estimated_cost) VALUES (?, ?, ?, ?, ?, ?)",
-                        [$bRecipeId, $ri['component_type'], $ri['component_id'], $ri['qty'], $ri['unit_id'], $ri['estimated_cost']]);
+                $masterRecipe = $m->one("SELECT * FROM recipes WHERE id = ?", [$masterRecipeId]);
+                if ($masterRecipe) {
+                    $m->execSql("INSERT INTO recipes (outlet_id, product_variant_id, name, recipe_type, yield_qty, yield_unit_id, yield_unit_label, version, total_hpp, is_active, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW(), NOW())", [
+                        $branchId,
+                        $bVarId,
+                        $masterRecipe['name'] ?? $masterProd['name'],
+                        $masterRecipe['recipe_type'] ?? 'final',
+                        (float)($masterRecipe['yield_qty'] ?? 1.0),
+                        $masterRecipe['yield_unit_id'] ?: null,
+                        $masterRecipe['yield_unit_label'] ?? '',
+                        (int)($masterRecipe['version'] ?? 1),
+                        (float)($masterVar['hpp'] ?? 0),
+                        $masterRecipe['notes'] ?? ''
+                    ]);
+                    $bRecipeId = (int)Database::connection()->lastInsertId();
+                    
+                    // Helper to get or create branch raw material category ID
+                    $catMapBranch = [];
+                    $getBranchRMCatId = function($pusatCatId) use ($m, $branchId, &$catMapBranch) {
+                        if (isset($catMapBranch[$branchId][$pusatCatId])) return $catMapBranch[$branchId][$pusatCatId];
+                        
+                        $catName = 'Umum';
+                        if ($pusatCatId > 0) {
+                            $row = $m->one("SELECT name FROM raw_material_categories WHERE id = ?", [$pusatCatId]);
+                            if ($row && !empty($row['name'])) {
+                                $catName = $row['name'];
+                            }
+                        }
+
+                        $bCat = $m->one("SELECT id FROM raw_material_categories WHERE outlet_id = ? AND name = ? LIMIT 1", [$branchId, $catName]);
+                        if ($bCat) {
+                            $cid = (int)$bCat['id'];
+                        } else {
+                            $m->execSql("INSERT INTO raw_material_categories (outlet_id, name, sort_order) VALUES (?, ?, 0)", [$branchId, $catName]);
+                            $cid = (int)Database::connection()->lastInsertId();
+                        }
+                        $catMapBranch[$branchId][$pusatCatId] = $cid;
+                        return $cid;
+                    };
+
+                    $recipeItems = $m->all("SELECT * FROM recipe_items WHERE recipe_id = ?", [$masterRecipeId]);
+                    foreach ($recipeItems as $ri) {
+                        $itemType = $ri['item_type'] ?? '';
+                        $bRawId = null;
+                        $bSubId = null;
+                        
+                        if ($itemType === 'raw_material' && !empty($ri['raw_material_id'])) {
+                            $masterRM = $m->one("SELECT * FROM raw_materials WHERE id = ?", [$ri['raw_material_id']]);
+                            if ($masterRM) {
+                                $branchRM = $m->one("SELECT id FROM raw_materials WHERE outlet_id = ? AND (sku = ? OR name = ?) LIMIT 1", [$branchId, $masterRM['sku'], $masterRM['name']]);
+                                if ($branchRM) {
+                                    $bRawId = (int)$branchRM['id'];
+                                } else {
+                                    $bCatId = $getBranchRMCatId((int)($masterRM['category_id'] ?? 0));
+                                    $unitId = (int)($masterRM['unit_id'] ?? 0);
+                                    if ($unitId <= 0) $unitId = 1;
+                                    $m->execSql("INSERT INTO raw_materials (outlet_id, category_id, unit_id, name, sku, min_stock_qty, stock_qty, average_cost, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, NOW(), NOW())", [
+                                        $branchId,
+                                        $bCatId,
+                                        $unitId,
+                                        $masterRM['name'],
+                                        $masterRM['sku'],
+                                        (float)($masterRM['min_stock_qty'] ?? 0),
+                                        (float)($masterRM['average_cost'] ?? 0)
+                                    ]);
+                                    $bRawId = (int)Database::connection()->lastInsertId();
+                                }
+                            }
+                        } elseif ($itemType === 'sub_recipe' && !empty($ri['sub_recipe_id'])) {
+                            $masterSub = $m->one("SELECT * FROM recipes WHERE id = ?", [$ri['sub_recipe_id']]);
+                            if ($masterSub) {
+                                $branchSub = $m->one("SELECT id FROM recipes WHERE outlet_id = ? AND recipe_type = 'sub_recipe' AND name = ? LIMIT 1", [$branchId, $masterSub['name']]);
+                                if ($branchSub) {
+                                    $bSubId = (int)$branchSub['id'];
+                                } else {
+                                    $m->execSql("INSERT INTO recipes (outlet_id, product_variant_id, name, recipe_type, yield_qty, yield_unit_id, yield_unit_label, version, total_hpp, is_active, notes, created_at, updated_at) VALUES (?, NULL, ?, 'sub_recipe', ?, ?, ?, ?, ?, 1, ?, NOW(), NOW())", [
+                                        $branchId,
+                                        $masterSub['name'],
+                                        (float)($masterSub['yield_qty'] ?? 1.0),
+                                        $masterSub['yield_unit_id'] ?: null,
+                                        $masterSub['yield_unit_label'] ?? '',
+                                        (int)($masterSub['version'] ?? 1),
+                                        (float)($masterSub['total_hpp'] ?? 0),
+                                        $masterSub['notes'] ?? ''
+                                    ]);
+                                    $bSubId = (int)Database::connection()->lastInsertId();
+                                    
+                                    $subItems = $m->all("SELECT * FROM recipe_items WHERE recipe_id = ?", [$masterSub['id']]);
+                                    foreach ($subItems as $si) {
+                                        if (($si['item_type'] ?? '') === 'raw_material' && !empty($si['raw_material_id'])) {
+                                            $masterSubRM = $m->one("SELECT * FROM raw_materials WHERE id = ?", [$si['raw_material_id']]);
+                                            if ($masterSubRM) {
+                                                $branchSubRM = $m->one("SELECT id FROM raw_materials WHERE outlet_id = ? AND (sku = ? OR name = ?) LIMIT 1", [$branchId, $masterSubRM['sku'], $masterSubRM['name']]);
+                                                if ($branchSubRM) {
+                                                    $subRawId = (int)$branchSubRM['id'];
+                                                } else {
+                                                    $bCatId = $getBranchRMCatId((int)($masterSubRM['category_id'] ?? 0));
+                                                    $unitId = (int)($masterSubRM['unit_id'] ?? 0);
+                                                    if ($unitId <= 0) $unitId = 1;
+                                                    $m->execSql("INSERT INTO raw_materials (outlet_id, category_id, unit_id, name, sku, min_stock_qty, stock_qty, average_cost, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, NOW(), NOW())", [
+                                                        $branchId,
+                                                        $bCatId,
+                                                        $unitId,
+                                                        $masterSubRM['name'],
+                                                        $masterSubRM['sku'],
+                                                        (float)($masterSubRM['min_stock_qty'] ?? 0),
+                                                        (float)($masterSubRM['average_cost'] ?? 0)
+                                                    ]);
+                                                    $subRawId = (int)Database::connection()->lastInsertId();
+                                                }
+                                                $siUnitId = (int)($si['unit_id'] ?? 0);
+                                                if ($siUnitId <= 0) $siUnitId = 1;
+                                                $m->execSql("INSERT INTO recipe_items (recipe_id, item_type, raw_material_id, sub_recipe_id, qty, unit_id, cost_per_unit, total_cost, notes) VALUES (?, 'raw_material', ?, NULL, ?, ?, ?, ?, ?)", [
+                                                    $bSubId,
+                                                    $subRawId,
+                                                    (float)($si['qty'] ?? 0),
+                                                    $siUnitId,
+                                                    (float)($si['cost_per_unit'] ?? 0),
+                                                    (float)($si['total_cost'] ?? 0),
+                                                    $si['notes'] ?? ''
+                                                ]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($bRawId || $bSubId) {
+                            $riUnitId = (int)($ri['unit_id'] ?? 0);
+                            if ($riUnitId <= 0) $riUnitId = 1;
+                            $m->execSql("INSERT INTO recipe_items (recipe_id, item_type, raw_material_id, sub_recipe_id, qty, unit_id, cost_per_unit, total_cost, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                                $bRecipeId,
+                                $itemType,
+                                $bRawId,
+                                $bSubId,
+                                (float)($ri['qty'] ?? 0),
+                                $riUnitId,
+                                (float)($ri['cost_per_unit'] ?? 0),
+                                (float)($ri['total_cost'] ?? 0),
+                                $ri['notes'] ?? ''
+                            ]);
+                        }
+                    }
                 }
             }
         }
