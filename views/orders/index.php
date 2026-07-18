@@ -64,6 +64,7 @@
                     <th>No Order</th>
                     <th>Tanggal</th>
                     <th>Sumber</th>
+                    <th>Jenis Pesanan</th>
                     <th>Payment</th>
                     <th>Status</th>
                     <th class="text-end">Total</th>
@@ -76,6 +77,21 @@
                     <td><strong><?= htmlspecialchars($o['order_number']) ?></strong></td>
                     <td data-sort="<?= strtotime($o['created_at']) ?>"><?= htmlspecialchars($o['created_at']) ?></td>
                     <td><?= htmlspecialchars($o['order_source']) ?></td>
+                    <td>
+                        <?php 
+                        $pMethod = strtoupper(trim($o['payment_method'] ?? ''));
+                        $oType = strtolower(trim($o['order_type'] ?? 'takeaway'));
+                        if ($pMethod === 'POINT' || $pMethod === 'LOYALTY' || !empty($o['loyalty_claim_code'])) {
+                            echo '<span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-gift-fill me-1"></i>Tukar Poin</span>';
+                        } elseif ($oType === 'delivery') {
+                            echo '<span class="badge bg-info text-white px-2 py-1"><i class="bi bi-truck me-1"></i>Delivery / Kirim</span>';
+                        } elseif ($oType === 'dine_in') {
+                            echo '<span class="badge text-white px-2 py-1" style="background-color: #6f42c1;"><i class="bi bi-cup-hot-fill me-1"></i>Dine In</span>';
+                        } else {
+                            echo '<span class="badge bg-success text-white px-2 py-1"><i class="bi bi-bag-check-fill me-1"></i>Takeaway / Ambil</span>';
+                        }
+                        ?>
+                    </td>
                     <td><?= htmlspecialchars(strtoupper($o['payment_method'])) ?></td>
                     <td>
                         <span class="badge-soft <?= $o['order_status']==='completed'?'badge-open':($o['order_status']==='cancelled'?'bg-danger text-white':'') ?>">
