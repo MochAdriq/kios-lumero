@@ -121,46 +121,63 @@
             </div>
         </div>
 
-        <div class="row g-4">
-            <?php foreach($subRecipes as $r): ?>
-            <div class="col-md-6 col-lg-4">
-                <div class="sim-card h-100 shadow-sm border border-light-subtle position-relative overflow-hidden">
-                    <div class="position-absolute top-0 start-0 w-100 bg-secondary" style="height: 4px;"></div>
-                    
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h5 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($r['name']) ?></h5>
-                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Sub-Resep</span>
-                    </div>
-                    
-                    <div class="d-flex flex-column gap-2 mb-4">
-                        <div class="d-flex justify-content-between border-bottom pb-2">
-                            <span class="text-muted small">Hasil (Yield)</span>
-                            <strong class="text-dark"><?= number_format($r['yield_qty'], 2) ?> <?= htmlspecialchars($r['yield_unit_label'] ?: 'unit') ?></strong>
-                        </div>
-                        <div class="d-flex justify-content-between border-bottom pb-2">
-                            <span class="text-muted small">Total HPP Sub-Resep</span>
-                            <strong class="text-dark"><?= rupiah($r['total_hpp']) ?></strong>
-                        </div>
-                        <div class="d-flex justify-content-between bg-light p-2 rounded">
-                            <span class="text-muted small fw-medium">HPP per Satuan</span>
-                            <strong class="text-primary fs-5"><?= rupiah((float)$r['total_hpp'] / max(1, (float)$r['yield_qty'])) ?></strong>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                        <a href="<?= url('/recipes/'.$r['id']) ?>" class="btn btn-outline-primary w-100 rounded-pill">
-                            <?= sim_icon('ti-eye', 'me-1') ?> Lihat Komposisi
-                        </a>
-                    </div>
-                </div>
+        <div class="sim-card shadow-sm border-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold"><?= sim_icon('ti-components', 'me-2') ?>Daftar Sub-Resep (Bahan Setengah Jadi)</h5>
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2 rounded-pill"><?= count($subRecipes) ?> Sub-Resep</span>
             </div>
-            <?php endforeach; ?>
-            
-            <?php if(empty($subRecipes)): ?>
-            <div class="col-12 text-center py-5">
-                <p class="text-muted">Belum ada sub-resep.</p>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 35%;">Nama Sub-Resep</th>
+                            <th class="text-center" style="width: 15%;">Hasil (Yield)</th>
+                            <th class="text-end" style="width: 20%;">Total Modal Sub-Resep</th>
+                            <th class="text-end" style="width: 20%;">HPP per Satuan</th>
+                            <th class="text-end" style="width: 10%;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($subRecipes as $r): ?>
+                        <?php $unitHpp = (float)$r['total_hpp'] / max(1, (float)$r['yield_qty']); ?>
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Sub-Resep</span>
+                                    <strong class="text-dark fs-6"><?= htmlspecialchars($r['name']) ?></strong>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                                    <?= number_format($r['yield_qty'], 2) ?> <?= htmlspecialchars($r['yield_unit_label'] ?: 'unit') ?>
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <span class="text-muted fw-medium"><?= rupiah($r['total_hpp']) ?></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-bold fs-6">
+                                    <?= rupiah($unitHpp) ?> / <?= htmlspecialchars($r['yield_unit_label'] ?: 'unit') ?>
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary rounded-pill px-3" href="<?= url('/recipes/'.$r['id']) ?>">
+                                    <?= sim_icon('ti-eye', 'me-1') ?> Lihat Komposisi
+                                </a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        
+                        <?php if(empty($subRecipes)): ?>
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <p class="text-muted mb-0">Belum ada sub-resep di cabang ini.</p>
+                            </td>
+                        </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>
