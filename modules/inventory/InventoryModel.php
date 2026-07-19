@@ -176,14 +176,16 @@ class InventoryModel extends Model
             throw new Exception("Bahan baku ini tidak dapat dihapus karena masih digunakan dalam " . $used['cnt'] . " komponen resep/sub-resep.");
         }
 
-        // 2. Check if has purchase items history
-        $purchased = $this->one("SELECT COUNT(*) as cnt FROM purchase_items WHERE raw_material_id = ?", [$id]);
+        // 2. Check if has purchase order items history
+        $purchased = $this->one("SELECT COUNT(*) as cnt FROM purchase_order_items WHERE raw_material_id = ?", [$id]);
         if (($purchased['cnt'] ?? 0) > 0) {
-            throw new Exception("Bahan baku ini tidak dapat dihapus karena memiliki riwayat pembelian/transaksi procurement.");
+            throw new Exception("Bahan baku ini tidak dapat dihapus karena memiliki riwayat pembelian/transaksi PO.");
         }
 
-        // Delete from outlet_raw_materials and raw_materials across all outlets
+        // Delete from outlet_raw_materials, movements, corrections, and raw_materials
         $this->execSql("DELETE FROM outlet_raw_materials WHERE raw_material_id = ?", [$id]);
+        $this->execSql("DELETE FROM inventory_movements WHERE raw_material_id = ?", [$id]);
+        $this->execSql("DELETE FROM stock_corrections WHERE raw_material_id = ?", [$id]);
         $this->execSql("DELETE FROM raw_materials WHERE id = ?", [$id]);
     }
 
