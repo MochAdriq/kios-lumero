@@ -1,8 +1,14 @@
 <?php include __DIR__.'/../shared-flash.php'; ?>
 <div class="mb-4">
-    <a href="<?= url('/recipes') ?>" class="text-decoration-none text-muted">
-        <?= sim_icon('ti-arrow-left', 'me-1') ?> Kembali ke Pengaturan Resep
-    </a>
+    <?php if (!empty($_GET['return_to']) && (int)$_GET['return_to'] > 0): ?>
+        <a href="<?= url('/recipes/'.(int)$_GET['return_to']) ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1 text-decoration-none fw-medium">
+            <?= sim_icon('ti-arrow-left', 'm-0') ?> <span>Kembali ke Resep Sebelumnya</span>
+        </a>
+    <?php else: ?>
+        <a href="<?= url('/recipes') ?>" class="text-decoration-none text-muted d-inline-flex align-items-center gap-1">
+            <?= sim_icon('ti-arrow-left', 'm-0') ?> <span>Kembali ke Pengaturan Resep</span>
+        </a>
+    <?php endif; ?>
 </div>
 
 <?php 
@@ -223,7 +229,14 @@ function toggleItemType() {
                             <?php endif; ?>
                         </td>
                         <td>
-                            <strong><?= htmlspecialchars($it['material_name']) ?></strong>
+                            <?php if($isItemSub && !empty($it['sub_recipe_id'])): ?>
+                                <a href="<?= url('/recipes/'.$it['sub_recipe_id'].'?return_to='.$recipe['id']) ?>" class="btn btn-sm btn-outline-info text-info-emphasis rounded-pill px-3 py-1 d-inline-flex align-items-center gap-1 text-decoration-none fw-bold shadow-sm" title="Klik untuk membuka detail & komposisi sub-resep ini">
+                                    <span><?= htmlspecialchars($it['material_name']) ?></span>
+                                    <?= sim_icon('ti-external-link', 'ms-1 m-0') ?>
+                                </a>
+                            <?php else: ?>
+                                <strong><?= htmlspecialchars($it['material_name']) ?></strong>
+                            <?php endif; ?>
                         </td>
                         <td class="text-end">
                             <span class="fs-5 fw-medium"><?= number_format($it['qty'], 2) ?></span>

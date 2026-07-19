@@ -168,6 +168,25 @@ class InventoryModel extends Model
         } catch (Throwable $e) {}
     }
 
+    public function deleteRawMaterial(int $id): void
+    {
+        // 1. Check if used in recipes or sub-recipes
+        $used = $this->one("SELECT COUNT(*) as cnt FROM recipe_items WHERE raw_material_id = ? AND item_type = 'raw_material'", [$id]);
+        if (($used['cnt'] ?? 0) > 0) {
+            throw new Exception("Bahan baku ini tidak dapat dihapus karena masih digunakan dalam " . $used['cnt'] . " komponen resep/sub-resep.");
+        }
+
+        // 2. Check if has purchase items history
+        $purchased = $this->one("SELECT COUNT(*) as cnt FROM purchase_items WHERE raw_material_id = ?", [$id]);
+        if (($purchased['cnt'] ?? 0) > 0) {
+            throw new Exception("Bahan baku ini tidak dapat dihapus karena memiliki riwayat pembelian/transaksi procurement.");
+        }
+
+        // Delete from outlet_raw_materials and raw_materials across all outlets
+        $this->execSql("DELETE FROM outlet_raw_materials WHERE raw_material_id = ?", [$id]);
+        $this->execSql("DELETE FROM raw_materials WHERE id = ?", [$id]);
+    }
+
     public function findOrCreateCategory(string $name): int
     {
         $name = trim($name);

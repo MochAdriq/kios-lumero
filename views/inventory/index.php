@@ -119,8 +119,21 @@
         <div class="sim-card shadow-sm border-0 bg-white h-100">
             
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 pb-3 border-bottom gap-3">
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center flex-wrap gap-2">
                     <h5 class="mb-0 fw-bold"><?= sim_icon('ti-table', 'me-1 text-dark') ?> Rincian Bahan Baku</h5>
+                    
+                    <!-- Bulk Toolbar -->
+                    <form id="bulkDeleteRawForm" method="post" action="<?= url('/inventory/raw/bulk-delete') ?>" onsubmit="return confirmBulkDeleteRaw();" class="m-0">
+                        <?= csrf_field() ?>
+                        <div id="rawBulkToolbar" class="d-none align-items-center gap-2 bg-danger-subtle border border-danger-subtle px-3 py-1 rounded-pill">
+                            <span class="text-danger fw-semibold small">
+                                <span id="rawSelectedCount">0</span> bahan terpilih
+                            </span>
+                            <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1">
+                                <?= sim_icon('ti-trash', 'm-0') ?> <span>Hapus Terpilih</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
                 
                 <form method="get" class="d-flex w-100 mt-2 mt-md-0" style="max-width:300px;">
@@ -139,19 +152,22 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 22%;">Info Bahan</th>
-                            <th style="width: 13%;">Kategori</th>
+                            <th class="text-center" style="width: 4%;">
+                                <input class="form-check-input" type="checkbox" id="checkAllRaw" title="Pilih semua bahan yang belum dipakai">
+                            </th>
+                            <th style="width: 20%;">Info Bahan</th>
+                            <th style="width: 12%;">Kategori</th>
                             <th class="text-center" style="width: 15%;">Dipakai Di</th>
-                            <th class="text-end" style="width: 15%;">Stok Gudang</th>
-                            <th class="text-end" style="width: 15%;">HPP / Satuan</th>
-                            <th class="text-center" style="width: 10%;">Status</th>
-                            <th class="text-end" style="width: 10%;">Aksi</th>
+                            <th class="text-end" style="width: 13%;">Stok Gudang</th>
+                            <th class="text-end" style="width: 13%;">HPP / Satuan</th>
+                            <th class="text-center" style="width: 9%;">Status</th>
+                            <th class="text-end" style="width: 14%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($items)): ?>
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
+                            <td colspan="8" class="text-center text-muted py-5">
                                 <?= sim_icon('ti-box-off', 'fs-1 text-light mb-2 d-block') ?>
                                 <p class="mb-0">Belum ada data bahan baku.<br><small>Gunakan tombol "Tambah Bahan" untuk memulai.</small></p>
                             </td>
@@ -166,8 +182,19 @@
                                 
                                 $rowClass = $isOut ? 'bg-danger-subtle' : ($isLow ? 'bg-warning-subtle' : '');
                                 $stockTextClass = $isOut ? 'text-danger' : ($isLow ? 'text-warning-emphasis' : 'text-dark');
+                                
+                                $finalCount = (int)($item['used_in_final_recipes_count'] ?? 0);
+                                $subCount   = (int)($item['used_in_sub_recipes_count'] ?? 0);
+                                $isUsed     = ($finalCount > 0 || $subCount > 0);
                             ?>
                             <tr class="<?= $isOut || $isLow ? 'border-bottom border-white' : '' ?>">
+                                <td class="text-center <?= $rowClass ?>">
+                                    <?php if (!$isUsed): ?>
+                                        <input class="form-check-input raw-checkbox" type="checkbox" name="ids[]" value="<?= $item['id'] ?>" form="bulkDeleteRawForm">
+                                    <?php else: ?>
+                                        <input class="form-check-input" type="checkbox" disabled title="Tidak bisa dipilih karena sedang dipakai di komponen resep/sub-resep">
+                                    <?php endif; ?>
+                                </td>
                                 <td class="<?= $rowClass ?>">
                                     <div class="d-flex flex-column">
                                         <strong class="text-dark fs-6"><?= htmlspecialchars($item['name']) ?></strong>
@@ -182,10 +209,6 @@
                                 </td>
 
                                 <td class="text-center <?= $rowClass ?>">
-                                    <?php 
-                                    $finalCount = (int)($item['used_in_final_recipes_count'] ?? 0);
-                                    $subCount   = (int)($item['used_in_sub_recipes_count'] ?? 0);
-                                    ?>
                                     <?php if ($finalCount > 0 && $subCount > 0): ?>
                                         <div class="d-flex flex-column align-items-center gap-1">
                                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill" title="Langsung dipakai di <?= $finalCount ?> Resep Produk Final">
@@ -234,16 +257,30 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end <?= $rowClass ?>">
-                                    <button type="button" class="btn btn-sm btn-outline-primary btn-edit-raw"
-                                            data-id="<?= $item['id'] ?>"
-                                            data-name="<?= htmlspecialchars($item['name']) ?>"
-                                            data-sku="<?= htmlspecialchars($item['sku']) ?>"
-                                            data-category-id="<?= $item['category_id'] ?>"
-                                            data-unit-id="<?= $item['unit_id'] ?>"
-                                            data-min-stock="<?= (float)$item['min_stock_qty'] ?>"
-                                            title="Edit Info Bahan">
-                                        <?= sim_icon('ti-edit') ?>
-                                    </button>
+                                    <div class="d-flex justify-content-end align-items-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 d-inline-flex align-items-center gap-1 btn-edit-raw"
+                                                data-id="<?= $item['id'] ?>"
+                                                data-name="<?= htmlspecialchars($item['name']) ?>"
+                                                data-sku="<?= htmlspecialchars($item['sku']) ?>"
+                                                data-category-id="<?= $item['category_id'] ?>"
+                                                data-unit-id="<?= $item['unit_id'] ?>"
+                                                data-min-stock="<?= (float)$item['min_stock_qty'] ?>"
+                                                title="Edit Info Bahan">
+                                            <?= sim_icon('ti-edit', 'm-0') ?> <span>Edit</span>
+                                        </button>
+                                        <?php if ($isUsed): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 d-inline-flex align-items-center gap-1 opacity-50" disabled title="Tidak bisa dihapus karena sedang terpakai di komponen resep/sub-resep">
+                                                <?= sim_icon('ti-trash', 'm-0') ?> <span>Hapus</span>
+                                            </button>
+                                        <?php else: ?>
+                                            <form method="post" action="<?= url('/inventory/raw/'.$item['id'].'/delete') ?>" class="d-inline m-0" onsubmit="return confirm('Apakah Anda yakin ingin menghapus bahan baku [<?= addslashes($item['name']) ?>]?\n\nTindakan ini tidak dapat dibatalkan.');">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 d-inline-flex align-items-center gap-1" title="Hapus Bahan Baku">
+                                                    <?= sim_icon('ti-trash', 'm-0') ?> <span>Hapus</span>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -338,5 +375,50 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Bulk Delete Raw Materials logic
+    const checkAllRaw = document.getElementById('checkAllRaw');
+    const rawCheckboxes = document.querySelectorAll('.raw-checkbox');
+    const rawBulkToolbar = document.getElementById('rawBulkToolbar');
+    const rawSelectedCount = document.getElementById('rawSelectedCount');
+
+    function updateRawBulkToolbar() {
+        if (!rawCheckboxes || !rawBulkToolbar) return;
+        const selected = document.querySelectorAll('.raw-checkbox:checked');
+        if (rawSelectedCount) rawSelectedCount.textContent = selected.length;
+        if (selected.length > 0) {
+            rawBulkToolbar.classList.remove('d-none');
+            rawBulkToolbar.classList.add('d-flex');
+        } else {
+            rawBulkToolbar.classList.remove('d-flex');
+            rawBulkToolbar.classList.add('d-none');
+        }
+    }
+
+    if (checkAllRaw && rawCheckboxes) {
+        checkAllRaw.addEventListener('change', function() {
+            rawCheckboxes.forEach(cb => cb.checked = this.checked);
+            updateRawBulkToolbar();
+        });
+
+        rawCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const total = rawCheckboxes.length;
+                const checked = document.querySelectorAll('.raw-checkbox:checked').length;
+                checkAllRaw.checked = (total > 0 && total === checked);
+                checkAllRaw.indeterminate = (checked > 0 && checked < total);
+                updateRawBulkToolbar();
+            });
+        });
+    }
 });
+
+function confirmBulkDeleteRaw() {
+    const selected = document.querySelectorAll('.raw-checkbox:checked');
+    if (selected.length === 0) {
+        alert('Pilih minimal 1 bahan baku yang akan dihapus.');
+        return false;
+    }
+    return confirm(`Apakah Anda yakin ingin menghapus ${selected.length} bahan baku terpilih?\n\nTindakan ini tidak dapat dibatalkan.`);
+}
 </script>
