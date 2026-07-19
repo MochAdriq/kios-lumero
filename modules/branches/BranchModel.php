@@ -159,6 +159,7 @@ class BranchModel extends Model
             $this->execSql("INSERT INTO product_variants (product_id, outlet_id, sku, variant_name, image, hpp, selling_price, margin_amount, margin_percent, is_default, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
                 [$newProdId, $branchId, $v['sku'], $v['variant_name'], $v['image'], $v['hpp'], $v['selling_price'], $v['margin_amount'], $v['margin_percent'], $v['is_default'], $v['is_active']]);
         }
+    }
 
     /**
      * Delete an outlet (soft-delete: deactivate + clear slug).
