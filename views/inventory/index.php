@@ -139,18 +139,19 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 25%;">Info Bahan</th>
-                            <th style="width: 15%;">Kategori</th>
+                            <th style="width: 22%;">Info Bahan</th>
+                            <th style="width: 13%;">Kategori</th>
+                            <th class="text-center" style="width: 15%;">Dipakai Di</th>
                             <th class="text-end" style="width: 15%;">Stok Gudang</th>
-                            <th class="text-end" style="width: 20%;">HPP / Satuan</th>
-                            <th class="text-center" style="width: 15%;">Status</th>
+                            <th class="text-end" style="width: 15%;">HPP / Satuan</th>
+                            <th class="text-center" style="width: 10%;">Status</th>
                             <th class="text-end" style="width: 10%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($items)): ?>
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-5">
+                            <td colspan="7" class="text-center text-muted py-5">
                                 <?= sim_icon('ti-box-off', 'fs-1 text-light mb-2 d-block') ?>
                                 <p class="mb-0">Belum ada data bahan baku.<br><small>Gunakan tombol "Tambah Bahan" untuk memulai.</small></p>
                             </td>
@@ -178,6 +179,35 @@
                                     <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
                                         <?= htmlspecialchars($item['category_name']) ?>
                                     </span>
+                                </td>
+
+                                <td class="text-center <?= $rowClass ?>">
+                                    <?php 
+                                    $finalCount = (int)($item['used_in_final_recipes_count'] ?? 0);
+                                    $subCount   = (int)($item['used_in_sub_recipes_count'] ?? 0);
+                                    ?>
+                                    <?php if ($finalCount > 0 && $subCount > 0): ?>
+                                        <div class="d-flex flex-column align-items-center gap-1">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill" title="Langsung dipakai di <?= $finalCount ?> Resep Produk Final">
+                                                <?= sim_icon('ti-box', 'me-1') ?><?= $finalCount ?> Resep Final
+                                            </span>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 rounded-pill" title="Dipakai sebagai bahan di <?= $subCount ?> Sub-Resep">
+                                                <?= sim_icon('ti-components', 'me-1') ?><?= $subCount ?> Sub-Resep
+                                            </span>
+                                        </div>
+                                    <?php elseif ($finalCount > 0): ?>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold" title="Langsung dipakai di <?= $finalCount ?> Resep Produk Final">
+                                            <?= sim_icon('ti-box', 'me-1') ?><?= $finalCount ?> Resep Final
+                                        </span>
+                                    <?php elseif ($subCount > 0): ?>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 rounded-pill fw-semibold" title="Dipakai sebagai bahan di <?= $subCount ?> Sub-Resep">
+                                            <?= sim_icon('ti-components', 'me-1') ?><?= $subCount ?> Sub-Resep
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-semibold" title="Bahan baku ini belum dipakai dalam resep manapun">
+                                            <?= sim_icon('ti-alert-circle', 'me-1') ?>Belum Dipakai (0)
+                                        </span>
+                                    <?php endif; ?>
                                 </td>
                                 
                                 <td class="text-end <?= $rowClass ?>">

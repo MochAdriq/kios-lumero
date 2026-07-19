@@ -48,7 +48,19 @@ class InventoryModel extends Model
                    COALESCE(orm.stock_qty, rm.stock_qty, 0) AS stock_qty,
                    COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0) AS min_stock_qty,
                    COALESCE(orm.average_cost, rm.average_cost, 0) AS average_cost,
-                   rmc.name category_name, u.symbol unit_symbol
+                   rmc.name category_name, u.symbol unit_symbol,
+                   (
+                       SELECT COUNT(DISTINCT ri.recipe_id)
+                       FROM recipe_items ri
+                       JOIN recipes r ON r.id = ri.recipe_id
+                       WHERE ri.raw_material_id = rm.id AND ri.item_type = 'raw_material' AND r.recipe_type = 'sub_recipe'
+                   ) AS used_in_sub_recipes_count,
+                   (
+                       SELECT COUNT(DISTINCT ri.recipe_id)
+                       FROM recipe_items ri
+                       JOIN recipes r ON r.id = ri.recipe_id
+                       WHERE ri.raw_material_id = rm.id AND ri.item_type = 'raw_material' AND r.recipe_type = 'final' AND r.is_active = 1
+                   ) AS used_in_final_recipes_count
             FROM raw_materials rm
             JOIN raw_material_categories rmc ON rmc.id = rm.category_id
             JOIN units u ON u.id = rm.unit_id
