@@ -36,7 +36,20 @@ class RecipeModel extends Model
     public function listSubRecipes(?int $forceOutletId = null): array
     {
         $outletId = $forceOutletId > 0 ? (int)$forceOutletId : $this->outletId();
-        return $this->all("SELECT r.*, u.name as yield_unit_label FROM recipes r LEFT JOIN units u ON u.id = r.yield_unit_id WHERE r.recipe_type = 'sub_recipe' AND r.outlet_id = ? ORDER BY r.name ASC", [$outletId]);
+        return $this->all("
+            SELECT r.*, 
+                   u.name as yield_unit_label,
+                   (
+                       SELECT COUNT(DISTINCT ri.recipe_id)
+                       FROM recipe_items ri
+                       JOIN recipes pr ON pr.id = ri.recipe_id
+                       WHERE ri.sub_recipe_id = r.id AND ri.item_type = 'sub_recipe' AND pr.is_active = 1 AND pr.recipe_type = 'final'
+                   ) AS used_in_recipes_count
+            FROM recipes r 
+            LEFT JOIN units u ON u.id = r.yield_unit_id 
+            WHERE r.recipe_type = 'sub_recipe' AND r.outlet_id = ? 
+            ORDER BY r.name ASC
+        ", [$outletId]);
     }
 
     public function getRecipe(int $id): ?array

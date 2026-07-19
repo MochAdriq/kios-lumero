@@ -111,4 +111,54 @@ class RecipeController extends Controller
         $this->redirect('/recipes/' . $recipeId);
     }
 
+    public function deleteSub($id = null): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator']); verify_csrf();
+        $targetId = (int)($id ?: ($_POST['id'] ?? 0));
+        if ($targetId <= 0) {
+            $_SESSION['flash_error'] = 'ID Sub-resep tidak valid.';
+            $this->redirect('/recipes');
+            return;
+        }
+        try {
+            (new RecipeModel())->deleteSubRecipe($targetId);
+            $_SESSION['flash_success'] = 'Sub-resep berhasil dihapus.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+        $this->redirect('/recipes');
+    }
+
+    public function bulkDeleteSub(): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator']); verify_csrf();
+        $ids = $_POST['ids'] ?? [];
+        if (!is_array($ids) || empty($ids)) {
+            $_SESSION['flash_error'] = 'Tidak ada sub-resep yang dipilih untuk dihapus.';
+            $this->redirect('/recipes');
+            return;
+        }
+
+        $m = new RecipeModel();
+        $deleted = 0;
+        $failed = 0;
+        foreach ($ids as $id) {
+            try {
+                $m->deleteSubRecipe((int)$id);
+                $deleted++;
+            } catch (Throwable $e) {
+                $failed++;
+            }
+        }
+
+        if ($deleted > 0 && $failed > 0) {
+            $_SESSION['flash_success'] = "Berhasil menghapus {$deleted} sub-resep ({$failed} gagal dihapus karena sedang dipakai).";
+        } elseif ($deleted > 0) {
+            $_SESSION['flash_success'] = "Berhasil menghapus {$deleted} sub-resep terpilih.";
+        } else {
+            $_SESSION['flash_error'] = "Gagal menghapus sub-resep terpilih (mungkin masih dipakai di resep produk final).";
+        }
+        $this->redirect('/recipes');
+    }
+
 }

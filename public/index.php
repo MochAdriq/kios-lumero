@@ -68,6 +68,8 @@ $router->post('/recipes/sub', [RecipeController::class,'storeSub']);
 $router->post('/recipes/sub/delete', [RecipeController::class,'deleteSub']);
 $router->get('/recipes/sub/template', [RecipeController::class,'downloadSubTemplate']);
 $router->post('/recipes/sub/import', [RecipeController::class,'importSubCsv']);
+$router->post('/recipes/sub/bulk-delete', [RecipeController::class,'bulkDeleteSub']);
+$router->post('/recipes/sub/{id}/delete', [RecipeController::class,'deleteSub']);
 $router->post('/recipes/recalculate-all', [RecipeController::class,'recalculateAll']);
 $router->get('/recipes/composition/template', [RecipeController::class,'downloadCompTemplate']);
 $router->post('/recipes/composition/import', [RecipeController::class,'importCompCsv']);
