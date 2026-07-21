@@ -590,7 +590,7 @@ function check_outlet_operating_status(int $outletId, ?array $outletRow = null):
         } catch (Throwable $e) {}
     }
 
-    if (!$outletRow || empty($outletRow['is_active'])) {
+    if (!$outletRow || (isset($outletRow['is_active']) && empty($outletRow['is_active']))) {
         return [
             'is_open' => false,
             'reason' => 'Cabang saat ini tidak aktif atau sedang tutup sementara.',
@@ -600,9 +600,12 @@ function check_outlet_operating_status(int $outletId, ?array $outletRow = null):
     }
 
     $closingHour = trim((string)($outletRow['closing_hour'] ?? '21:00:00'));
-    if ($closingHour === '') $closingHour = '21:00:00';
+    if ($closingHour === '' || $closingHour === '00:00:00' || $closingHour === '24:00:00') $closingHour = '23:59:59';
     if (strlen($closingHour) === 5) $closingHour .= ':00';
-    $openingHour = '10:00:00'; // Standard opening time
+    
+    $openingHour = trim((string)($outletRow['opening_hour'] ?? '08:00:00'));
+    if ($openingHour === '') $openingHour = '08:00:00';
+    if (strlen($openingHour) === 5) $openingHour .= ':00';
 
     // Compare current time with opening and closing hours
     if ($closingHour < $openingHour) {

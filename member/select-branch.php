@@ -7,7 +7,7 @@ $pdo = Database::connection();
 date_default_timezone_set('Asia/Jakarta');
 try{ if(isset($pdo) && $pdo instanceof PDO) $pdo->exec("SET time_zone = '+07:00'"); }catch(Throwable $e){}
 
-$stOutlets = $pdo->query("SELECT id, slug, name, outlet_code AS code, is_hq, closing_hour, address, phone, latitude, longitude FROM outlets WHERE is_active = 1 ORDER BY is_hq DESC, name ASC");
+$stOutlets = $pdo->query("SELECT id, slug, name, outlet_code AS code, is_hq, is_active, closing_hour, address, phone, latitude, longitude FROM outlets WHERE is_active = 1 ORDER BY is_hq DESC, name ASC");
 $activeOutletsList = $stOutlets ? $stOutlets->fetchAll(PDO::FETCH_ASSOC) : [];
 if (empty($activeOutletsList)) {
     $bc = app_branch_config();

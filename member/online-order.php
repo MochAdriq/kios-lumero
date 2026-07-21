@@ -24,7 +24,7 @@ $deliveryEnabled = delivery_is_enabled($pdo);
 $deliverySettings = delivery_settings($pdo);
 $deliveryOutletCoords = delivery_outlet_coords($pdo) ?? ['lat' => -6.9175, 'lng' => 106.9275];
 
-$stOutlets = $pdo->query("SELECT id, slug, name, outlet_code AS code, is_hq, closing_hour, address, phone, latitude, longitude FROM outlets WHERE is_active = 1 ORDER BY is_hq DESC, name ASC");
+$stOutlets = $pdo->query("SELECT id, slug, name, outlet_code AS code, is_hq, is_active, closing_hour, address, phone, latitude, longitude FROM outlets WHERE is_active = 1 ORDER BY is_hq DESC, name ASC");
 $activeOutletsList = $stOutlets ? $stOutlets->fetchAll(PDO::FETCH_ASSOC) : [];
 if (empty($activeOutletsList)) {
     $bc = app_branch_config();
