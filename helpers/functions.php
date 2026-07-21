@@ -584,7 +584,7 @@ function check_outlet_operating_status(int $outletId, ?array $outletRow = null):
     if (!$outletRow) {
         try {
             $db = Database::connection();
-            $stmt = $db->prepare("SELECT id, name, is_active, closing_hour FROM outlets WHERE id = ? LIMIT 1");
+            $stmt = $db->prepare("SELECT id, name, is_active, closing_hour, opening_hour FROM outlets WHERE id = ? LIMIT 1");
             $stmt->execute([$outletId]);
             $outletRow = $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Throwable $e) {}
@@ -607,7 +607,36 @@ function check_outlet_operating_status(int $outletId, ?array $outletRow = null):
     if ($openingHour === '') $openingHour = '08:00:00';
     if (strlen($openingHour) === 5) $openingHour .= ':00';
 
-    // Compare current time with opening and closing hours
+    $openingTimeFormatted = substr($openingHour, 0, 5);
+    $closingTimeFormatted = substr($closingHour, 0, 5);
+
+    // Cek status sesi toko di daily_store_sessions (Primary Source of Truth)
+    try {
+        $db = Database::connection();
+        $bizDate = function_exists('business_date') ? business_date($outletId) : $now->format('Y-m-d');
+        $sessStmt = $db->prepare("SELECT status FROM daily_store_sessions WHERE outlet_id = ? AND business_date = ? ORDER BY id DESC LIMIT 1");
+        $sessStmt->execute([$outletId, $bizDate]);
+        $storeSession = $sessStmt->fetch(PDO::FETCH_ASSOC);
+        if ($storeSession && isset($storeSession['status'])) {
+            if ($storeSession['status'] === 'open') {
+                return [
+                    'is_open' => true,
+                    'reason' => 'Buka (Sesi Toko Aktif)',
+                    'opening_time' => $openingTimeFormatted,
+                    'closing_time' => $closingTimeFormatted
+                ];
+            } elseif ($storeSession['status'] === 'closed') {
+                return [
+                    'is_open' => false,
+                    'reason' => 'Cabang sudah ditutup hari ini.',
+                    'opening_time' => $openingTimeFormatted,
+                    'closing_time' => $closingTimeFormatted
+                ];
+            }
+        }
+    } catch (Throwable $e) {}
+
+    // Compare current time with opening and closing hours (fallback jika belum ada sesi)
     if ($closingHour < $openingHour) {
         // Closes past midnight (e.g. 02:00:00)
         $isOpen = ($currentTimeStr >= $openingHour || $currentTimeStr < $closingHour);
@@ -617,9 +646,9 @@ function check_outlet_operating_status(int $outletId, ?array $outletRow = null):
 
     return [
         'is_open' => $isOpen,
-        'reason' => $isOpen ? 'Buka' : 'Cabang saat ini di luar jam operasional (' . substr($openingHour, 0, 5) . ' - ' . substr($closingHour, 0, 5) . ' WIB).',
-        'opening_time' => substr($openingHour, 0, 5),
-        'closing_time' => substr($closingHour, 0, 5)
+        'reason' => $isOpen ? 'Buka' : 'Cabang saat ini di luar jam operasional (' . $openingTimeFormatted . ' - ' . $closingTimeFormatted . ' WIB).',
+        'opening_time' => $openingTimeFormatted,
+        'closing_time' => $closingTimeFormatted
     ];
 }
 
