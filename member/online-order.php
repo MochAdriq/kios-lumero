@@ -1285,10 +1285,12 @@ simInitTheme();
     </div>
     <div class="fo-pickup-actions">
       <button type="button" class="light" onclick="closePickupConfirm()">Kembali Pilih Menu</button>
-      <button type="button" class="gold" onclick="continueToPayment()">Lanjut Bayar</button>
     </div>
   </div>
+</div><!-- end #pickupConfirmModal -->
 
+<!-- Deprecated layout B hidden -->
+<div id="deprecatedPosLayoutB" style="display:none !important;">
 <header class="fo-header">
     <div class="fo-header-logo">
       <div class="logo-img">🍗</div>
