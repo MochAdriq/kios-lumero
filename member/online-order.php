@@ -1108,11 +1108,11 @@ simInitTheme();
                                 <div class="sim-summary-section">
     <div class="form-group mb-2" style="display:none !important;">
         <label class="form-label fs-12 mb-1">Nama Pemesan</label>
-        <input type="text" class="form-control form-control-sm" name="customer_name" id="customerName" placeholder="Nama Anda">
+        <input type="text" class="form-control form-control-sm" name="customer_name" id="customerNameHiddenOld" placeholder="Nama Anda">
     </div>
     <div class="form-group mb-2" style="display:none !important;">
         <label class="form-label fs-12 mb-1">No WhatsApp</label>
-        <input type="text" class="form-control form-control-sm" name="customer_phone" id="customerPhone" placeholder="08...">
+        <input type="text" class="form-control form-control-sm" name="customer_phone" id="customerPhoneHiddenOld" placeholder="08...">
     </div>
     <div class="row g-2 mb-2" id="pickupDateRowSide" style="display:none !important;">
         <div class="col-6">
@@ -1288,20 +1288,7 @@ simInitTheme();
       <button type="button" class="gold" onclick="continueToPayment()">Lanjut Bayar</button>
     </div>
   </div>
-</div>
 
-<div class="fo-drawer" id="checkoutDrawer"><div class="fo-panel">
-  <h2>Checkout Online Order</h2>
-  <div class="fo-cart-list" id="cartList"></div>
-  <div class="fo-payment-total-box">
-    <div id="checkoutFeeDetailRow" style="display:none; justify-content:space-between; margin-bottom:6px; font-size:12px; color:var(--dp-muted);"><span>Ongkos Kirim:</span> <b id="checkoutFeeDetailText" style="color:var(--dp-text);">Rp0</b></div>
-    <small>Total yang harus dibayar</small><b id="checkoutTotalText">Rp0</b><div class="items" id="checkoutTotalDetail">Keranjang masih kosong.</div>
-  </div>
-  <div class="fo-checkout-grid">
-    <div class="fo-field"><label>Nama Pemesan</label><input id="customerName" placeholder="Nama Anda" value="<?=fo_e($memberOnline['name'] ?? '')?>"></div>
-    <div class="fo-field"><label>Nomor WhatsApp</label><input id="customerPhone" inputmode="tel" placeholder="08xxxxxxxxxx" value="<?=fo_e($memberOnline['phone'] ?? '')?>"></div>
-  </div>
-  <div class="fo-field"><label>Catatan</label><textarea id="customerNote" placeholder="Catatan untuk kasir, opsional"></textarea></div>
 <header class="fo-header">
     <div class="fo-header-logo">
       <div class="logo-img">🍗</div>
