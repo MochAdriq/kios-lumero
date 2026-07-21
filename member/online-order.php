@@ -1612,6 +1612,132 @@ let payment = 'qris';
 let selectedPickupType = 'outlet';
 let lastAddedName = '';
 
+/* ── Branch Selector & GPS Haversine Recommendation ── */
+function openBranchSelector() {
+  const overlay = document.getElementById('branchSelectOverlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    detectBranchGPS();
+  }
+}
+
+function closeBranchSelector() {
+  const overlay = document.getElementById('branchSelectOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+function detectBranchGPS() {
+  const detectingBar = document.getElementById('branchDetectingBar');
+  if (detectingBar) {
+    detectingBar.innerHTML = '<span>⏳ Mengukur jarak GPS ke lokasi Anda...</span>';
+  }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        if (detectingBar) {
+          detectingBar.innerHTML = '<span>✅ Lokasi GPS akurat ditemukan</span><button type="button" onclick="detectBranchGPS()" style="background:transparent; border:none; color:var(--dp-red); font-weight:800; cursor:pointer; font-size:12px; text-decoration:underline;">Deteksi Ulang</button>';
+        }
+        renderBranchCards(userLat, userLng);
+      },
+      function(error) {
+        if (detectingBar) {
+          detectingBar.innerHTML = '<span>⚠️ GPS tidak aktif / izin ditolak. Menampilkan semua cabang.</span><button type="button" onclick="detectBranchGPS()" style="background:transparent; border:none; color:var(--dp-red); font-weight:800; cursor:pointer; font-size:12px; text-decoration:underline;">Coba Lagi</button>';
+        }
+        renderBranchCards(null, null);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  } else {
+    if (detectingBar) {
+      detectingBar.innerHTML = '<span>⚠️ Browser Anda tidak mendukung GPS.</span>';
+    }
+    renderBranchCards(null, null);
+  }
+}
+
+function renderBranchCards(userLat, userLng) {
+  const container = document.getElementById('branchCardsContainer');
+  if (!container) return;
+  
+  let outlets = [...(window.LUMERO_ACTIVE_OUTLETS || [])];
+  if (outlets.length === 0) {
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--dp-text-2); font-size:13px;">Belum ada data cabang aktif di sistem.</div>';
+    return;
+  }
+
+  outlets.forEach(o => {
+    o.distance = null;
+    if (userLat !== null && userLng !== null && o.latitude && o.longitude && typeof haversineDistanceKmJS === 'function') {
+      o.distance = haversineDistanceKmJS(userLat, userLng, Number(o.latitude), Number(o.longitude));
+    }
+  });
+
+  if (userLat !== null && userLng !== null) {
+    outlets.sort((a, b) => {
+      if (a.distance === null && b.distance === null) return 0;
+      if (a.distance === null) return 1;
+      if (b.distance === null) return -1;
+      return a.distance - b.distance;
+    });
+  }
+
+  let html = '';
+  outlets.forEach((o, index) => {
+    const isCurrent = (Number(o.id) === Number(window.LUMERO_SELECTED_OUTLET_ID));
+    const distText = o.distance !== null ? `${o.distance.toFixed(1)} km dari Anda` : `Cabang Lumero`;
+    const isClosest = (userLat !== null && index === 0 && o.distance !== null);
+    const badgeHtml = isClosest ? `<div style="display:inline-block; background:rgba(239,68,68,0.15); color:var(--dp-red); font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; margin-bottom:6px; border:1px solid rgba(239,68,68,0.3);">🌟 REKOMENDASI TERDEKAT (${distText})</div>` : `<div style="display:inline-block; background:var(--dp-surface-2); color:var(--dp-text-2); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-bottom:6px;">📍 ${distText}</div>`;
+    const borderStyle = isCurrent ? 'border:2px solid var(--dp-red);' : (isClosest ? 'border:1px solid rgba(239,68,68,0.6);' : 'border:1px solid var(--dp-glass-border);');
+    const bgStyle = isCurrent ? 'background:rgba(239,68,68,0.06);' : 'background:var(--dp-surface-2);';
+
+    html += `
+    <div style="border-radius:18px; padding:16px; ${bgStyle} ${borderStyle} transition:all .2s ease; display:flex; flex-direction:column; gap:8px;">
+      <div>${badgeHtml}</div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="font-size:15px; font-weight:800; color:var(--dp-text); margin-bottom:4px;">${o.name || 'Cabang Lumero'} ${isCurrent ? '<span style="color:var(--dp-red); font-size:11px;">(Terpilih Saat Ini)</span>' : ''}</div>
+          <div style="font-size:12px; color:var(--dp-text-2); line-height:1.4;">${o.address || 'Alamat cabang belum dicantumkan'}</div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; pt:6px; border-top:1px dashed var(--dp-glass-border);">
+        <div style="font-size:11px; color:var(--dp-muted); font-weight:600;">🕒 Jam Buka: 10:00 - ${o.closing_hour || '22:00'}</div>
+        <button type="button" onclick="selectBranchItem(${o.id}, '${(o.name || '').replace(/'/g, "\\'")}', ${Number(o.latitude) || -6.9175}, ${Number(o.longitude) || 106.9275})" style="background:var(--dp-red); color:#fff; border:none; padding:8px 16px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(239,68,68,0.3);">
+          ${isCurrent ? '✔ Terpilih' : 'Pilih Cabang Ini &rarr;'}
+        </button>
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function selectBranchItem(outletId, outletName, lat, lng) {
+  window.LUMERO_SELECTED_OUTLET_ID = Number(outletId);
+  const inputEl = document.getElementById('outletIdInput');
+  if (inputEl) inputEl.value = outletId;
+  
+  if (lat && lng && typeof deliveryConfig !== 'undefined') {
+    deliveryConfig.outletLat = lat;
+    deliveryConfig.outletLng = lng;
+    if (typeof deliveryMapObj !== 'undefined' && deliveryMapObj) {
+      deliveryMapObj.setView([lat, lng], 14);
+    }
+  }
+
+  const badgeEl = document.getElementById('activeBranchBadge');
+  if (badgeEl) {
+    badgeEl.innerHTML = `📍 Cabang Terpilih: <b>${outletName}</b> <span style="font-weight:400; font-size:11px;">(Ganti)</span>`;
+  }
+
+  closeBranchSelector();
+}
+
 /* ── Delivery JS Configuration & State ── */
 const deliveryConfig = {
   enabled: <?= $deliveryEnabled ? 'true' : 'false' ?>,
