@@ -7,7 +7,7 @@ require_once __DIR__ . '/../helpers/delivery_helper.php';
 $pdo = Database::connection();
 delivery_ensure_columns($pdo);
 
-$q = trim((string)($_GET['no'] ?? $_GET['q'] ?? ''));
+$q = trim((string)($_GET['no'] ?? $_GET['q'] ?? $_GET['order_id'] ?? ''));
 $success = (int)($_GET['success'] ?? 0);
 
 $order = null;
