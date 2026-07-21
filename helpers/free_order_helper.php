@@ -297,7 +297,11 @@ if (!function_exists('fo_normalize_cart')) {
 }
 
 if (!function_exists('fo_load_pos_menu_data')) {
-    function fo_load_pos_menu_data(PDO $pdo): array {
+    function fo_load_pos_menu_data(PDO $pdo, int $outletId = 0): array {
+        if ($outletId <= 0 && function_exists('current_outlet_id')) {
+            $outletId = current_outlet_id();
+        }
+        $outletFilter = $outletId > 0 ? " AND p.outlet_id = " . (int)$outletId . " AND pv.outlet_id = " . (int)$outletId . " AND pc.outlet_id = " . (int)$outletId : "";
         $st = $pdo->query("
             SELECT pv.id AS variant_id, p.id AS product_id, p.name AS product_name, pv.variant_name,
                    COALESCE(NULLIF(pv.selling_price,0), p.base_price, 0) AS price,
@@ -307,7 +311,7 @@ if (!function_exists('fo_load_pos_menu_data')) {
             FROM product_variants pv
             JOIN products p ON p.id = pv.product_id
             JOIN product_categories pc ON pc.id = p.category_id
-            WHERE p.is_active = 1 AND pv.is_active = 1 AND pc.is_active = 1
+            WHERE p.is_active = 1 AND pv.is_active = 1 AND pc.is_active = 1 {$outletFilter}
             ORDER BY p.name ASC, pv.variant_name ASC
         ");
         $rows = $st ? $st->fetchAll(PDO::FETCH_ASSOC) : [];

@@ -14,6 +14,9 @@ loyalty_ensure_tables($pdo);
 $memberOnline = null;
 if(!empty($_SESSION['member_id'])) $memberOnline = loyalty_member_by_id($pdo,(int)$_SESSION['member_id']);
 if(!$memberOnline){ header('Location: login.php'); exit; }
+if(!isset($_GET['outlet_id']) && !isset($_SESSION['lumero_selected_outlet_id']) && !isset($_GET['lookup_phone'])) {
+    header('Location: welcome.php'); exit;
+}
 $memberPointBalance=(int)($memberOnline['total_points'] ?? 0);
 $memberPointValue=max(1,(int)(loyalty_settings($pdo)['redeem_point_value'] ?? 500));
 
@@ -253,8 +256,13 @@ require_once __DIR__.'/../modules/pos/POSModel.php';
 require_once __DIR__.'/../helpers/pos_helper.php';
 try {
     $orderNo = '#ORD-' . date('Y') . '-' . str_pad(rand(1,999), 3, '0', STR_PAD_LEFT);
+    $activeOutletId = (int)($_GET['outlet_id'] ?? $_SESSION['lumero_selected_outlet_id'] ?? current_outlet_id());
+    if ($activeOutletId <= 0) $activeOutletId = 1;
+    if (isset($_GET['outlet_id'])) {
+        $_SESSION['lumero_selected_outlet_id'] = (int)$_GET['outlet_id'];
+    }
     $posModel = new POSModel();
-    $categories = $posModel->categoriesWithProducts(1);
+    $categories = $posModel->categoriesWithProducts($activeOutletId);
     $preparedData = sim_pos_prepare_data($categories);
     $preparedCategories = $preparedData['categories'];
     $posAssets = $preparedData['assets'];
@@ -270,7 +278,9 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
 </script>
 <?php
 
-$data = function_exists('fo_load_pos_menu_data') ? fo_load_pos_menu_data($pdo) : (function_exists('load_menu_data') ? load_menu_data() : ['parts'=>[],'sauces'=>[],'kentang'=>[],'matcha'=>[]]);
+$activeOutletId = (int)($_GET['outlet_id'] ?? $_SESSION['lumero_selected_outlet_id'] ?? current_outlet_id());
+if ($activeOutletId <= 0) $activeOutletId = 1;
+$data = function_exists('fo_load_pos_menu_data') ? fo_load_pos_menu_data($pdo, $activeOutletId) : (function_exists('load_menu_data') ? load_menu_data() : ['parts'=>[],'sauces'=>[],'kentang'=>[],'matcha'=>[]]);
 $data['parts']=array_values(array_filter($data['parts'] ?? [], function($p){
   $name=mb_strtolower(trim((string)($p['name'] ?? '')));
   return strpos($name,'chicken crips')===false
@@ -918,24 +928,6 @@ simInitTheme();
 </script>
 </head>
 <body class="pos-page sim-pos-template sim-pos-dcelup k2-body">
-<div class="fo-video-overlay" id="freeOrderVideoOverlay" aria-modal="true" role="dialog">
-  <video id="freeOrderVideoPlayer" autoplay muted loop playsinline preload="auto" poster="../<?=fo_e($freeOrderPoster)?>">
-    <source src="../<?=fo_e($freeOrderVideo)?>" type="video/mp4">
-  </video>
-  <div class="fo-video-content">
-    <div class="fo-video-badge"><img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero"></div>
-    <h2 class="fo-video-title">Online Order Lumero</h2>
-    <p class="fo-video-subtitle">Pesan dulu dari HP, pilih jam ambil yang paling pas, lalu bayar via QRIS, transfer, atau cash di outlet.</p>
-    <div class="fo-video-phone-box" style="display: none;">
-      <label>Nomor WhatsApp Pelanggan</label>
-      <div class="fo-video-phone-row single">
-        <input id="videoPhoneInput" inputmode="tel" placeholder="08xxxxxxxxxx" value="<?=fo_e($memberOnline['phone'] ?? '')?>">
-      </div>
-      <div class="fo-video-phone-info" id="videoPhoneInfo">Masukkan nomor WhatsApp untuk mempercepat order.</div>
-    </div>
-    <button type="button" class="fo-start-btn" id="startFreeOrderBtn">Mulai Online Order</button>
-  </div>
-</div>
 
 <audio id="foBgm" src="<?=fo_e($freeOrderVoiceBase)?>slow-cafe.mp3?v=2" preload="auto" loop></audio>
 <audio class="fo-voice" id="foVoiceWelcome" src="<?=fo_e($freeOrderVoiceBase)?>welcome.mp3?v=2" preload="auto"></audio>
@@ -1288,7 +1280,7 @@ simInitTheme();
       <div class="logo-img">🍗</div>
       <div class="logo-text">
         <h1>Lumero SELF-ORDER</h1>
-        <small id="activeBranchBadge" onclick="openBranchSelector()" style="cursor:pointer;color:var(--dp-green);text-decoration:underline;font-weight:700;">📍 Pilih / Ganti Cabang (Klik di sini)</small>
+        <small id="activeBranchBadge" onclick="window.location.href='select-branch.php'" style="cursor:pointer;color:var(--dp-green);text-decoration:underline;font-weight:700;">📍 Pilih / Ganti Cabang (Klik di sini)</small>
       </div>
     </div>
     <div class="fo-header-actions">
@@ -1556,33 +1548,11 @@ simInitTheme();
   </div>
 </div>
 
-<!-- ===== POPUP: PILIH CABANG LUMERO ===== -->
-<div id="branchSelectOverlay" style="display:none; position:fixed; inset:0; z-index:10001; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); align-items:center; justify-content:center; padding:16px;">
-  <div style="background:var(--dp-surface); border:1px solid var(--dp-glass-border); border-radius:28px; padding:32px 24px 28px; max-width:440px; width:100%; text-align:left; box-shadow:0 24px 80px rgba(0,0,0,0.8), 0 0 50px rgba(239,68,68,0.15); animation:popIn .35s cubic-bezier(.4,0,.2,1) both; max-height:90vh; display:flex; flex-direction:column;">
-    <div style="text-align:center; margin-bottom:20px;">
-      <div style="font-size:38px; margin-bottom:8px;">📍</div>
-      <div style="font-size:22px; font-weight:800; color:var(--dp-text); letter-spacing:-.02em; margin-bottom:6px;">Pilih Cabang Lumero</div>
-      <div style="font-size:13px; color:var(--dp-text-2); font-weight:600; line-height:1.5;">Pilih cabang terdekat dari lokasi Anda untuk jangkauan delivery & kecepatan pelayanan maksimal.</div>
-    </div>
-    
-    <div id="branchDetectingBar" style="background:rgba(239,68,68,0.08); border:1px dashed rgba(239,68,68,0.3); border-radius:12px; padding:10px 14px; margin-bottom:16px; font-size:12px; font-weight:600; color:var(--dp-red); display:flex; align-items:center; justify-content:space-between;">
-      <span>⏳ Mengukur jarak GPS ke lokasi Anda...</span>
-      <button type="button" onclick="detectBranchGPS()" style="background:transparent; border:none; color:var(--dp-red); font-weight:800; cursor:pointer; font-size:12px; text-decoration:underline;">Deteksi Ulang</button>
-    </div>
-
-    <div id="branchCardsContainer" style="overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:4px; max-height:50vh; margin-bottom:20px;">
-      <!-- Cards rendered dynamically via JS -->
-    </div>
-
-    <div style="text-align:center; font-size:11px; color:var(--dp-muted); font-weight:600;">
-      Semua cabang menyajikan ayam saus lumer standar kualitas terbaik Lumero 🔥
-    </div>
-  </div>
-</div>
 
 <script>
 window.LUMERO_ACTIVE_OUTLETS = <?= json_encode($activeOutletsList, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
-window.LUMERO_SELECTED_OUTLET_ID = <?= (int)current_outlet_id() ?>;
+window.LUMERO_SELECTED_OUTLET_ID = <?= (int)($activeOutletId ?? current_outlet_id()) ?>;
+window.LUMERO_HAS_SELECTED_OUTLET = <?= isset($_GET['outlet_id']) || isset($_SESSION['lumero_selected_outlet_id']) ? 'true' : 'false' ?>;
 window.DCELUP_FREE_ORDER_POPUP = <?= $orderPopup ? 'true' : 'false' ?>;
 const today = <?=json_encode($today)?>;
 const tomorrow = <?=json_encode($tomorrow)?>;
@@ -1614,21 +1584,10 @@ let lastAddedName = '';
 
 /* ── Branch Selector & GPS Haversine Recommendation ── */
 function openBranchSelector() {
-  const overlay = document.getElementById('branchSelectOverlay');
-  if (overlay) {
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    detectBranchGPS();
-  }
+  window.location.href = 'select-branch.php';
 }
 
-function closeBranchSelector() {
-  const overlay = document.getElementById('branchSelectOverlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }
-}
+function closeBranchSelector() {}
 
 function detectBranchGPS() {
   const detectingBar = document.getElementById('branchDetectingBar');
@@ -1736,6 +1695,7 @@ function selectBranchItem(outletId, outletName, lat, lng) {
   }
 
   closeBranchSelector();
+  window.location.href = 'online-order.php?outlet_id=' + Number(outletId);
 }
 
 /* ── Delivery JS Configuration & State ── */
@@ -3068,15 +3028,6 @@ document.getElementById('foForm').addEventListener('submit', e=>{
   }
 });
 
-(function(){
-  const overlay=document.getElementById('freeOrderVideoOverlay');
-  const player=document.getElementById('freeOrderVideoPlayer');
-  const start=document.getElementById('startFreeOrderBtn');
-  function showCover(){ if(!overlay) return; overlay.classList.add('show'); document.body.style.overflow='hidden'; if(player){ try{player.currentTime=0; player.muted=true; const p=player.play(); if(p&&p.catch)p.catch(()=>{});}catch(e){} } }
-  function hideCover(){ startBgm(); const vp=document.getElementById('videoPhoneInput'); if(vp && vp.value){ lookupCustomerFromVideo(false); } if(!overlay) return; overlay.classList.remove('show'); document.body.style.overflow=''; if(player){ try{player.pause();}catch(e){} } openBranchSelector(); }
-  if(!window.DCELUP_FREE_ORDER_POPUP) setTimeout(showCover,180);
-  if(start) start.addEventListener('click', hideCover);
-})();
 if(window.DCELUP_FREE_ORDER_POPUP){ setTimeout(()=>foPlay('foVoiceSuccess'), 500); }
 
 updateAudioToggleButtons();
