@@ -11,7 +11,7 @@
   const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const has = (s, arr) => arr.some(x => norm(s).includes(norm(x)));
   const findCat = id => categories.find(c => Number(c.id) === Number(id)) || categories[0] || null;
-  const isChickenCat = cat => cat && has(cat.name + ' ' + cat.slug, ['ayam', 'chicken', 'crispy', 'crips']);
+  const isChickenCat = cat => cat && has(cat.name + ' ' + cat.slug, ['ayam', 'chicken']) && has(cat.name + ' ' + cat.slug, ['crispy', 'crips']);
   const iconBase = (() => new URL('../tabler-sprite.svg', document.currentScript?.src || window.location.href).href)();
   const mapIconName = (name) => {
     let clean = String(name || '').replace(/^ti ti-/, '').replace(/^ti-/, '');
