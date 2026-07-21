@@ -1405,6 +1405,20 @@ simInitTheme();
     </div>
     <!-- Error state -->
     <div id="mqrisError" style="display:none; padding:20px; color:#ef4444; font-size:13px; font-weight:600; line-height:1.6;"></div>
+    <!-- Static Fallback state -->
+    <div id="mqrisStaticFallback" style="display:none; padding:0 20px 20px;">
+      <b style="font-size:14px; display:block; margin-bottom:14px; color:var(--dp-text);">Silakan gunakan QRIS Cadangan berikut:</b>
+      <div style="background:#fff; padding:14px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
+        <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero" style="width:240px; max-width:100%; height:auto; display:block; margin:0 auto; border-radius:10px; background:#fff; padding:0; border:none;">
+      </div>
+      <div style="margin-top:16px;">
+        <a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Lumero.png" style="box-shadow:0 4px 16px rgba(255,45,85,0.4); padding:10px 24px; font-size:13px;">Download QRIS</a>
+      </div>
+      <div class="fo-info" style="margin-top:14px; margin-bottom:16px; font-size:12px; line-height:1.5; color:var(--dp-text-2);">
+        <?=fo_e(str_ireplace('midtrans', 'Lumero', $qrisInfo))?>. Simpan bukti pembayaran untuk diverifikasi kasir.
+      </div>
+      <button type="button" id="mqrisFallbackDoneBtn" style="width:100%;background:var(--dp-gradient);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(255,45,85,0.3)">Selesai & Lacak Pesanan</button>
+    </div>
   </div>
 </div>
 
@@ -2796,6 +2810,8 @@ function closeMidtransQris(){
   _mqrisPollingTimer  = null;
   _mqrisCountdownTimer = null;
   document.getElementById('midtransQrisOverlay').style.display = 'none';
+  const fb = document.getElementById('mqrisStaticFallback');
+  if(fb) fb.style.display = 'none';
 }
 function _mqrisShowSuccessPopup(orderNo){
   // Tutup QRIS popup
@@ -2872,7 +2888,18 @@ async function _mqrisSubmitOrder(formData){
       document.getElementById('mqrisLoading').style.display = 'none';
       const errEl = document.getElementById('mqrisError');
       errEl.style.display = 'block';
-      errEl.innerHTML = '⚠️ Gagal memuat QRIS Midtrans:<br><small>'+escapeHtml(data.error||'Error tidak diketahui')+'</small><br><br><button onclick="closeMidtransQris()" style="background:var(--dp-red);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;">Tutup</button>';
+      if(data.order_no) {
+        errEl.innerHTML = '⚠️ Gagal memuat QRIS Midtrans:<br><small>'+escapeHtml(data.error||'Error tidak diketahui')+'</small>';
+        document.getElementById('mqrisStaticFallback').style.display = 'block';
+        const doneBtn = document.getElementById('mqrisFallbackDoneBtn');
+        if(doneBtn) {
+          doneBtn.onclick = () => {
+            window.location.href = '../order-online/lacak.php?no=' + encodeURIComponent(data.order_no) + '&success=1';
+          };
+        }
+      } else {
+        errEl.innerHTML = '⚠️ Gagal memproses pesanan:<br><small>'+escapeHtml(data.error||'Error tidak diketahui')+'</small><br><br><button onclick="closeMidtransQris()" style="background:var(--dp-red);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;">Tutup</button>';
+      }
       return;
     }
     if(data.mode === 'qris_midtrans'){
