@@ -14,9 +14,11 @@ loyalty_ensure_tables($pdo);
 $memberOnline = null;
 if(!empty($_SESSION['member_id'])) $memberOnline = loyalty_member_by_id($pdo,(int)$_SESSION['member_id']);
 if(!$memberOnline){ header('Location: login.php'); exit; }
+
 if(empty($_SESSION['welcome_passed']) || (!isset($_GET['outlet_id']) && !isset($_SESSION['lumero_selected_outlet_id']) && !isset($_GET['lookup_phone']))) {
     header('Location: welcome.php'); exit;
 }
+
 $memberPointBalance=(int)($memberOnline['total_points'] ?? 0);
 $memberPointValue=max(1,(int)(loyalty_settings($pdo)['redeem_point_value'] ?? 500));
 
@@ -225,7 +227,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;
         } catch (Throwable $midEx) {
-            // Gagal buat QRIS Midtrans â€” fallback: redirect normal
+            // Gagal buat QRIS Midtrans — fallback: redirect normal
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode([
                 'ok'       => false,
@@ -424,7 +426,7 @@ function fo_combo_img($row){
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <style>
-/* â”€â”€ Delivery Map Custom Styles â”€â”€ */
+/* ── Delivery Map Custom Styles ── */
 .fo-search-results {
   position: absolute; left:0; right:0; top:100%; z-index:500;
   background: var(--dp-surface-2); border: 1px solid var(--dp-glass-border);
@@ -443,12 +445,12 @@ function fo_combo_img($row){
 }
 .fo-btn-search:hover { background: var(--dp-red); color: #fff; border-color: var(--dp-red); }
 /* ============================================
-   Lumero SELF-ORDER â€“ DARK PREMIUM CINEMATIC
+   Lumero SELF-ORDER – DARK PREMIUM CINEMATIC
    Adapted from POS kasir2-theme
    ============================================ */
 
-/* â”€â”€ Design Tokens (copas dari POS) â”€â”€ */
-/* â”€â”€ Design Tokens (copas dari POS) â”€â”€ */
+/* ── Design Tokens (copas dari POS) ── */
+/* ── Design Tokens (copas dari POS) ── */
 :root{
   --dp-bg:#f4f6f9;--dp-bg-2:#ffffff;--dp-surface:#ffffff;--dp-surface-2:#f8f9fc;
   --dp-surface-hover:#e9ecef;--dp-glass:rgba(255,255,255,.85);--dp-glass-border:rgba(0,0,0,.08);
@@ -469,7 +471,7 @@ function fo_combo_img($row){
   --dp-line:rgba(255,255,255,.06);--dp-shadow:0 4px 24px rgba(0,0,0,.4);
 }
 
-/* â”€â”€ Animations â”€â”€ */
+/* ── Animations ── */
 @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
@@ -482,23 +484,23 @@ function fo_combo_img($row){
 @keyframes aiNudgeIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
 
-/* â”€â”€ Base â”€â”€ */
+/* ── Base ── */
 *{box-sizing:border-box}html,body{margin:0;padding:0}
 body{font-family:var(--dp-font);background:var(--dp-bg);color:var(--dp-text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 button,input,select,textarea{font:inherit}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--dp-muted);border-radius:10px}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    SPLIT LAYOUT
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-pos-wrapper{display:flex;flex-direction:column;height:100vh;overflow:hidden;width:100%}
 .fo-pos-left{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .fo-pos-right{flex:0 0 380px;max-width:380px;display:flex;flex-direction:column;height:100vh;background:var(--dp-bg-2);border-left:1px solid var(--dp-line)}
 .fo-products-scroll{flex:1;overflow-y:auto;padding:24px 28px 120px}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    HEADER BAR
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-header-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 20px;background:var(--dp-glass);backdrop-filter:blur(20px) saturate(1.5);border-bottom:1px solid var(--dp-line);flex-shrink:0;z-index:40}
 .fo-brand{display:flex;align-items:center;gap:12px}
 .fo-brand img{width:40px;height:40px;padding:4px;background:var(--dp-surface);border-radius:12px;border:1px solid var(--dp-glass-border)}
@@ -516,33 +518,33 @@ button,input,select,textarea{font:inherit}
 .fo-cart-pill span{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:999px;background:var(--dp-gradient);color:#fff;font-size:12px;font-weight:800}
 .fo-cart-icon{font-size:16px;line-height:1}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    TOPBAR (Category Title + Info)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
 .fo-topbar h2{font-size:24px;font-weight:800;color:var(--dp-text);margin:0;line-height:1.2;letter-spacing:-.02em}
 .fo-topbar .item-count{font-size:13px;color:var(--dp-muted);font-weight:500}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    HORIZONTAL CATEGORY TABS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-toolbar{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding:0 0 16px;scrollbar-width:none;-ms-overflow-style:none;flex-shrink:0}
 .fo-toolbar::-webkit-scrollbar{display:none}
 .fo-tab{list-style:none;min-height:40px;max-height:44px;padding:8px 18px;border:1px solid var(--dp-glass-border);border-radius:999px;background:var(--dp-surface);display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all var(--dp-transition);white-space:nowrap;flex:0 0 auto;font-size:13px;font-weight:600;color:var(--dp-text-2);animation:fadeIn .3s ease both}
 .fo-tab:hover{background:var(--dp-surface-hover);border-color:var(--dp-muted)}
 .fo-tab.active{background:var(--dp-red-soft);border-color:var(--dp-red);box-shadow:0 0 16px var(--dp-red-glow);color:var(--dp-red);font-weight:700}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    SECTIONS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-section{margin:0 0 28px;animation:fadeInUp .4s ease both}
 .fo-section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--dp-line)}
 .fo-section h3{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--dp-text)}
 .fo-section p{margin:4px 0 0;color:var(--dp-muted);font-weight:500;font-size:13px}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    PRODUCT CARDS (sim-kasir2 style)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
 .fo-card{min-height:auto;border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);background:var(--dp-surface);box-shadow:0 2px 16px rgba(0,0,0,.25);padding:0;overflow:hidden;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;animation:cardAppear .4s ease both;position:relative}
 .fo-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--dp-gradient);opacity:0;transition:opacity .3s ease}
@@ -617,9 +619,9 @@ button,input,select,textarea{font:inherit}
 .fo-combo-card p{margin:3px 0 6px;color:var(--dp-muted);font-size:12px;font-weight:600;line-height:1.35}
 .fo-combo-card .price{display:inline-flex;font-size:14px;font-weight:800;color:var(--dp-red)}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    ORDER PANEL (RIGHT SIDEBAR)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-order-header{padding:20px 20px 0}
 .fo-order-header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .fo-order-title{font-size:18px;font-weight:800;color:var(--dp-text);letter-spacing:-.02em}
@@ -663,9 +665,9 @@ button,input,select,textarea{font:inherit}
 .fo-checkout-btn strong{font-size:15px;font-weight:800}
 .fo-checkout-btn small{font-size:12px;opacity:.85;font-weight:500}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    FLOATING PAYBOX (Mobile only)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-paybox{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--dp-glass);backdrop-filter:blur(20px) saturate(1.5);border-top:1px solid var(--dp-line);box-shadow:0 -18px 40px rgba(0,0,0,.4);display:none}
 .fo-pay-inner{max-width:1260px;margin:auto;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
 .fo-total small{display:block;color:var(--dp-muted);font-size:12px;font-weight:600}
@@ -673,9 +675,9 @@ button,input,select,textarea{font:inherit}
 .fo-footer-detail{margin-top:3px;color:var(--dp-muted);font-size:11px;font-weight:600;line-height:1.3}
 .fo-checkout{border:0;border-radius:999px;background:var(--dp-gradient);color:#fff;padding:12px 20px;font-weight:800;cursor:pointer;min-width:160px;font-size:14px}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    MODALS & DRAWERS (Dark Theme)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-alert{padding:12px 15px;border-radius:var(--dp-radius-sm);margin:14px 0;font-weight:700}.fo-alert.err{background:var(--dp-red-soft);color:var(--dp-red)}
 
 /* Checkout Drawer */
@@ -791,9 +793,9 @@ button,input,select,textarea{font:inherit}
 .fo-close{margin-top:12px;display:inline-flex;justify-content:center;align-items:center;background:var(--dp-surface);color:var(--dp-text-2);border-radius:var(--dp-radius-sm);padding:12px 16px;font-weight:700;border:1px solid var(--dp-glass-border);cursor:pointer;text-decoration:none;width:100%;transition:all var(--dp-transition)}
 .fo-close:hover{background:var(--dp-surface-hover);color:var(--dp-text)}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    VIDEO OVERLAY (kept, dark compatible)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-video-overlay{position:fixed;inset:0;background:#050505;z-index:9999;display:none;align-items:center;justify-content:center;overflow:hidden}.fo-video-overlay.show{display:flex}
 .fo-video-overlay video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
 .fo-video-overlay:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,.16) 44%,rgba(0,0,0,.78)),radial-gradient(circle at center,rgba(255,199,44,.10),rgba(0,0,0,.32));pointer-events:none}
@@ -812,9 +814,9 @@ button,input,select,textarea{font:inherit}
 .fo-video-phone-info.ok{color:#bbf7d0}.fo-video-phone-info.warn{color:#fde68a}.fo-video-phone-info.err{color:#fecaca}
 .fo-video-phone-row button.checked{background:var(--dp-green);color:#fff}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    FLOATING ACTIONS & AI
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 .fo-floating-actions{position:fixed;left:14px;bottom:90px;z-index:54;display:grid;gap:10px;justify-items:start}
 .fo-float-btn{border:0;border-radius:999px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:12px}
 .fo-float-btn.ai{background:var(--dp-gradient);color:#fff}
@@ -849,9 +851,9 @@ button,input,select,textarea{font:inherit}
 .fo-matcha-spacer{height:38px}
 .fo-audio-note{position:absolute;left:14px;right:14px;bottom:14px;color:rgba(255,255,255,.64);font-size:11px}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════
    RESPONSIVE
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════ */
 @media(max-width:1399px){.fo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:1199px){.fo-pos-right{flex:0 0 340px;max-width:340px}}
 
@@ -968,7 +970,7 @@ simInitTheme();
 <?php if (!empty($outletOpStatus) && !$outletOpStatus['is_open']): ?>
 <div id="storeClosedOverlay" style="position:fixed; inset:0; z-index:99999; background:rgba(9,9,11,0.92); backdrop-filter:blur(18px); display:flex; align-items:center; justify-content:center; padding:20px;">
   <div style="background:rgba(24,24,34,0.98); border:2px solid rgba(239,68,68,0.45); border-radius:28px; padding:36px 28px; max-width:480px; width:100%; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.85), 0 0 60px rgba(239,68,68,0.22); animation:popIn .35s cubic-bezier(.4,0,.2,1) both;">
-    <div style="font-size:54px; margin-bottom:14px;">ðŸš«</div>
+    <div style="font-size:54px; margin-bottom:14px;">🚫</div>
     <h2 style="font-size:24px; font-weight:950; color:#FFFFFF; margin:0 0 10px; letter-spacing:-.02em;">Cabang Ini Sedang Tutup</h2>
     <p style="font-size:15px; color:#F3F4F6; line-height:1.6; font-weight:600; margin:0 0 14px;">
       <?= fo_e($activeOutletRow['name'] ?? 'Cabang Lumero') ?> saat ini sedang tidak beroperasi. <br>
@@ -978,7 +980,7 @@ simInitTheme();
       <?= fo_e($outletOpStatus['reason'] ?? 'Di luar jam operasional.') ?> <br>Pemesanan online untuk cabang ini ditutup sementara demi keamanan pesanan Anda.
     </div>
     <div style="display:flex; flex-direction:column; gap:12px;">
-      <a href="select-branch.php" style="background:linear-gradient(135deg, #FF2D55 0%, #FF6B00 100%); color:#FFFFFF; font-size:15px; font-weight:900; padding:14px 24px; border-radius:999px; text-decoration:none; box-shadow:0 10px 30px rgba(255,45,85,0.4); display:block; transition:transform .2s ease;">ðŸ“ Pilih Cabang Lain yang Buka</a>
+      <a href="select-branch.php" style="background:linear-gradient(135deg, #FF2D55 0%, #FF6B00 100%); color:#FFFFFF; font-size:15px; font-weight:900; padding:14px 24px; border-radius:999px; text-decoration:none; box-shadow:0 10px 30px rgba(255,45,85,0.4); display:block; transition:transform .2s ease;">📍 Pilih Cabang Lain yang Buka</a>
       <a href="welcome.php" style="color:#E5E7EB; font-size:14px; font-weight:700; text-decoration:underline; padding:8px 0; display:block;">&larr; Kembali ke Layar Sambutan</a>
     </div>
   </div>
@@ -1006,7 +1008,7 @@ simInitTheme();
       <img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero">
       <div>
         <h1>Lumero SELF-ORDER</h1>
-        <small>Pesan Cepat â€¢ Tanpa Antre â€¢ Ambil di Outlet</small>
+        <small>Pesan Cepat • Tanpa Antre • Ambil di Outlet</small>
       </div>
     </div>
     <div class="fo-header-actions">
@@ -1016,14 +1018,14 @@ simInitTheme();
           <span class="theme-icon-dark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
         </button>
         <button class="fo-audio-toggle on" id="toggleBgm" type="button" aria-pressed="true">
-          <span>â™ª</span> Musik ON
+          <span>♪</span> Musik ON
         </button>
         <button class="fo-audio-toggle on" id="toggleVoice" type="button" aria-pressed="true">
           <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></span> Suara ON
         </button>
       </div>
       <a href="../order-online/lacak.php" class="fo-track-link">
-        <span>ðŸ“</span> Lacak Pesanan
+        <span>📍</span> Lacak Pesanan
       </a>
       <button type="button" class="fo-cart-pill" onclick="document.querySelector('.fo-pos-right').classList.add('show')">
         <i class="ti ti-shopping-cart fo-cart-icon"></i> Keranjang Pesanan <span id="itemCount3">0</span>
@@ -1050,7 +1052,7 @@ simInitTheme();
                                     <button class="btn btn-light btn-sm sim-sort-btn" type="button" id="resetFlow"><?= sim_icon('ti-refresh-dot', 'me-1') ?>Reset</button>
                                     <div class="input-icon-start search-pos position-relative">
                                         <span class="input-icon-addon"><?= sim_icon('ti-search') ?></span>
-                                        <input type="text" class="form-control" id="posSearch" placeholder="Cari produk... (âŒ˜K)">
+                                        <input type="text" class="form-control" id="posSearch" placeholder="Cari produk... (⌘K)">
                                     </div>
                                 </div>
                             </div>
@@ -1109,8 +1111,8 @@ simInitTheme();
                                     </div>
                                     <div class="sim-order-type-toggle" style="display:none !important;">
                                         <select class="form-select form-select-sm" id="customerType" onchange="selectPickupOption(this.value)">
-                                            <option value="outlet">ðŸª Ambil di Outlet</option>
-                                            <option value="delivery" <?= $deliveryEnabled ? '' : 'disabled' ?>>ðŸ›µ Delivery (Diantar Kurir) <?= $deliveryEnabled ? '' : '(Belum Aktif)' ?></option>
+                                            <option value="outlet">🏪 Ambil di Outlet</option>
+                                            <option value="delivery" <?= $deliveryEnabled ? '' : 'disabled' ?>>🛵 Delivery (Diantar Kurir) <?= $deliveryEnabled ? '' : '(Belum Aktif)' ?></option>
                                         </select>
                                     </div>
                                 </div>
@@ -1198,8 +1200,8 @@ simInitTheme();
 
 
 <div class="fo-floating-actions">
-  <button type="button" class="fo-float-btn ai" onclick="toggleAiPanel()">âœ¨ Dengarkan Saran AI</button>
-  <a class="fo-float-btn wa" href="https://wa.me/6285794532040?text=Halo%20D%27Celup%20Pasekon%2C%20saya%20ingin%20bertanya%20tentang%20online%20order" target="_blank">ðŸ’¬ Hubungi Outlet</a>
+  <button type="button" class="fo-float-btn ai" onclick="toggleAiPanel()">✨ Dengarkan Saran AI</button>
+  <a class="fo-float-btn wa" href="https://wa.me/6285794532040?text=Halo%20D%27Celup%20Pasekon%2C%20saya%20ingin%20bertanya%20tentang%20online%20order" target="_blank">💬 Hubungi Outlet</a>
 </div>
 
 <div class="fo-ai-nudge" id="aiNudgeBubble">
@@ -1226,7 +1228,7 @@ simInitTheme();
 
 <div class="fo-added-modal" id="addedModal" aria-modal="true" role="dialog">
   <div class="fo-added-card">
-    <div class="fo-added-icon">âœ“</div>
+    <div class="fo-added-icon">✓</div>
     <h2>Masuk Keranjang</h2>
     <p id="addedItemText">Menu sudah ditambahkan ke keranjang.</p>
     <div class="fo-added-actions">
@@ -1260,17 +1262,17 @@ simInitTheme();
 
     <div class="fo-checkout-grid" style="margin-top:12px" id="outletDateTimeGrid">
       <div class="fo-field"><label>Tanggal Pengambilan</label><input type="date" id="pickupDate" min="<?=$today?>" value="<?=$today?>"></div>
-      <div class="fo-field"><label>Jam Pengambilan</label><select id="pickupTime"></select><div class="fo-time-hint" id="pickupTimeHint">Menyiapkan opsi waktu pengambilanâ€¦</div></div>
+      <div class="fo-field"><label>Jam Pengambilan</label><select id="pickupTime"></select><div class="fo-time-hint" id="pickupTimeHint">Menyiapkan opsi waktu pengambilan…</div></div>
     </div>
 
     <!-- Delivery Map & Address Section -->
     <div id="deliverySectionWrap" style="display:none; margin-top:14px;">
       <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; background:var(--dp-surface); border:1px solid var(--dp-glass-border); padding:10px 12px; border-radius:10px;">
         <div style="font-size:12px; font-weight:600; color:var(--dp-text); display:flex; align-items:center; gap:6px;">
-          <span>ðŸ“</span> <span>Lokasi Pengantaran</span>
+          <span>📍</span> <span>Lokasi Pengantaran</span>
         </div>
         <button type="button" id="btnUseGps" onclick="useCurrentDeviceLocation()" style="background:var(--dp-gradient); color:#fff; border:none; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:0 2px 10px rgba(255,45,85,0.3); transition:all 0.2s;">
-          ðŸŽ¯ Gunakan Lokasi Saat Ini (GPS)
+          🎯 Gunakan Lokasi Saat Ini (GPS)
         </button>
       </div>
 
@@ -1286,7 +1288,7 @@ simInitTheme();
       <div style="margin: 8px 0; border-radius:10px; overflow:hidden; border:1px solid var(--dp-glass-border); position:relative;">
         <div id="deliveryMap" style="height:220px; width:100%; z-index:1;"></div>
         <div style="position:absolute; bottom:8px; left:8px; right:8px; z-index:400; background:rgba(15,15,19,0.85); backdrop-filter:blur(10px); padding:6px 10px; border-radius:8px; border:1px solid var(--dp-glass-border); font-size:11px; display:flex; justify-content:space-between; align-items:center;">
-          <span style="color:#fff;">ðŸ“ Geser pin ke titik lokasi pasti</span>
+          <span style="color:#fff;">📍 Geser pin ke titik lokasi pasti</span>
           <span id="mapDistanceBadge" style="font-weight:800; color:var(--dp-green);">0 km</span>
         </div>
       </div>
@@ -1336,9 +1338,15 @@ simInitTheme();
     <button type="button" class="payBtn" data-pay="transfer">Transfer Bank</button>
   </div>
   <div class="fo-pay-preview active" id="qrisPreview" style="text-align:center; padding:20px;">
-    <b style="font-size:15px; display:block; margin-bottom:14px; color:var(--dp-text);">Pembayaran QRIS / E-Wallet</b>
-    <div class="fo-info" style="font-size:13px; line-height:1.6; color:var(--dp-text-2);">
-      Kode QRIS akan ditampilkan secara otomatis pada layar setelah Anda menekan tombol <b>Kirim Online Order</b>.
+    <b style="font-size:15px; display:block; margin-bottom:14px; color:var(--dp-text);">Scan QRIS Lumero / E-Wallet</b>
+    <div style="background:#fff; padding:14px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
+      <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero" style="width:240px; max-width:100%; height:auto; display:block; margin:0 auto; border-radius:10px; background:#fff; padding:0; border:none;">
+    </div>
+    <div style="margin-top:16px;">
+      <a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Lumero.png" style="box-shadow:0 4px 16px rgba(255,45,85,0.4); padding:10px 24px; font-size:13px;">⬇️ Download QRIS</a>
+    </div>
+    <div class="fo-info" style="margin-top:14px; font-size:12px; line-height:1.5; color:var(--dp-text-2);">
+      <?=fo_e(str_ireplace('midtrans', 'Lumero', $qrisInfo))?>. Simpan bukti pembayaran untuk diverifikasi kasir.
     </div>
   </div>
   <div class="fo-pay-preview" id="transferPreview">
@@ -1390,7 +1398,7 @@ simInitTheme();
         <img id="mqrisImg" src="" alt="QRIS Midtrans" style="width:220px; max-width:100%; height:auto; display:block; border-radius:8px;">
       </div>
       <div id="mqrisAmount" style="font-size:24px; font-weight:800; color:var(--dp-text); margin-bottom:4px;"></div>
-      <div style="font-size:12px; color:var(--dp-muted); font-weight:600; margin-bottom:16px; line-height:1.5;">Scan dengan aplikasi dompet digital favorit Anda.<br><b style="color:var(--dp-text);">GoPay Â· OVO Â· Dana Â· ShopeePay Â· M-Banking</b></div>
+      <div style="font-size:12px; color:var(--dp-muted); font-weight:600; margin-bottom:16px; line-height:1.5;">Scan dengan aplikasi dompet digital favorit Anda.<br><b style="color:var(--dp-text);">GoPay · OVO · Dana · ShopeePay · M-Banking</b></div>
       <div id="mqrisTimer" style="font-size:12px; color:var(--dp-muted); margin-bottom:10px; font-weight:600;"></div>
       <div id="mqrisStatusBadge" style="display:inline-flex; align-items:center; gap:6px; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3); border-radius:999px; padding:6px 16px; font-size:12px; font-weight:700; color:#f59e0b; margin-bottom:16px;">
         <span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block;animation:pulseGlow 1.4s infinite;"></span>
@@ -1419,9 +1427,9 @@ simInitTheme();
 <!-- ===== POPUP: SUKSES PEMBAYARAN ===== -->
 <div id="paymentSuccessOverlay" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.88); backdrop-filter:blur(10px); align-items:center; justify-content:center;">
   <div style="background:var(--dp-surface); border:1px solid rgba(52,211,153,.25); border-radius:24px; padding:40px 28px 32px; max-width:380px; width:calc(100vw - 32px); text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.7), 0 0 60px rgba(52,211,153,0.12); animation:popIn .4s cubic-bezier(.4,0,.2,1) both;">
-    <div style="font-size:68px; margin-bottom:14px;">ðŸŽ‰</div>
+    <div style="font-size:68px; margin-bottom:14px;">🎉</div>
     <div style="font-size:24px; font-weight:800; color:var(--dp-green); margin-bottom:8px; letter-spacing:-.02em;">Pembayaran Berhasil!</div>
-    <div style="font-size:14px; color:var(--dp-text-2); font-weight:600; margin-bottom:8px; line-height:1.6;">Terima kasih! Pesanan Anda sudah kami terima dan akan segera diproses oleh dapur Lumero. ðŸ—</div>
+    <div style="font-size:14px; color:var(--dp-text-2); font-weight:600; margin-bottom:8px; line-height:1.6;">Terima kasih! Pesanan Anda sudah kami terima dan akan segera diproses oleh dapur Lumero. 🍗</div>
     <div id="successOrderNo" style="font-size:12px; color:var(--dp-muted); margin-bottom:24px;"></div>
     <div style="width:100%; background:var(--dp-surface-2); border-radius:12px; height:6px; overflow:hidden; margin-bottom:8px;">
       <div id="successProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#34d399,#10b981); border-radius:12px; transition:width .1s linear;"></div>
@@ -1464,7 +1472,7 @@ let payment = 'qris';
 let selectedPickupType = 'outlet';
 let lastAddedName = '';
 
-/* â”€â”€ Branch Selector & GPS Haversine Recommendation â”€â”€ */
+/* ── Branch Selector & GPS Haversine Recommendation ── */
 function openBranchSelector() {
   window.location.href = 'select-branch.php';
 }
@@ -1474,7 +1482,7 @@ function closeBranchSelector() {}
 function detectBranchGPS() {
   const detectingBar = document.getElementById('branchDetectingBar');
   if (detectingBar) {
-    detectingBar.innerHTML = '<span>â³ Mengukur jarak GPS ke lokasi Anda...</span>';
+    detectingBar.innerHTML = '<span>⏳ Mengukur jarak GPS ke lokasi Anda...</span>';
   }
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
@@ -1482,13 +1490,13 @@ function detectBranchGPS() {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
         if (detectingBar) {
-          detectingBar.innerHTML = '<span>âœ… Lokasi GPS akurat ditemukan</span><button type="button" onclick="detectBranchGPS()" style="background:transparent; border:none; color:var(--dp-red); font-weight:800; cursor:pointer; font-size:12px; text-decoration:underline;">Deteksi Ulang</button>';
+          detectingBar.innerHTML = '<span>✅ Lokasi GPS akurat ditemukan</span><button type="button" onclick="detectBranchGPS()" style="background:transparent; border:none; color:var(--dp-red); font-weight:800; cursor:pointer; font-size:12px; text-decoration:underline;">Deteksi Ulang</button>';
         }
         renderBranchCards(userLat, userLng);
       },
       function(error) {
         if (detectingBar) {
-          detectingBar.innerHTML = '<span>âš ï¸ GPS tidak aktif / izin ditolak. Menampilkan semua cabang.</span><button type="button" onclick="detectBranchGPS()" style="background:transparent; border:none; color:var(--dp-red); font-weight:800; cursor:pointer; font-size:12px; text-decoration:underline;">Coba Lagi</button>';
+          detectingBar.innerHTML = '<span>⚠️ GPS tidak aktif / izin ditolak. Menampilkan semua cabang.</span><button type="button" onclick="detectBranchGPS()" style="background:transparent; border:none; color:var(--dp-red); font-weight:800; cursor:pointer; font-size:12px; text-decoration:underline;">Coba Lagi</button>';
         }
         renderBranchCards(null, null);
       },
@@ -1496,7 +1504,7 @@ function detectBranchGPS() {
     );
   } else {
     if (detectingBar) {
-      detectingBar.innerHTML = '<span>âš ï¸ Browser Anda tidak mendukung GPS.</span>';
+      detectingBar.innerHTML = '<span>⚠️ Browser Anda tidak mendukung GPS.</span>';
     }
     renderBranchCards(null, null);
   }
@@ -1533,7 +1541,7 @@ function renderBranchCards(userLat, userLng) {
     const isCurrent = (Number(o.id) === Number(window.LUMERO_SELECTED_OUTLET_ID));
     const distText = o.distance !== null ? `${o.distance.toFixed(1)} km dari Anda` : `Cabang Lumero`;
     const isClosest = (userLat !== null && index === 0 && o.distance !== null);
-    const badgeHtml = isClosest ? `<div style="display:inline-block; background:rgba(239,68,68,0.15); color:var(--dp-red); font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; margin-bottom:6px; border:1px solid rgba(239,68,68,0.3);">ðŸŒŸ REKOMENDASI TERDEKAT (${distText})</div>` : `<div style="display:inline-block; background:var(--dp-surface-2); color:var(--dp-text-2); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-bottom:6px;">ðŸ“ ${distText}</div>`;
+    const badgeHtml = isClosest ? `<div style="display:inline-block; background:rgba(239,68,68,0.15); color:var(--dp-red); font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; margin-bottom:6px; border:1px solid rgba(239,68,68,0.3);">🌟 REKOMENDASI TERDEKAT (${distText})</div>` : `<div style="display:inline-block; background:var(--dp-surface-2); color:var(--dp-text-2); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; margin-bottom:6px;">📍 ${distText}</div>`;
     const borderStyle = isCurrent ? 'border:2px solid var(--dp-red);' : (isClosest ? 'border:1px solid rgba(239,68,68,0.6);' : 'border:1px solid var(--dp-glass-border);');
     const bgStyle = isCurrent ? 'background:rgba(239,68,68,0.06);' : 'background:var(--dp-surface-2);';
 
@@ -1547,9 +1555,9 @@ function renderBranchCards(userLat, userLng) {
         </div>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; pt:6px; border-top:1px dashed var(--dp-glass-border);">
-        <div style="font-size:11px; color:var(--dp-muted); font-weight:600;">ðŸ•’ Jam Buka: 10:00 - ${o.closing_hour || '22:00'}</div>
+        <div style="font-size:11px; color:var(--dp-muted); font-weight:600;">🕒 Jam Buka: 10:00 - ${o.closing_hour || '22:00'}</div>
         <button type="button" onclick="selectBranchItem(${o.id}, '${(o.name || '').replace(/'/g, "\\'")}', ${Number(o.latitude) || -6.9175}, ${Number(o.longitude) || 106.9275})" style="background:var(--dp-red); color:#fff; border:none; padding:8px 16px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(239,68,68,0.3);">
-          ${isCurrent ? 'âœ” Terpilih' : 'Pilih Cabang Ini &rarr;'}
+          ${isCurrent ? '✔ Terpilih' : 'Pilih Cabang Ini &rarr;'}
         </button>
       </div>
     </div>`;
@@ -1573,14 +1581,14 @@ function selectBranchItem(outletId, outletName, lat, lng) {
 
   const badgeEl = document.getElementById('activeBranchBadge');
   if (badgeEl) {
-    badgeEl.innerHTML = `ðŸ“ Cabang Terpilih: <b>${outletName}</b> <span style="font-weight:400; font-size:11px;">(Ganti)</span>`;
+    badgeEl.innerHTML = `📍 Cabang Terpilih: <b>${outletName}</b> <span style="font-weight:400; font-size:11px;">(Ganti)</span>`;
   }
 
   closeBranchSelector();
   window.location.href = 'online-order.php?outlet_id=' + Number(outletId);
 }
 
-/* â”€â”€ Delivery JS Configuration & State â”€â”€ */
+/* ── Delivery JS Configuration & State ── */
 const deliveryConfig = {
   enabled: <?= $deliveryEnabled ? 'true' : 'false' ?>,
   maxRadius: <?= (float)($deliverySettings['delivery_max_radius_km'] ?? 5) ?>,
@@ -1640,12 +1648,12 @@ function initDeliveryMap() {
   deliveryMapObj = L.map('deliveryMap').setView([outletLat, outletLng], 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: 'Â© OpenStreetMap'
+    attribution: '© OpenStreetMap'
   }).addTo(deliveryMapObj);
 
   const outletIcon = L.divIcon({
     className: 'custom-outlet-pin',
-    html: '<div style="background:#ff2d55; border:2px solid #fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.5);">ðŸ </div>',
+    html: '<div style="background:#ff2d55; border:2px solid #fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.5);">🏠</div>',
     iconSize: [24, 24],
     iconAnchor: [12, 12]
   });
@@ -1655,7 +1663,7 @@ function initDeliveryMap() {
   const startLng = deliveryLng || (outletLng + 0.005);
   const pinIcon = L.divIcon({
     className: 'custom-delivery-pin',
-    html: '<div style="background:#34d399; border:2px solid #fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:#1a1a2e; font-size:14px; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.6); cursor:move;">ðŸ“</div>',
+    html: '<div style="background:#34d399; border:2px solid #fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:#1a1a2e; font-size:14px; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.6); cursor:move;">📍</div>',
     iconSize: [28, 28],
     iconAnchor: [14, 14]
   });
@@ -1782,8 +1790,8 @@ function useCurrentDeviceLocation() {
     alert('Perangkat atau browser Anda tidak mendukung fitur GPS.');
     return;
   }
-  const origText = btn ? btn.innerHTML : 'ðŸŽ¯ Gunakan Lokasi Saat Ini (GPS)';
-  if (btn) btn.innerHTML = 'â³ Mengambil Titik GPS...';
+  const origText = btn ? btn.innerHTML : '🎯 Gunakan Lokasi Saat Ini (GPS)';
+  if (btn) btn.innerHTML = '⏳ Mengambil Titik GPS...';
 
   navigator.geolocation.getCurrentPosition(
     position => {
@@ -1882,7 +1890,7 @@ function buildPickupOptions(){
     for(let h=9;h<=21;h++){ options.push(pad(h)+':00'); }
     if(serverNowTime >= '21:00' && selectedDate===today){
       const placeholder=document.createElement('option');
-      placeholder.value=''; placeholder.textContent='Outlet sudah tutup â€¢ pilih besok';
+      placeholder.value=''; placeholder.textContent='Outlet sudah tutup • pilih besok';
       placeholder.disabled=true;
       timeSelect.innerHTML='';
       timeSelect.appendChild(placeholder);
@@ -1939,7 +1947,7 @@ function renderCart(){
   if(!cart.length){
     if(list) list.innerHTML='<div class="fo-info">Keranjang masih kosong.</div>';
     if(sideList){
-      sideList.innerHTML='<div class="fo-order-empty"><div class="icon">ðŸ›’</div><p>Belum ada menu dipilih</p><small>Klik menu di kiri untuk menambah pesanan</small></div>';
+      sideList.innerHTML='<div class="fo-order-empty"><div class="icon">🛒</div><p>Belum ada menu dipilih</p><small>Klik menu di kiri untuk menambah pesanan</small></div>';
     }
   }
   const ccEl = document.getElementById('cartCount'); if(ccEl) ccEl.textContent=count;
@@ -1978,7 +1986,7 @@ function updateFooterDetail(total,count){
   if(!count){ el.textContent='Keranjang masih kosong.'; return; }
   const names=cart.slice(0,2).map(it=>it.type==='chicken'?buildChickenText(it):it.name);
   const more=count>2?` + ${count-2} item lainnya`:'';
-  el.textContent=`${count} item â€¢ ${names.join(', ')}${more} â€¢ Pilih Lanjut Bayar untuk checkout.`;
+  el.textContent=`${count} item • ${names.join(', ')}${more} • Pilih Lanjut Bayar untuk checkout.`;
 }
 function showAddedModal(name){
   foPlay('foVoiceBerhasil');
@@ -2056,12 +2064,12 @@ function updateAudioToggleButtons(){
   if(musicBtn){
     musicBtn.classList.toggle('active',isMusicOn());
     musicBtn.classList.toggle('off',!isMusicOn());
-    musicBtn.innerHTML=isMusicOn()?'<span>â™ª</span> Musik ON':'<span>â™ª</span> Musik OFF';
+    musicBtn.innerHTML=isMusicOn()?'<span>♪</span> Musik ON':'<span>♪</span> Musik OFF';
   }
   if(guideBtn){
     guideBtn.classList.toggle('active',isGuideOn());
     guideBtn.classList.toggle('off',!isGuideOn());
-    guideBtn.innerHTML=isGuideOn()?'<span>ðŸ”Š</span> Suara ON':'<span>ðŸ”‡</span> Suara OFF';
+    guideBtn.innerHTML=isGuideOn()?'<span>🔊</span> Suara ON':'<span>🔇</span> Suara OFF';
   }
 }
 
@@ -2734,7 +2742,7 @@ const pickupTimeEl=document.getElementById('pickupTime');
 if(pickupTimeEl) pickupTimeEl.addEventListener('change',updatePickupSummary);
 
 // ============================================================
-//  MIDTRANS QRIS POPUP â€” State
+//  MIDTRANS QRIS POPUP — State
 // ============================================================
 let _mqrisPollingTimer  = null;
 let _mqrisCountdownTimer = null;
@@ -2817,7 +2825,7 @@ function _mqrisShowSuccessPopup(orderNo){
   // Progress bar animasi 3 detik lalu redirect
   const bar = document.getElementById('successProgressBar');
   let pct = 0;
-  const step = 100 / 30; // 30 tick Ã— 100ms = 3s
+  const step = 100 / 30; // 30 tick × 100ms = 3s
   const prog = setInterval(()=>{
     pct += step;
     bar.style.width = Math.min(pct, 100) + '%';
@@ -2837,7 +2845,7 @@ function _mqrisStartPolling(midtransOrderId, localOrderNo){
       clearInterval(_mqrisPollingTimer);
       clearInterval(_mqrisCountdownTimer);
       const badge = document.getElementById('mqrisStatusBadge');
-      if(badge) badge.innerHTML = '<span style="color:#ef4444;">â›” Kode QRIS Kadaluarsa. Silakan buat pesanan baru.</span>';
+      if(badge) badge.innerHTML = '<span style="color:#ef4444;">⛔ Kode QRIS Kadaluarsa. Silakan buat pesanan baru.</span>';
       return;
     }
     try{
@@ -2878,12 +2886,12 @@ async function _mqrisSubmitOrder(formData){
     });
     const data = await res.json();
     if(!data.ok){
-      // Gagal â€“ tampilkan error di popup
+      // Gagal – tampilkan error di popup
       document.getElementById('mqrisLoading').style.display = 'none';
       const errEl = document.getElementById('mqrisError');
       errEl.style.display = 'block';
       if(data.order_no) {
-        errEl.innerHTML = 'âš ï¸ Gagal memuat QRIS Midtrans:<br><small>'+escapeHtml(data.error||'Error tidak diketahui')+'</small>';
+        errEl.innerHTML = '⚠️ Gagal memuat QRIS Midtrans:<br><small>'+escapeHtml(data.error||'Error tidak diketahui')+'</small>';
         document.getElementById('mqrisStaticFallback').style.display = 'block';
         const doneBtn = document.getElementById('mqrisFallbackDoneBtn');
         if(doneBtn) {
@@ -2892,7 +2900,7 @@ async function _mqrisSubmitOrder(formData){
           };
         }
       } else {
-        errEl.innerHTML = 'âš ï¸ Gagal memproses pesanan:<br><small>'+escapeHtml(data.error||'Error tidak diketahui')+'</small><br><br><button onclick="closeMidtransQris()" style="background:var(--dp-red);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;">Tutup</button>';
+        errEl.innerHTML = '⚠️ Gagal memproses pesanan:<br><small>'+escapeHtml(data.error||'Error tidak diketahui')+'</small><br><br><button onclick="closeMidtransQris()" style="background:var(--dp-red);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;">Tutup</button>';
       }
       return;
     }
@@ -2915,7 +2923,7 @@ async function _mqrisSubmitOrder(formData){
     document.getElementById('mqrisLoading').style.display = 'none';
     const errEl = document.getElementById('mqrisError');
     errEl.style.display = 'block';
-    errEl.innerHTML = 'âš ï¸ Koneksi bermasalah. Periksa internet Anda.<br><br><button onclick="closeMidtransQris()" style="background:var(--dp-red);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;">Tutup</button>';
+    errEl.innerHTML = '⚠️ Koneksi bermasalah. Periksa internet Anda.<br><br><button onclick="closeMidtransQris()" style="background:var(--dp-red);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;">Tutup</button>';
   }
 }
 
@@ -2925,7 +2933,7 @@ document.getElementById('foForm').addEventListener('submit', e=>{
   if(!formData) return;
 
   if(payment === 'qris'){
-    // QRIS Midtrans: submit via AJAX â†’ tampilkan popup
+    // QRIS Midtrans: submit via AJAX → tampilkan popup
     _mqrisSubmitOrder(formData);
   } else {
     // Non-QRIS (transfer, point): submit form biasa
