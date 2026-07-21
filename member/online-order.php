@@ -2941,7 +2941,7 @@ initCustomerMemory();
 initChickenCards();
 renderCart();
 </script>
-<script src="../public/assets/js/self-order-ui.js"></script>
+<script src="../public/assets/js/self-order-ui.js?v=<?=time()?>"></script>
 </body>
 </html>
 
