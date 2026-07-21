@@ -54,7 +54,7 @@ class POSModel extends Model
             
             if ($items) {
                 foreach ($items as &$it) {
-                    $it['ready_stock'] = $mRecipe->calculateMaxYield((int)$it['variant_id']);
+                    $it['ready_stock'] = $mRecipe->calculateMaxYield((int)$it['variant_id'], $outletId);
                 }
                 $cat['items'] = $items;
                 $out[] = $cat;

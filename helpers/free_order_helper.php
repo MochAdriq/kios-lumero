@@ -336,7 +336,7 @@ if (!function_exists('fo_load_pos_menu_data')) {
                 'price' => (int)$r['price'],
                 'hpp' => (int)$r['hpp'],
                 'image' => $r['image'],
-                'stock_available' => function_exists('check_variant_stock') ? check_variant_stock($pdo, (int)$r['variant_id']) : true
+                'stock_available' => function_exists('check_variant_stock') ? check_variant_stock($pdo, (int)$r['variant_id'], (int)$outletId) : true
             ];
 
             if (strpos($combined, 'saus') !== false || strpos($combined, 'sauce') !== false || strpos($combined, 'celup') !== false) {
