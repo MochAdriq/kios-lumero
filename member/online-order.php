@@ -762,6 +762,27 @@ button,input,select,textarea{font:inherit}
 .fo-customer-found{display:none;background:var(--dp-green-soft);border:1px solid rgba(52,211,153,.2);color:var(--dp-green);border-radius:var(--dp-radius-sm);padding:9px 11px;font-size:12px;font-weight:700;line-height:1.4}
 .fo-customer-found.show{display:block}
 
+/* Checkout drawer overlay and modal styling */
+.fo-checkout-drawer{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:75;display:none;padding:18px;overflow-y:auto}
+.fo-checkout-drawer.show{display:grid;place-items:center}
+.fo-checkout-content{width:min(94vw,580px);max-height:90vh;overflow-y:auto;background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);padding:22px;box-shadow:var(--dp-shadow);color:var(--dp-text);text-align:left}
+.fo-checkout-body{margin:14px 0;display:grid;gap:16px}
+.fo-section{background:var(--dp-bg);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius-sm);padding:14px}
+.fo-section h4{margin:0 0 12px;font-size:15px;color:var(--dp-text);font-weight:800}
+.fo-form-group{margin-bottom:10px}
+.fo-form-group label{display:block;font-size:12px;font-weight:700;color:var(--dp-text-2);margin-bottom:4px}
+.fo-form-group input, .fo-form-group select, .fo-form-group textarea{width:100%;background:var(--dp-surface) !important;border:1px solid var(--dp-glass-border);border-radius:8px;padding:9px 12px;color:var(--dp-text) !important;font-size:13px}
+.fo-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fo-payment-options{display:grid;gap:8px}
+.fo-payment-item{background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:8px;padding:12px;text-align:left;cursor:pointer;transition:all .2s;color:var(--dp-text);display:block;width:100%}
+.fo-payment-item b{display:block;font-size:13px;font-weight:800}
+.fo-payment-item small{display:block;font-size:11px;color:var(--dp-muted);margin-top:2px}
+.fo-payment-item.active{background:var(--dp-red-soft);border-color:var(--dp-red);box-shadow:0 0 12px var(--dp-red-glow)}
+.fo-checkout-footer{border-top:1px solid var(--dp-glass-border);padding-top:14px}
+.fo-checkout-footer .summary-row{display:flex;justify-content:space-between;font-weight:800;font-size:16px;color:var(--dp-text);margin-bottom:12px}
+.fo-checkout-footer .summary-row span#drawerTotalText{color:var(--dp-red)}
+.btn-submit-order{width:100%;background:var(--dp-gradient);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(255,45,85,0.3)}
+
 /* ═══════════════════════════════════
    VIDEO OVERLAY (kept, dark compatible)
    ═══════════════════════════════════ */
@@ -1285,6 +1306,7 @@ simInitTheme();
     </div>
     <div class="fo-pickup-actions">
       <button type="button" class="light" onclick="closePickupConfirm()">Kembali Pilih Menu</button>
+      <button type="button" class="gold" onclick="continueToPayment()">Lanjut Bayar</button>
     </div>
   </div>
 </div><!-- end #pickupConfirmModal -->
@@ -1425,7 +1447,7 @@ simInitTheme();
         </div>
 
         <!-- Section Khusus Delivery -->
-        <div id="deliverySectionWrap" style="display:none; margin-top:16px; background:var(--dp-surface-2); padding:16px; border-radius:14px; border:1px solid var(--dp-glass-border);">
+        <div id="deliverySectionWrapDrawer" style="display:none; margin-top:16px; background:var(--dp-surface-2); padding:16px; border-radius:14px; border:1px solid var(--dp-glass-border);">
           <div style="font-size:13px; font-weight:700; color:var(--dp-text); margin-bottom:8px;">📍 Penentuan Titik Lokasi Pengantaran</div>
           <div style="font-size:12px; color:var(--dp-text-2); margin-bottom:12px; line-height:1.5;">Geser peta atau klik tombol di bawah untuk menentukan lokasi rumah/pengantaran Anda secara akurat.</div>
           
@@ -1435,21 +1457,21 @@ simInitTheme();
             </button>
           </div>
 
-          <div id="deliveryMap" style="width:100%; height:220px; border-radius:12px; overflow:hidden; border:1px solid var(--dp-glass-border); margin-bottom:12px; background:#1e1e2d;"></div>
+          <div id="deliveryMapDrawer" style="width:100%; height:220px; border-radius:12px; overflow:hidden; border:1px solid var(--dp-glass-border); margin-bottom:12px; background:#1e1e2d;"></div>
           
           <div class="fo-form-group" style="margin-bottom:12px;">
             <label style="font-size:12px;">Alamat Lengkap & Patokan Rumah</label>
-            <textarea id="deliveryAddressInput" rows="2" placeholder="Contoh: Jl. Raya Kalibunder No. 12, RT 02/01 (depan minimarket, pagar hitam)..."></textarea>
+            <textarea id="deliveryAddressInputDrawer" rows="2" placeholder="Contoh: Jl. Raya Kalibunder No. 12, RT 02/01 (depan minimarket, pagar hitam)..."></textarea>
           </div>
 
           <div id="deliveryDistanceBox" style="background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:8px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <span style="color:var(--dp-text-2);">Jarak Pengantaran:</span>
-              <strong id="deliveryDistanceText" style="color:var(--dp-text); margin-left:4px;">0 km</strong>
+              <strong id="deliveryDistanceTextDrawer" style="color:var(--dp-text); margin-left:4px;">0 km</strong>
             </div>
             <div>
               <span style="color:var(--dp-text-2);">Ongkir:</span>
-              <strong id="deliveryFeeText" style="color:var(--dp-green); margin-left:4px;">Rp 0</strong>
+              <strong id="deliveryFeeTextDrawer" style="color:var(--dp-green); margin-left:4px;">Rp 0</strong>
             </div>
           </div>
         </div>
@@ -1458,17 +1480,17 @@ simInitTheme();
       <!-- Pickup Date & Time -->
       <div class="fo-section" id="pickupDateRowSide">
         <h4>3. Waktu Pengambilan</h4>
-        <div class="fo-grid-2" id="outletDateTimeGrid">
+        <div class="fo-grid-2" id="outletDateTimeGridDrawer">
           <div class="fo-form-group">
             <label>Tanggal</label>
-            <select id="pickupDate" onchange="buildPickupTimeSlots()">
+            <select id="pickupDateDrawer" onchange="buildPickupTimeSlots()">
               <option value="<?=fo_e($today)?>">Hari ini (<?=fo_e(date('d/m/Y', strtotime($today)))?>)</option>
               <option value="<?=fo_e($tomorrow)?>">Besok (<?=fo_e(date('d/m/Y', strtotime($tomorrow)))?>)</option>
             </select>
           </div>
           <div class="fo-form-group">
             <label>Jam Ambil</label>
-            <select id="pickupTime"></select>
+            <select id="pickupTimeDrawer"></select>
           </div>
         </div>
       </div>
@@ -2257,6 +2279,15 @@ function syncCustomerFields(source){
   }else{
     if(name && topName) name.value=topName.value;
     if(phone && topPhone) phone.value=topPhone.value;
+    const pd = document.getElementById('pickupDate');
+    const pdd = document.getElementById('pickupDateDrawer');
+    if(pd && pdd) pdd.value = pd.value;
+    const pt = document.getElementById('pickupTime');
+    const ptd = document.getElementById('pickupTimeDrawer');
+    if(pt && ptd){ ptd.innerHTML = pt.innerHTML; ptd.value = pt.value; }
+    const da = document.getElementById('deliveryAddressInput');
+    const dad = document.getElementById('deliveryAddressInputDrawer');
+    if(da && dad) dad.value = da.value;
   }
   try{
     if(topPhone && topPhone.value) localStorage.setItem('dcelup_customer_phone', normalizePhoneClient(topPhone.value));
@@ -2897,14 +2928,14 @@ function _mqrisPrepareFormData(){
   const foForm = document.getElementById('foForm');
   const g = id => foForm.querySelector('#'+id) || document.getElementById(id);
   g('cartInput').value           = JSON.stringify(cart);
-  g('pickupDateInput').value     = document.getElementById('pickupDate')?.value || '';
-  g('pickupTimeInput').value     = document.getElementById('pickupTime')?.value || '';
+  g('pickupDateInput').value     = document.getElementById('pickupDateDrawer')?.value || document.getElementById('pickupDate')?.value || '';
+  g('pickupTimeInput').value     = document.getElementById('pickupTimeDrawer')?.value || document.getElementById('pickupTime')?.value || '';
   g('customerNameInput').value   = nameVal;
   g('customerPhoneInput').value  = phoneVal;
   g('customerNoteInput').value   = document.getElementById('customerNote')?.value || '';
   g('pickupTypeInput').value     = selectedPickupType;
   if(selectedPickupType==='delivery'){
-    g('deliveryAddressHiddenInput').value  = document.getElementById('deliveryAddressInput')?.value?.trim()||'';
+    g('deliveryAddressHiddenInput').value  = (document.getElementById('deliveryAddressInputDrawer')?.value || document.getElementById('deliveryAddressInput')?.value || '').trim();
     g('deliveryLatHiddenInput').value      = deliveryLat;
     g('deliveryLngHiddenInput').value      = deliveryLng;
     g('deliveryFeeHiddenInput').value      = deliveryFee;
