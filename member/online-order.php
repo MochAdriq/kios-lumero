@@ -714,7 +714,7 @@ button,input,select,textarea{font:inherit}
 .fo-payment-total-box .items{color:var(--dp-text-2);font-size:13px;font-weight:600;line-height:1.4}
 
 /* Success Modal */
-.fo-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:70;display:grid;place-items:center;padding:18px}
+.fo-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:70;display:none;place-items:center;padding:18px}.fo-modal.show{display:grid}
 .fo-modal-card{width:min(94vw,560px);background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);padding:24px;box-shadow:var(--dp-shadow);text-align:center;color:var(--dp-text)}
 .fo-modal-card h2{margin:0;font-size:30px;letter-spacing:-.04em;color:var(--dp-text)}
 .fo-order-no{margin:10px auto 14px;display:inline-flex;background:var(--dp-gradient);color:#fff;border-radius:999px;padding:10px 16px;font-weight:800}
@@ -1368,7 +1368,7 @@ simInitTheme();
 </div>
 
 <!-- Modal Pilihan & Detail Produk -->
-<div class="fo-modal" id="productModal">
+<div class="fo-modal" id="productModal" style="display:none;">
   <div class="fo-modal-content">
     <div class="fo-modal-header">
       <h3 id="modalProductTitle">Pilih Varian</h3>
