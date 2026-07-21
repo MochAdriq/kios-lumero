@@ -14,6 +14,15 @@ if(!empty($_SESSION['member_id'])) {
     $memberOnline = loyalty_member_by_id($pdo,(int)$_SESSION['member_id']);
 }
 
+// Set session flag that customer passed through welcome page
+$_SESSION['welcome_passed'] = time();
+
+// If coming from idle timeout, optionally clear cart or selected outlet
+if (isset($_GET['idle'])) {
+    unset($_SESSION['lumero_selected_outlet_id']);
+    // You can also clear cart here if needed, e.g., unset($_SESSION['cart']);
+}
+
 $freeOrderVideo = 'public/assets/video/self-order-cover.mp4';
 $freeOrderPoster = 'public/assets/images/pos-products/dclup-pasekon.png';
 $freeOrderVoiceBase = '../public/assets/audio/';

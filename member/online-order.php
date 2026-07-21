@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__.'/../helpers/functions.php';
 require_once __DIR__.'/../core/Database.php';
@@ -14,7 +14,7 @@ loyalty_ensure_tables($pdo);
 $memberOnline = null;
 if(!empty($_SESSION['member_id'])) $memberOnline = loyalty_member_by_id($pdo,(int)$_SESSION['member_id']);
 if(!$memberOnline){ header('Location: login.php'); exit; }
-if(!isset($_GET['outlet_id']) && !isset($_SESSION['lumero_selected_outlet_id']) && !isset($_GET['lookup_phone'])) {
+if(empty($_SESSION['welcome_passed']) || (!isset($_GET['outlet_id']) && !isset($_SESSION['lumero_selected_outlet_id']) && !isset($_GET['lookup_phone']))) {
     header('Location: welcome.php'); exit;
 }
 $memberPointBalance=(int)($memberOnline['total_points'] ?? 0);
@@ -2940,6 +2940,17 @@ buildPickupOptions();
 initCustomerMemory();
 initChickenCards();
 renderCart();
+
+// Idle timeout: 30 seconds of no interaction -> redirect to welcome
+(function(){
+  let idleTimer;
+  const resetTimer = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => { window.location.href = 'welcome.php?idle=1'; }, 30000);
+  };
+  ['mousemove','keydown','scroll','touchstart','click'].forEach(e => document.addEventListener(e, resetTimer, true));
+  resetTimer();
+})();
 </script>
 <script src="../public/assets/js/self-order-ui.js?v=<?=time()?>"></script>
 </body>

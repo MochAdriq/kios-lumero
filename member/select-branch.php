@@ -4,6 +4,11 @@ require_once __DIR__.'/../helpers/functions.php';
 require_once __DIR__.'/../core/Database.php';
 $pdo = Database::connection();
 
+if (empty($_SESSION['welcome_passed'])) {
+    header('Location: welcome.php');
+    exit;
+}
+
 date_default_timezone_set('Asia/Jakarta');
 try{ if(isset($pdo) && $pdo instanceof PDO) $pdo->exec("SET time_zone = '+07:00'"); }catch(Throwable $e){}
 
@@ -246,6 +251,17 @@ function selectBranchItem(outletId, isOpen, outletName, openTime, closeTime) {
 document.addEventListener('DOMContentLoaded', () => {
     detectBranchGPS();
 });
+
+// Idle timeout: 30 seconds of no interaction -> redirect to welcome
+(function(){
+  let idleTimer;
+  const resetTimer = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => { window.location.href = 'welcome.php?idle=1'; }, 30000);
+  };
+  ['mousemove','keydown','scroll','touchstart','click'].forEach(e => document.addEventListener(e, resetTimer, true));
+  resetTimer();
+})();
 </script>
 </body>
 </html>
