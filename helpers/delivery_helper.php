@@ -20,6 +20,7 @@ if (!function_exists('delivery_ensure_columns')) {
             'delivery_distance_km' => "DECIMAL(6,2) DEFAULT NULL",
             'delivery_status'      => "VARCHAR(50) DEFAULT NULL",
             'delivery_courier_name'=> "VARCHAR(100) DEFAULT NULL",
+            'outlet_id'            => "INT(11) DEFAULT 1",
         ];
 
         foreach ($deliveryCols as $col => $def) {

@@ -21,6 +21,16 @@ $deliveryEnabled = delivery_is_enabled($pdo);
 $deliverySettings = delivery_settings($pdo);
 $deliveryOutletCoords = delivery_outlet_coords($pdo) ?? ['lat' => -6.9175, 'lng' => 106.9275];
 
+$stOutlets = $pdo->query("SELECT id, slug, name, outlet_code AS code, is_hq, closing_hour, address, phone, latitude, longitude FROM outlets WHERE is_active = 1 ORDER BY is_hq DESC, name ASC");
+$activeOutletsList = $stOutlets ? $stOutlets->fetchAll(PDO::FETCH_ASSOC) : [];
+if (empty($activeOutletsList)) {
+    $bc = app_branch_config();
+    if (!empty($bc['default'])) $activeOutletsList[] = $bc['default'];
+    foreach (($bc['map'] ?? []) as $b) {
+        $activeOutletsList[] = $b;
+    }
+}
+
 
 if(isset($_GET['lookup_phone'])){
   header('Content-Type: application/json; charset=utf-8');
@@ -99,7 +109,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     $deliveryStatus = null;
     $deliveryCourierName = null;
 
+    $selectedOutletId = (int)($_POST['outlet_id'] ?? current_outlet_id());
+    if ($selectedOutletId <= 0) $selectedOutletId = 1;
+
     if($pickupType === 'delivery'){
+      if ($selectedOutletId > 0) {
+          $stO = $pdo->prepare("SELECT latitude, longitude FROM outlets WHERE id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL");
+          $stO->execute([$selectedOutletId]);
+          $rowO = $stO->fetch(PDO::FETCH_ASSOC);
+          if ($rowO && $rowO['latitude'] && $rowO['longitude']) {
+              $deliveryOutletCoords = ['lat' => (float)$rowO['latitude'], 'lng' => (float)$rowO['longitude']];
+          }
+      }
       $deliveryAddress = trim((string)($_POST['delivery_address'] ?? ''));
       $deliveryLat = (float)($_POST['delivery_lat'] ?? 0);
       $deliveryLng = (float)($_POST['delivery_lng'] ?? 0);
@@ -132,8 +153,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $totalDue=0;
       loyalty_deduct_points($pdo,$memberId,$redeemPoints,'redeem_payment','Bayar online order dengan point '.$no,null,null);
     }
-    $st=$pdo->prepare("INSERT INTO free_orders (pre_order_no,customer_name,customer_phone,member_id,pickup_type,pickup_date,pickup_time,payment_method,payment_status,order_status,subtotal,discount,total,total_hpp,loyalty_points_redeemed,loyalty_point_value,loyalty_redeem_amount,customer_note,cart_json,stock_reserved,delivery_address,delivery_lat,delivery_lng,delivery_fee,delivery_distance_km,delivery_status,delivery_courier_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-    $st->execute([$no,$customerName,$customerPhone,$memberId ?: null,$pickupType,$pickupDate,$pickupTime.':00',$paymentMethod,$paymentStatus,'new',$subtotalOnline,$redeemAmount,$totalDue,$calc['total_hpp'],$redeemPoints,$pointValue,$redeemAmount,$note,json_encode($cart,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),0,$deliveryAddress,$deliveryLat,$deliveryLng,$deliveryFee,$deliveryDistanceKm,$deliveryStatus,$deliveryCourierName]);
+    $st=$pdo->prepare("INSERT INTO free_orders (pre_order_no,customer_name,customer_phone,member_id,pickup_type,pickup_date,pickup_time,payment_method,payment_status,order_status,subtotal,discount,total,total_hpp,loyalty_points_redeemed,loyalty_point_value,loyalty_redeem_amount,customer_note,cart_json,stock_reserved,delivery_address,delivery_lat,delivery_lng,delivery_fee,delivery_distance_km,delivery_status,delivery_courier_name,outlet_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $st->execute([$no,$customerName,$customerPhone,$memberId ?: null,$pickupType,$pickupDate,$pickupTime.':00',$paymentMethod,$paymentStatus,'new',$subtotalOnline,$redeemAmount,$totalDue,$calc['total_hpp'],$redeemPoints,$pointValue,$redeemAmount,$note,json_encode($cart,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),0,$deliveryAddress,$deliveryLat,$deliveryLng,$deliveryFee,$deliveryDistanceKm,$deliveryStatus,$deliveryCourierName,$selectedOutletId]);
     $freeOrderId=(int)$pdo->lastInsertId();
 
     $ins=$pdo->prepare("INSERT INTO free_order_items (free_order_id,item_type,chicken_part_id,chicken_style,sauce_id,with_rice,matcha_variant_id,kentang_variant_id,menu_item_id,item_name,qty,price,hpp,line_total,line_hpp,payload_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -170,9 +191,58 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
         } catch (Throwable $e) {}
     }
 
+    // === MIDTRANS QRIS: Intercept untuk payment QRIS via AJAX ===
+    if ($paymentMethod === 'qris' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        try {
+            require_once __DIR__.'/../helpers/MidtransService.php';
+            $items = [];
+            foreach ($calc['items'] as $ci) {
+                $items[] = [
+                    'id'       => (string)($ci['menu_item_id'] ?? ($ci['id'] ?? 'ITEM')),
+                    'price'    => (int)round((float)($ci['price'] ?? 0)),
+                    'quantity' => (int)($ci['qty'] ?? 1),
+                    'name'     => mb_substr((string)($ci['item_name'] ?? ($ci['name'] ?? 'Menu')), 0, 50),
+                ];
+            }
+            $qrisResult = MidtransService::createQrisCharge([
+                'order_number'  => $no,
+                'grand_total'   => $totalDue > 0 ? $totalDue : $subtotalOnline,
+                'customer_name' => $customerName,
+                'items'         => $items,
+            ]);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok'             => true,
+                'mode'           => 'qris_midtrans',
+                'order_no'       => $no,
+                'qr_url'         => $qrisResult['qr_url'],
+                'qr_string'      => $qrisResult['qr_string'],
+                'midtrans_order' => $qrisResult['order_id'],
+                'gross_amount'   => $qrisResult['gross_amount'],
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit;
+        } catch (Throwable $midEx) {
+            // Gagal buat QRIS Midtrans — fallback: redirect normal
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok'       => false,
+                'mode'     => 'qris_fallback',
+                'order_no' => $no,
+                'error'    => $midEx->getMessage(),
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit;
+        }
+    }
+
     header('Location: ../order-online/lacak.php?no='.urlencode($no).'&success=1'); exit;
   }catch(Throwable $e){
     if(isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
+    // Jika AJAX, kembalikan JSON error
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $err=$e->getMessage();
   }
 }
@@ -1213,62 +1283,311 @@ simInitTheme();
     <div class="fo-field"><label>Nomor WhatsApp</label><input id="customerPhone" inputmode="tel" placeholder="08xxxxxxxxxx" value="<?=fo_e($memberOnline['phone'] ?? '')?>"></div>
   </div>
   <div class="fo-field"><label>Catatan</label><textarea id="customerNote" placeholder="Catatan untuk kasir, opsional"></textarea></div>
-  <div class="fo-payment">
-    <button type="button" class="payBtn active" data-pay="qris">QRIS / E-Wallet</button>
-    <button type="button" class="payBtn" data-pay="transfer">Transfer Bank</button>
-  </div>
-  <div class="fo-pay-preview active" id="qrisPreview" style="text-align:center; padding:20px;">
-    <b style="font-size:15px; display:block; margin-bottom:14px; color:var(--dp-text);">Scan QRIS Lumero / E-Wallet</b>
-    <div style="background:#fff; padding:14px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
-      <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero" style="width:240px; max-width:100%; height:auto; display:block; margin:0 auto; border-radius:10px; background:#fff; padding:0; border:none;">
+<header class="fo-header">
+    <div class="fo-header-logo">
+      <div class="logo-img">🍗</div>
+      <div class="logo-text">
+        <h1>Lumero SELF-ORDER</h1>
+        <small id="activeBranchBadge" onclick="openBranchSelector()" style="cursor:pointer;color:var(--dp-green);text-decoration:underline;font-weight:700;">📍 Pilih / Ganti Cabang (Klik di sini)</small>
+      </div>
     </div>
-    <div style="margin-top:16px;">
-      <a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Lumero.png" style="box-shadow:0 4px 16px rgba(255,45,85,0.4); padding:10px 24px; font-size:13px;">⬇️ Download QRIS</a>
+    <div class="fo-header-actions">
+      <div class="fo-audio-toggles">
+        <button class="fo-audio-toggle" id="toggleTheme" type="button" aria-pressed="false" onclick="simToggleTheme()">
+          <span class="theme-icon-light" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span>
+          <span class="theme-icon-dark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
+        </button>
+        <button class="fo-audio-toggle on" id="toggleBgm" type="button" aria-pressed="true">
+          <span>♪</span> Musik ON
+        </button>
+        <button class="fo-audio-toggle on" id="toggleVoice" type="button" aria-pressed="true">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></span> Suara ON
+        </button>
+      </div>
+      <a href="../order-online/lacak.php" class="fo-track-link">
+        <span>📍</span> Lacak Pesanan
+      </a>
+      <button type="button" class="fo-cart-pill" onclick="document.querySelector('.fo-pos-right').classList.add('show')">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count" id="cartCountPill">0</span>
+      </button>
     </div>
-    <div class="fo-info" style="margin-top:14px; font-size:12px; line-height:1.5; color:var(--dp-text-2);">
-      <?=fo_e(str_ireplace('midtrans', 'Lumero', $qrisInfo))?>. Simpan bukti pembayaran untuk diverifikasi kasir.
-    </div>
-  </div>
-  <div class="fo-pay-preview" id="transferPreview">
-    <b>Transfer Bank</b><br><br>
-    <div style="font-size:14px; margin-bottom:12px; color:var(--dp-text);">
-      Silakan transfer ke rekening berikut:<br>
-      <b>Bank BCA</b><br>
-      No. Rekening: <b style="font-size:16px; color:var(--dp-primary);"><?=$bankAccountNo?></b> 
-      <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-copy="<?=$bankAccountNo?>" style="padding:2px 8px; font-size:11px;">Copy</button><br>
-      Atas Nama: <b><?=$bankAccountName?></b>
-    </div>
-    <div class="fo-info" style="margin-top:10px">Pesanan akan diproses setelah bukti pembayaran diverifikasi kasir.</div>
-  </div>
-  <div class="fo-info" id="payInfo" style="margin-top:10px">Metode pembayaran otomatis: QRIS / E-Wallet.</div>
-  <form method="post" id="foForm">
-    <input type="hidden" name="cart" id="cartInput">
-    <input type="hidden" name="pickup_date" id="pickupDateInput">
-    <input type="hidden" name="pickup_time" id="pickupTimeInput">
-    <input type="hidden" name="payment_method" id="paymentInput" value="">
-    <input type="hidden" name="pickup_type" id="pickupTypeInput" value="outlet">
-    <input type="hidden" name="customer_name" id="customerNameInput">
-    <input type="hidden" name="customer_phone" id="customerPhoneInput">
-    <input type="hidden" name="customer_note" id="customerNoteInput">
-    <input type="hidden" name="delivery_address" id="deliveryAddressHiddenInput">
-    <input type="hidden" name="delivery_lat" id="deliveryLatHiddenInput">
-    <input type="hidden" name="delivery_lng" id="deliveryLngHiddenInput">
-    <input type="hidden" name="delivery_fee" id="deliveryFeeHiddenInput" value="0">
-    <input type="hidden" name="delivery_distance_km" id="deliveryDistanceHiddenInput" value="0">
-    <button class="fo-submit">Kirim Online Order</button>
-  </form>
-  <button class="fo-close" type="button" onclick="closeCheckout()">Tutup</button>
-</div></div>
+  </header>
+  <div class="fo-pos-left">
+    <div class="fo-products-scroll">
+      <!-- AI Nudge Container -->
+      <div class="fo-ai-panel" id="foAiPanel">
+        <div class="fo-ai-header">
+          <div class="fo-ai-badge">🤖 Lumero AI Assistant</div>
+          <button type="button" class="fo-ai-close" onclick="closeAiPanel()">&times;</button>
+        </div>
+        <div class="fo-ai-title" id="foAiTitle">Rekomendasi Spesial</div>
+        <div class="fo-ai-desc" id="foAiDesc">Pilih menu favoritmu sekarang</div>
+        <div class="fo-ai-action">
+          <button type="button" class="btn btn-sm btn-light font-bold" id="foAiCta" onclick="aiCtaAction()">+ Lihat Rekomendasi</button>
+        </div>
+      </div>
+      <div class="fo-ai-nudge" id="foAiNudge" onclick="openAiPanel()">
+        <span>✨</span> <span id="foAiNudgeText">Bingung pilih menu? Klik untuk rekomendasi AI!</span>
+      </div>
 
+      <h2 style="font-size: 26px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em;">Pilih Varian Ayam & Saus Favoritmu</h2>
+      <p style="color: var(--dp-text-2); margin-bottom: 24px; font-size: 14px;">Klik varian ayam atau saus di bawah ini untuk melihat detail rasa dan menambahkannya ke keranjang.</p>
+
+      <div class="fo-grid" id="chickenCardsGrid">
+        <!-- Cards by JS -->
+      </div>
+    </div>
+  </div>
+  <aside class="fo-pos-right">
+    <div class="fo-cart-header">
+      <h3>Keranjang Pesanan</h3>
+      <button type="button" class="fo-close-mobile" onclick="document.querySelector('.fo-pos-right').classList.remove('show')">&times;</button>
+    </div>
+    <div class="fo-cart-items" id="cartListContainer">
+      <!-- Cart items by JS -->
+    </div>
+    <div class="fo-cart-summary">
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span id="cartSubtotalText">Rp 0</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total</span>
+        <span id="cartGrandTotalText">Rp 0</span>
+      </div>
+      <button type="button" class="btn-checkout" onclick="openCheckout()">Lanjutkan Pemesanan &rarr;</button>
+    </div>
+  </aside>
+</div>
+
+<!-- Modal Pilihan & Detail Produk -->
+<div class="fo-modal" id="productModal">
+  <div class="fo-modal-content">
+    <div class="fo-modal-header">
+      <h3 id="modalProductTitle">Pilih Varian</h3>
+      <button type="button" class="fo-modal-close" onclick="closeProductModal()">&times;</button>
+    </div>
+    <div class="fo-modal-body" id="modalProductBody">
+      <!-- Dynamic form by JS -->
+    </div>
+    <div class="fo-modal-footer">
+      <button type="button" class="btn-add-modal" onclick="confirmModalAddToCart()">+ Tambahkan ke Keranjang</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer Checkout -->
+<div class="fo-checkout-drawer" id="checkoutDrawer">
+  <div class="fo-checkout-content">
+    <div class="fo-modal-header">
+      <h3>Selesaikan Pesanan</h3>
+      <button type="button" class="fo-modal-close" onclick="closeCheckout()">&times;</button>
+    </div>
+    <div class="fo-checkout-body">
+      <!-- Customer Info -->
+      <div class="fo-section">
+        <h4>1. Data Pemesan</h4>
+        <div class="fo-form-group">
+          <label>Nama Lengkap / Panggilan</label>
+          <input type="text" id="customerName" placeholder="Contoh: Budi">
+        </div>
+        <div class="fo-form-group">
+          <label>Nomor WhatsApp (Aktif)</label>
+          <input type="tel" id="customerPhone" placeholder="08xxxxxxxxxx" value="<?=fo_e($memberOnline['phone'] ?? '')?>">
+        </div>
+        <div class="fo-form-group">
+          <label>Catatan Tambahan (Opsional)</label>
+          <textarea id="customerNote" rows="2" placeholder="Contoh: Saus dipisah, ayam bagian paha atas..."></textarea>
+        </div>
+      </div>
+
+      <!-- Pickup Type Selection -->
+      <div class="fo-section">
+        <h4>2. Metode Pengambilan / Pengiriman</h4>
+        <div class="fo-pickup-options">
+          <button type="button" class="fo-pickup-option active" data-pickup="outlet">
+            <b>Ambil di Outlet (Pickup)</b>
+            <small>Siap sesuai jam yang dipilih</small>
+          </button>
+          <button type="button" class="fo-pickup-option <?= !$deliveryEnabled ? 'disabled' : '' ?>" data-pickup="delivery" <?= !$deliveryEnabled ? 'disabled title="Fitur Delivery saat ini belum aktif"' : '' ?>>
+            <b>Diantar Kurir (Delivery)</b>
+            <small><?= $deliveryEnabled ? 'Kurir Internal Lumero' : 'Belum Tersedia' ?></small>
+          </button>
+        </div>
+
+        <!-- Section Khusus Delivery -->
+        <div id="deliverySectionWrap" style="display:none; margin-top:16px; background:var(--dp-surface-2); padding:16px; border-radius:14px; border:1px solid var(--dp-glass-border);">
+          <div style="font-size:13px; font-weight:700; color:var(--dp-text); margin-bottom:8px;">📍 Penentuan Titik Lokasi Pengantaran</div>
+          <div style="font-size:12px; color:var(--dp-text-2); margin-bottom:12px; line-height:1.5;">Geser peta atau klik tombol di bawah untuk menentukan lokasi rumah/pengantaran Anda secara akurat.</div>
+          
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <button type="button" onclick="deliveryDetectGPS()" style="flex:1; background:var(--dp-primary); color:#fff; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <span>🎯</span> Gunakan Lokasi GPS Saya
+            </button>
+          </div>
+
+          <div id="deliveryMap" style="width:100%; height:220px; border-radius:12px; overflow:hidden; border:1px solid var(--dp-glass-border); margin-bottom:12px; background:#1e1e2d;"></div>
+          
+          <div class="fo-form-group" style="margin-bottom:12px;">
+            <label style="font-size:12px;">Alamat Lengkap & Patokan Rumah</label>
+            <textarea id="deliveryAddressInput" rows="2" placeholder="Contoh: Jl. Raya Kalibunder No. 12, RT 02/01 (depan minimarket, pagar hitam)..."></textarea>
+          </div>
+
+          <div id="deliveryDistanceBox" style="background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:8px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="color:var(--dp-text-2);">Jarak Pengantaran:</span>
+              <strong id="deliveryDistanceText" style="color:var(--dp-text); margin-left:4px;">0 km</strong>
+            </div>
+            <div>
+              <span style="color:var(--dp-text-2);">Ongkir:</span>
+              <strong id="deliveryFeeText" style="color:var(--dp-green); margin-left:4px;">Rp 0</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pickup Date & Time -->
+      <div class="fo-section" id="pickupDateRowSide">
+        <h4>3. Waktu Pengambilan</h4>
+        <div class="fo-grid-2" id="outletDateTimeGrid">
+          <div class="fo-form-group">
+            <label>Tanggal</label>
+            <select id="pickupDate" onchange="buildPickupTimeSlots()">
+              <option value="<?=fo_e($today)?>">Hari ini (<?=fo_e(date('d/m/Y', strtotime($today)))?>)</option>
+              <option value="<?=fo_e($tomorrow)?>">Besok (<?=fo_e(date('d/m/Y', strtotime($tomorrow)))?>)</option>
+            </select>
+          </div>
+          <div class="fo-form-group">
+            <label>Jam Ambil</label>
+            <select id="pickupTime"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="fo-section">
+        <h4>4. Pilih Pembayaran</h4>
+        <div class="fo-payment-options">
+          <button type="button" class="fo-payment-item active" data-pay="qris" onclick="setPayment('qris')">
+            <b>QRIS (Otomatis)</b>
+            <small>GoPay, OVO, Dana, ShopeePay, M-Banking</small>
+          </button>
+          <button type="button" class="fo-payment-item" data-pay="transfer" onclick="setPayment('transfer')">
+            <b>Transfer Bank BCA</b>
+            <small>Verifikasi manual oleh kasir</small>
+          </button>
+          <?php if($memberOnline && $memberPointBalance > 0): ?>
+          <button type="button" class="fo-payment-item" data-pay="point" onclick="setPayment('point')">
+            <b>Bayar Pakai Point</b>
+            <small>Saldo: <?=number_format($memberPointBalance,0,',','.')?> pts</small>
+          </button>
+          <?php endif; ?>
+        </div>
+        <div id="payInfo" style="font-size:12px; color:var(--dp-text-2); margin-top:10px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px;"></div>
+      </div>
+    </div>
+    <div class="fo-checkout-footer">
+      <div class="summary-row total">
+        <span>Total Dibayar</span>
+        <span id="drawerTotalText">Rp 0</span>
+      </div>
+      <form id="foForm" method="post">
+        <input type="hidden" name="cart" id="cartInput">
+        <input type="hidden" name="pickup_date" id="pickupDateInput">
+        <input type="hidden" name="pickup_time" id="pickupTimeInput">
+        <input type="hidden" name="payment_method" id="paymentInput" value="qris">
+        <input type="hidden" name="pickup_type" id="pickupTypeInput" value="outlet">
+        <input type="hidden" name="customer_name" id="customerNameInput">
+        <input type="hidden" name="customer_phone" id="customerPhoneInput">
+        <input type="hidden" name="customer_note" id="customerNoteInput">
+        <input type="hidden" name="delivery_address" id="deliveryAddressHiddenInput">
+        <input type="hidden" name="delivery_lat" id="deliveryLatHiddenInput">
+        <input type="hidden" name="delivery_lng" id="deliveryLngHiddenInput">
+        <input type="hidden" name="delivery_fee" id="deliveryFeeHiddenInput" value="0">
+        <input type="hidden" name="delivery_distance_km" id="deliveryDistanceHiddenInput" value="0">
+        <input type="hidden" name="outlet_id" id="outletIdInput" value="<?= fo_e((string)current_outlet_id()) ?>">
+        <button type="submit" class="btn-submit-order">Kirim Pesanan Sekarang &rarr;</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===== POPUP: QRIS MIDTRANS ===== -->
+<div id="midtransQrisOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.82); backdrop-filter:blur(8px); align-items:center; justify-content:center;">
+  <div id="midtransQrisBox" style="background:var(--dp-surface); border:1px solid var(--dp-glass-border); border-radius:24px; padding:32px 28px 24px; max-width:400px; width:calc(100vw - 32px); text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.7); position:relative; animation:foPayIn .25s ease both;">
+    <button type="button" onclick="closeMidtransQris()" style="position:absolute;top:14px;right:14px;background:var(--dp-surface-2);border:1px solid var(--dp-glass-border);border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;color:var(--dp-muted);display:flex;align-items:center;justify-content:center;line-height:1;">&times;</button>
+    <h3 style="font-size:20px; font-weight:800; color:var(--dp-text); margin:0 0 6px;">Pembayaran QRIS</h3>
+    <div id="mqrisOrderNo" style="font-size:12px; font-weight:700; color:var(--dp-primary); margin-bottom:16px;"></div>
+    <!-- Loading state -->
+    <div id="mqrisLoading" style="padding:40px 20px;">
+      <div style="width:44px;height:44px;border:3px solid var(--dp-glass-border);border-top-color:var(--dp-primary);border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
+      <div style="font-size:13px; font-weight:600; color:var(--dp-text-2);">Membuat kode QRIS...</div>
+    </div>
+    <!-- Content state -->
+    <div id="mqrisContent" style="display:none;">
+      <div style="background:#fff; padding:16px; border-radius:16px; display:inline-block; margin-bottom:16px; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+        <img id="mqrisImg" src="" alt="QRIS Midtrans" style="width:220px; max-width:100%; height:auto; display:block; border-radius:8px;">
+      </div>
+      <div id="mqrisAmount" style="font-size:24px; font-weight:800; color:var(--dp-text); margin-bottom:4px;"></div>
+      <div style="font-size:12px; color:var(--dp-muted); font-weight:600; margin-bottom:16px; line-height:1.5;">Scan dengan aplikasi dompet digital favorit Anda.<br><b style="color:var(--dp-text);">GoPay · OVO · Dana · ShopeePay · M-Banking</b></div>
+      <div id="mqrisTimer" style="font-size:12px; color:var(--dp-muted); margin-bottom:10px; font-weight:600;"></div>
+      <div id="mqrisStatusBadge" style="display:inline-flex; align-items:center; gap:6px; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3); border-radius:999px; padding:6px 16px; font-size:12px; font-weight:700; color:#f59e0b; margin-bottom:16px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block;animation:pulseGlow 1.4s infinite;"></span>
+        Menunggu Pembayaran...
+      </div>
+    </div>
+    <!-- Error state -->
+    <div id="mqrisError" style="display:none; padding:20px; color:#ef4444; font-size:13px; font-weight:600; line-height:1.6;"></div>
+  </div>
+</div>
+
+<!-- ===== POPUP: SUKSES PEMBAYARAN ===== -->
+<div id="paymentSuccessOverlay" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.88); backdrop-filter:blur(10px); align-items:center; justify-content:center;">
+  <div style="background:var(--dp-surface); border:1px solid rgba(52,211,153,.25); border-radius:24px; padding:40px 28px 32px; max-width:380px; width:calc(100vw - 32px); text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.7), 0 0 60px rgba(52,211,153,0.12); animation:popIn .4s cubic-bezier(.4,0,.2,1) both;">
+    <div style="font-size:68px; margin-bottom:14px;">🎉</div>
+    <div style="font-size:24px; font-weight:800; color:var(--dp-green); margin-bottom:8px; letter-spacing:-.02em;">Pembayaran Berhasil!</div>
+    <div style="font-size:14px; color:var(--dp-text-2); font-weight:600; margin-bottom:8px; line-height:1.6;">Terima kasih! Pesanan Anda sudah kami terima dan akan segera diproses oleh dapur Lumero. 🍗</div>
+    <div id="successOrderNo" style="font-size:12px; color:var(--dp-muted); margin-bottom:24px;"></div>
+    <div style="width:100%; background:var(--dp-surface-2); border-radius:12px; height:6px; overflow:hidden; margin-bottom:8px;">
+      <div id="successProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#34d399,#10b981); border-radius:12px; transition:width .1s linear;"></div>
+    </div>
+    <div style="font-size:12px; color:var(--dp-muted); font-weight:600;">Mengalihkan ke halaman lacak pesanan...</div>
+  </div>
+</div>
+
+<!-- ===== POPUP: PILIH CABANG LUMERO ===== -->
+<div id="branchSelectOverlay" style="display:none; position:fixed; inset:0; z-index:10001; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--dp-surface); border:1px solid var(--dp-glass-border); border-radius:28px; padding:32px 24px 28px; max-width:440px; width:100%; text-align:left; box-shadow:0 24px 80px rgba(0,0,0,0.8), 0 0 50px rgba(239,68,68,0.15); animation:popIn .35s cubic-bezier(.4,0,.2,1) both; max-height:90vh; display:flex; flex-direction:column;">
+    <div style="text-align:center; margin-bottom:20px;">
+      <div style="font-size:38px; margin-bottom:8px;">📍</div>
+      <div style="font-size:22px; font-weight:800; color:var(--dp-text); letter-spacing:-.02em; margin-bottom:6px;">Pilih Cabang Lumero</div>
+      <div style="font-size:13px; color:var(--dp-text-2); font-weight:600; line-height:1.5;">Pilih cabang terdekat dari lokasi Anda untuk jangkauan delivery & kecepatan pelayanan maksimal.</div>
+    </div>
+    
+    <div id="branchDetectingBar" style="background:rgba(239,68,68,0.08); border:1px dashed rgba(239,68,68,0.3); border-radius:12px; padding:10px 14px; margin-bottom:16px; font-size:12px; font-weight:600; color:var(--dp-red); display:flex; align-items:center; justify-content:space-between;">
+      <span>⏳ Mengukur jarak GPS ke lokasi Anda...</span>
+      <button type="button" onclick="detectBranchGPS()" style="background:transparent; border:none; color:var(--dp-red); font-weight:800; cursor:pointer; font-size:12px; text-decoration:underline;">Deteksi Ulang</button>
+    </div>
+
+    <div id="branchCardsContainer" style="overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:4px; max-height:50vh; margin-bottom:20px;">
+      <!-- Cards rendered dynamically via JS -->
+    </div>
+
+    <div style="text-align:center; font-size:11px; color:var(--dp-muted); font-weight:600;">
+      Semua cabang menyajikan ayam saus lumer standar kualitas terbaik Lumero 🔥
+    </div>
+  </div>
+</div>
 
 <script>
+window.LUMERO_ACTIVE_OUTLETS = <?= json_encode($activeOutletsList, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+window.LUMERO_SELECTED_OUTLET_ID = <?= (int)current_outlet_id() ?>;
 window.DCELUP_FREE_ORDER_POPUP = <?= $orderPopup ? 'true' : 'false' ?>;
 const today = <?=json_encode($today)?>;
 const tomorrow = <?=json_encode($tomorrow)?>;
 const serverNowTime = <?=json_encode($nowTime)?>;
-const priceMap = <?=json_encode($priceMap,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>;
-const aiNarratives = <?=json_encode($aiNarratives,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?>;
-const aiNarrativeFallbacks = {
+const aiNarratives = {
   empty_cart:[{title:'Bingung Pilih Menu?',suggested_menu:'Ayam Crispy Varian Saus',message:'Tenang kak, jangan bingung! Kalau kaka bingung pilih menu, aku bantu ya. Di Lumero, Kakak wajib coba menu ayam crispy dengan varian saus favorit. Kriuknya mantap, sausnya lumer, aromanya menggoda, dan rasanya bikin pengen nambah. Biar makin sedap, kaka juga bisa tambahkan kentang kriwil dan Matcha, cobain deh, gak akan nyesel!!!',cta_text:'Coba ayam saus favorit'}],
   only_chicken_original:[{title:'Lengkapi Ayam Original',suggested_menu:'Kentang Kriuk dan Matcha',message:'Biar makin lengkap, tambahkan kentang kriuk dan minuman matcha segar sebagai penyempurna hidangan. Dijamin bikin ketagihan deh, hihihi...',cta_text:'Tambah kentang dan matcha'}],
   chicken_original_rice:[{title:'Ayam dan Nasi Sudah Pas',suggested_menu:'Saus Favorit + Minuman',message:'Ayam original plus nasi sudah mantap, Kak. Biar rasanya makin hidup, tambahkan varian saus favorit dan minuman segar. Sekali celup, kriuknya makin lumer di hati.',cta_text:'Tambah saus dan minuman'}],
@@ -1278,11 +1597,6 @@ const aiNarrativeFallbacks = {
   drink_potato:[{title:'Minuman dan Kentang Sudah Oke',suggested_menu:'Ayam Crispy Varian Saus',message:'Minuman dan kentang sudah jadi duet yang asik. Tapi biar makin lengkap, tambahkan ayam crispy saus Lumero. Dijamin makin kenyang dan makin puas.',cta_text:'Tambah ayam saus'}],
   drink_chicken:[{title:'Ayam dan Minuman Sudah Mantap',suggested_menu:'Kentang Kriwil',message:'Ayam dan minuman Kakak sudah pas banget. Biar teksturnya makin rame, tambahkan kentang kriwil yang renyah. Jadi lengkap, gurih, segar, dan nagih.',cta_text:'Tambah kentang kriwil'}],
   all_menu:[{title:'Pesanan Sudah Lengkap',suggested_menu:'Tambahan Saus Favorit',message:'Wah, pilihan Kakak sudah lengkap banget! Ayam ada, kentang ada, minuman juga ada. Kalau mau makin lumer, tambahkan saus favorit ekstra biar setiap gigitan makin seru.',cta_text:'Tambah saus ekstra'}],
-  only_sauce:[{title:'Sausnya Sudah Siap',suggested_menu:'Ayam Crispy Original',message:'Saus favoritnya sudah dipilih, Kak. Sekarang tinggal pasangkan dengan ayam crispy original yang kriuknya mantap. Biar sausnya punya pasangan terbaik.',cta_text:'Tambah ayam crispy'}],
-  only_rice:[{title:'Nasinya Sudah Siap',suggested_menu:'Ayam Crispy Saus',message:'Nasi hangatnya sudah siap, Kak. Biar jadi hidangan lengkap, tambahkan ayam crispy varian saus favorit. Kriuk, lumer, dan bikin makan makin semangat.',cta_text:'Tambah ayam saus'}],
-  whole_chicken:[{title:'Ayam 1 Ekor Mantap',suggested_menu:'Saus Ekstra dan Minuman',message:'Wah, 1 ekor ayam sudah pilihan mantap untuk rame-rame. Biar makin seru, tambahkan saus ekstra dan minuman segar supaya semua kebagian rasa favorit.',cta_text:'Tambah saus dan minuman'}],
-  whole_chicken_sauce:[{title:'Ayam 1 Ekor Saus Juara',suggested_menu:'Nasi dan Matcha',message:'Ayam 1 ekor plus saus sudah paket yang menggoda banget. Biar makin lengkap untuk disantap bareng, tambahkan nasi hangat dan Matcha segar.',cta_text:'Tambah nasi dan matcha'}],
-  promo_window:[{title:'Jam Promo Spesial',suggested_menu:'Combo Hemat Jam Spesial',message:'Kakak lagi masuk jam promo nih! Ini waktu paling pas ambil paket combo hemat. Ayamnya nikmat, nasinya ada, harganya lebih bersahabat, dan rasanya tetap juara.',cta_text:'Ambil combo promo sekarang'}],
   general:[{title:'Saran Menu Lumero',suggested_menu:'Ayam Crispy Varian Saus',message:'Kakak bisa pilih ayam crispy varian saus favorit Lumero. Kriuknya mantap, sausnya lumer, dan cocok dilengkapi kentang atau minuman segar.',cta_text:'Pilih menu favorit'}]
 };
 const comboWindowActive = <?=$comboWindowActive ? 'true' : 'false'?>;
@@ -2441,52 +2755,191 @@ if(pickupDateEl) pickupDateEl.addEventListener('change',()=>{ buildPickupOptions
 const pickupTimeEl=document.getElementById('pickupTime');
 if(pickupTimeEl) pickupTimeEl.addEventListener('change',updatePickupSummary);
 
-document.getElementById('foForm').addEventListener('submit',e=>{
+// ============================================================
+//  MIDTRANS QRIS POPUP — State
+// ============================================================
+let _mqrisPollingTimer  = null;
+let _mqrisCountdownTimer = null;
+let _mqrisOrderNo        = '';
+let _mqrisExpireAt       = 0;   // epoch ms
+const MQRIS_LIFETIME_MS  = 15 * 60 * 1000; // 15 menit QRIS Midtrans
+const MQRIS_POLL_INTERVAL = 3000; // poll tiap 3 detik
+
+function _mqrisPrepareFormData(){
   cart = window.cart || cart || [];
   window.cart = cart;
   syncCustomerFields('top');
-  const nameVal=(document.getElementById('customerNameTop')?.value || document.getElementById('customerName')?.value || '').trim();
-  const phoneVal=normalizePhoneClient(document.getElementById('customerPhoneTop')?.value || document.getElementById('customerPhone')?.value || '');
-  if(!cart.length){ e.preventDefault(); alert('Keranjang masih kosong (dari JS foForm).'); return; }
-  if(!nameVal || !phoneVal){ e.preventDefault(); foPlay('foVoiceMaaf'); alert('Mohon isi nama dan nomor WhatsApp terlebih dahulu.'); return; }
-  if(!payment){ e.preventDefault(); foPlay('foVoiceOpsiBayar'); alert('Mohon pilih metode pembayaran terlebih dahulu.'); return; }
-  if(payment==='point'){ const need=Math.ceil(getCartTotal()/<?=max(1,(int)$memberPointValue)?>); const bal=<?=max(0,(int)$memberPointBalance)?>; if(need>bal){ e.preventDefault(); alert('Point belum mencukupi. Butuh '+need.toLocaleString('id-ID')+' point untuk membayar total belanja ini.'); return; } }
-  if(selectedPickupType === 'outlet' && !document.getElementById('pickupTime').value){ e.preventDefault(); alert('Jam pengambilan belum tersedia. Silakan pilih tanggal yang valid.'); return; }
-  
-  if(selectedPickupType === 'delivery'){
+  const nameVal  = (document.getElementById('customerNameTop')?.value  || document.getElementById('customerName')?.value  || '').trim();
+  const phoneVal = normalizePhoneClient(document.getElementById('customerPhoneTop')?.value || document.getElementById('customerPhone')?.value || '');
+
+  // Validasi
+  if(!cart.length)                 { foPlay('foVoiceMaaf'); alert('Keranjang masih kosong.'); return null; }
+  if(!nameVal || !phoneVal)        { foPlay('foVoiceMaaf'); alert('Mohon isi nama dan nomor WhatsApp terlebih dahulu.'); return null; }
+  if(!payment)                     { foPlay('foVoiceOpsiBayar'); alert('Mohon pilih metode pembayaran terlebih dahulu.'); return null; }
+  if(payment==='point'){
+    const need=Math.ceil(getCartTotal()/<?=max(1,(int)$memberPointValue)?>);
+    const bal=<?=max(0,(int)$memberPointBalance)?>;
+    if(need>bal){ alert('Point belum mencukupi. Butuh '+need.toLocaleString('id-ID')+' point.'); return null; }
+  }
+  if(selectedPickupType==='outlet' && !document.getElementById('pickupTime').value){
+    alert('Jam pengambilan belum tersedia. Silakan pilih tanggal yang valid.'); return null;
+  }
+  if(selectedPickupType==='delivery'){
     const addr = document.getElementById('deliveryAddressInput')?.value?.trim() || '';
-    if(!addr || deliveryLat == 0 || deliveryLng == 0){
-      e.preventDefault();
-      alert('Mohon lengkapi titik lokasi pada peta dan alamat lengkap pengantaran.');
-      return;
-    }
-    if(deliveryDistanceKm > deliveryConfig.maxRadius){
-      e.preventDefault();
-      alert(`Jarak pengantaran (${deliveryDistanceKm} km) melebihi batas maksimal (${deliveryConfig.maxRadius} km).`);
-      return;
-    }
-    document.querySelector('#foForm #deliveryAddressHiddenInput').value = addr;
-    document.querySelector('#foForm #deliveryLatHiddenInput').value = deliveryLat;
-    document.querySelector('#foForm #deliveryLngHiddenInput').value = deliveryLng;
-    document.querySelector('#foForm #deliveryFeeHiddenInput').value = deliveryFee;
-    document.querySelector('#foForm #deliveryDistanceHiddenInput').value = deliveryDistanceKm;
+    if(!addr || deliveryLat==0 || deliveryLng==0){ alert('Mohon lengkapi titik lokasi pada peta dan alamat lengkap pengantaran.'); return null; }
+    if(deliveryDistanceKm > deliveryConfig.maxRadius){ alert(`Jarak pengantaran (${deliveryDistanceKm} km) melebihi batas maksimal (${deliveryConfig.maxRadius} km).`); return null; }
   }
 
-  try{ localStorage.setItem('dcelup_customer_phone', phoneVal); localStorage.setItem('dcelup_customer_name', nameVal); }catch(err){}
-  const foCartInput = document.querySelector('#foForm #cartInput') || document.getElementById('cartInput');
-  if(foCartInput) foCartInput.value = JSON.stringify(cart);
-  const foPickupDate = document.querySelector('#foForm #pickupDateInput') || document.getElementById('pickupDateInput');
-  if(foPickupDate) foPickupDate.value = document.getElementById('pickupDate').value;
-  const foPickupTime = document.querySelector('#foForm #pickupTimeInput') || document.getElementById('pickupTimeInput');
-  if(foPickupTime) foPickupTime.value = document.getElementById('pickupTime').value;
-  const foCustomerName = document.querySelector('#foForm #customerNameInput') || document.getElementById('customerNameInput');
-  if(foCustomerName) foCustomerName.value = nameVal;
-  const foCustomerPhone = document.querySelector('#foForm #customerPhoneInput') || document.getElementById('customerPhoneInput');
-  if(foCustomerPhone) foCustomerPhone.value = phoneVal;
-  const foCustomerNote = document.querySelector('#foForm #customerNoteInput') || document.getElementById('customerNoteInput');
-  if(foCustomerNote) foCustomerNote.value = document.getElementById('customerNote').value;
-  const foPickupType = document.querySelector('#foForm #pickupTypeInput') || document.getElementById('pickupTypeInput');
-  if(foPickupType) foPickupType.value = selectedPickupType;
+  // Isi hidden inputs
+  const foForm = document.getElementById('foForm');
+  const g = id => foForm.querySelector('#'+id) || document.getElementById(id);
+  g('cartInput').value           = JSON.stringify(cart);
+  g('pickupDateInput').value     = document.getElementById('pickupDate')?.value || '';
+  g('pickupTimeInput').value     = document.getElementById('pickupTime')?.value || '';
+  g('customerNameInput').value   = nameVal;
+  g('customerPhoneInput').value  = phoneVal;
+  g('customerNoteInput').value   = document.getElementById('customerNote')?.value || '';
+  g('pickupTypeInput').value     = selectedPickupType;
+  if(selectedPickupType==='delivery'){
+    g('deliveryAddressHiddenInput').value  = document.getElementById('deliveryAddressInput')?.value?.trim()||'';
+    g('deliveryLatHiddenInput').value      = deliveryLat;
+    g('deliveryLngHiddenInput').value      = deliveryLng;
+    g('deliveryFeeHiddenInput').value      = deliveryFee;
+    g('deliveryDistanceHiddenInput').value = deliveryDistanceKm;
+  }
+  const oi = g('outletIdInput');
+  if(oi) oi.value = window.LUMERO_SELECTED_OUTLET_ID || <?= current_outlet_id() ?>;
+  try{ localStorage.setItem('dcelup_customer_phone', phoneVal); localStorage.setItem('dcelup_customer_name', nameVal); }catch(_){}
+  return new FormData(foForm);
+}
+
+function _mqrisShowLoading(){
+  document.getElementById('mqrisLoading').style.display  = 'block';
+  document.getElementById('mqrisContent').style.display  = 'none';
+  document.getElementById('mqrisError').style.display    = 'none';
+  const ov = document.getElementById('midtransQrisOverlay');
+  ov.style.display = 'flex';
+}
+function closeMidtransQris(){
+  clearInterval(_mqrisPollingTimer);
+  clearInterval(_mqrisCountdownTimer);
+  _mqrisPollingTimer  = null;
+  _mqrisCountdownTimer = null;
+  document.getElementById('midtransQrisOverlay').style.display = 'none';
+}
+function _mqrisShowSuccessPopup(orderNo){
+  // Tutup QRIS popup
+  closeMidtransQris();
+  // Tampilkan popup sukses
+  const ov = document.getElementById('paymentSuccessOverlay');
+  document.getElementById('successOrderNo').textContent = 'No. Pesanan: ' + orderNo;
+  ov.style.display = 'flex';
+  // Progress bar animasi 3 detik lalu redirect
+  const bar = document.getElementById('successProgressBar');
+  let pct = 0;
+  const step = 100 / 30; // 30 tick × 100ms = 3s
+  const prog = setInterval(()=>{
+    pct += step;
+    bar.style.width = Math.min(pct, 100) + '%';
+    if(pct >= 100){
+      clearInterval(prog);
+      window.location.href = '../order-online/lacak.php?no=' + encodeURIComponent(orderNo) + '&success=1&paid=1';
+    }
+  }, 100);
+  // Coba mainkan suara sukses
+  foPlay('foVoiceSuccess');
+}
+
+function _mqrisStartPolling(midtransOrderId, localOrderNo){
+  _mqrisPollingTimer = setInterval(async ()=>{
+    // Cek expiry
+    if(Date.now() >= _mqrisExpireAt){
+      clearInterval(_mqrisPollingTimer);
+      clearInterval(_mqrisCountdownTimer);
+      const badge = document.getElementById('mqrisStatusBadge');
+      if(badge) badge.innerHTML = '<span style="color:#ef4444;">⛔ Kode QRIS Kadaluarsa. Silakan buat pesanan baru.</span>';
+      return;
+    }
+    try{
+      const res  = await fetch('../member/check-qris-status.php?order_id=' + encodeURIComponent(midtransOrderId), {
+        headers: {'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest'},
+        credentials: 'same-origin', cache: 'no-store'
+      });
+      const data = await res.json();
+      if(data.paid === true){
+        clearInterval(_mqrisPollingTimer);
+        clearInterval(_mqrisCountdownTimer);
+        _mqrisShowSuccessPopup(localOrderNo);
+      }
+    } catch(_){}
+  }, MQRIS_POLL_INTERVAL);
+}
+
+function _mqrisStartCountdown(){
+  _mqrisExpireAt = Date.now() + MQRIS_LIFETIME_MS;
+  _mqrisCountdownTimer = setInterval(()=>{
+    const rem = Math.max(0, Math.floor((_mqrisExpireAt - Date.now()) / 1000));
+    const m   = Math.floor(rem / 60);
+    const s   = rem % 60;
+    const el  = document.getElementById('mqrisTimer');
+    if(el) el.textContent = `Kode berlaku: ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if(rem <= 0) clearInterval(_mqrisCountdownTimer);
+  }, 1000);
+}
+
+async function _mqrisSubmitOrder(formData){
+  _mqrisShowLoading();
+  try{
+    const res  = await fetch('', {
+      method: 'POST',
+      body: formData,
+      headers: {'X-Requested-With':'XMLHttpRequest'},
+      credentials: 'same-origin'
+    });
+    const data = await res.json();
+    if(!data.ok){
+      // Gagal – tampilkan error di popup
+      document.getElementById('mqrisLoading').style.display = 'none';
+      const errEl = document.getElementById('mqrisError');
+      errEl.style.display = 'block';
+      errEl.innerHTML = '⚠️ Gagal memuat QRIS Midtrans:<br><small>'+escapeHtml(data.error||'Error tidak diketahui')+'</small><br><br><button onclick="closeMidtransQris()" style="background:var(--dp-red);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;">Tutup</button>';
+      return;
+    }
+    if(data.mode === 'qris_midtrans'){
+      _mqrisOrderNo = data.order_no;
+      // Tampilkan QR
+      document.getElementById('mqrisLoading').style.display = 'none';
+      document.getElementById('mqrisContent').style.display = 'block';
+      document.getElementById('mqrisOrderNo').textContent   = 'No. Pesanan: ' + data.order_no;
+      document.getElementById('mqrisAmount').textContent    = 'Rp ' + Number(data.gross_amount).toLocaleString('id-ID');
+      document.getElementById('mqrisImg').src               = data.qr_url;
+      _mqrisStartCountdown();
+      _mqrisStartPolling(data.midtrans_order, data.order_no);
+    } else {
+      // Fallback: redirect langsung
+      closeMidtransQris();
+      window.location.href = '../order-online/lacak.php?no=' + encodeURIComponent(data.order_no) + '&success=1';
+    }
+  } catch(err){
+    document.getElementById('mqrisLoading').style.display = 'none';
+    const errEl = document.getElementById('mqrisError');
+    errEl.style.display = 'block';
+    errEl.innerHTML = '⚠️ Koneksi bermasalah. Periksa internet Anda.<br><br><button onclick="closeMidtransQris()" style="background:var(--dp-red);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;">Tutup</button>';
+  }
+}
+
+document.getElementById('foForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const formData = _mqrisPrepareFormData();
+  if(!formData) return;
+
+  if(payment === 'qris'){
+    // QRIS Midtrans: submit via AJAX → tampilkan popup
+    _mqrisSubmitOrder(formData);
+  } else {
+    // Non-QRIS (transfer, point): submit form biasa
+    document.getElementById('foForm').submit();
+  }
 });
 
 (function(){
@@ -2494,7 +2947,7 @@ document.getElementById('foForm').addEventListener('submit',e=>{
   const player=document.getElementById('freeOrderVideoPlayer');
   const start=document.getElementById('startFreeOrderBtn');
   function showCover(){ if(!overlay) return; overlay.classList.add('show'); document.body.style.overflow='hidden'; if(player){ try{player.currentTime=0; player.muted=true; const p=player.play(); if(p&&p.catch)p.catch(()=>{});}catch(e){} } }
-  function hideCover(){ startBgm(); const vp=document.getElementById('videoPhoneInput'); if(vp && vp.value){ lookupCustomerFromVideo(false); } if(!overlay) return; overlay.classList.remove('show'); document.body.style.overflow=''; if(player){ try{player.pause();}catch(e){} } foPlay('foVoiceWelcome'); }
+  function hideCover(){ startBgm(); const vp=document.getElementById('videoPhoneInput'); if(vp && vp.value){ lookupCustomerFromVideo(false); } if(!overlay) return; overlay.classList.remove('show'); document.body.style.overflow=''; if(player){ try{player.pause();}catch(e){} } openBranchSelector(); }
   if(!window.DCELUP_FREE_ORDER_POPUP) setTimeout(showCover,180);
   if(start) start.addEventListener('click', hideCover);
 })();

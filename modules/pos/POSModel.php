@@ -275,10 +275,14 @@ class POSModel extends Model
             WHERE o.outlet_id=? AND p.status IN ('pending','waiting_verification')
             ORDER BY p.created_at ASC", [$outletId]);
 
+        $foWhere = " AND (outlet_id = ? OR outlet_id IS NULL OR outlet_id = 0)";
+        if ($outletId != 1) {
+            $foWhere = " AND outlet_id = ?";
+        }
         $freeOrders = $this->all("SELECT id AS free_order_id, 1 AS is_free_order, 0 AS payment_id, pre_order_no AS order_number, payment_method, total AS amount, payment_status AS payment_real_status, created_at, customer_name
             FROM free_orders
-            WHERE payment_status IN ('unpaid','pending','waiting_verification') AND order_status <> 'cancelled'
-            ORDER BY created_at ASC");
+            WHERE payment_status IN ('unpaid','pending','waiting_verification') AND order_status <> 'cancelled'{$foWhere}
+            ORDER BY created_at ASC", [$outletId]);
 
         $merged = array_merge($posPayments, $freeOrders);
         usort($merged, function($a, $b) {
@@ -319,7 +323,7 @@ class POSModel extends Model
             $fo['payment_status'] = 'paid';
         }
 
-        $outletId = $outletId ?: (int)app_config('default_outlet_id', 1);
+        $outletId = !empty($fo['outlet_id']) ? (int)$fo['outlet_id'] : ($outletId ?: (int)app_config('default_outlet_id', 1));
         $session = $this->one("SELECT id FROM daily_store_sessions WHERE outlet_id=? AND status='open' ORDER BY id DESC LIMIT 1", [$outletId]) ?: ['id' => 0];
 
         if (!$existOrder) {
