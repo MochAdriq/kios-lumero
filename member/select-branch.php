@@ -16,6 +16,16 @@ if (empty($activeOutletsList)) {
         $activeOutletsList[] = $b;
     }
 }
+if (!empty($activeOutletsList)) {
+    foreach ($activeOutletsList as &$o) {
+        $st = check_outlet_operating_status((int)$o['id'], $o);
+        $o['is_open'] = $st['is_open'];
+        $o['open_time'] = $st['opening_time'];
+        $o['close_time'] = $st['closing_time'];
+        $o['status_reason'] = $st['reason'];
+    }
+    unset($o);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -198,18 +208,26 @@ function renderBranchCards(userLat, userLng) {
     let html = '';
     outlets.forEach((o, index) => {
         const distText = o.distance !== null ? `${o.distance.toFixed(1)} km dari Anda` : `Cabang Lumero`;
-        const isClosest = (userLat !== null && index === 0 && o.distance !== null);
-        const badgeHtml = isClosest ? `<div class="badge-closest">🌟 REKOMENDASI TERDEKAT (${distText})</div>` : `<div class="badge-dist">📍 ${distText}</div>`;
-        const borderStyle = isClosest ? 'border: 2px solid #FF2D55; box-shadow: 0 16px 42px rgba(255,45,85,0.3);' : '';
+        const isClosest = (userLat !== null && index === 0 && o.distance !== null && o.is_open);
+        
+        let badgeHtml = isClosest ? `<div class="badge-closest">🌟 REKOMENDASI TERDEKAT (${distText})</div>` : `<div class="badge-dist">📍 ${distText}</div>`;
+        if (!o.is_open) {
+            badgeHtml = `<div class="badge-dist" style="background:rgba(239,68,68,0.25); border-color:#F87171; color:#FECACA;">🚫 SEDANG TUTUP (${distText})</div>`;
+        }
+        
+        const borderStyle = isClosest ? 'border: 2px solid #FF2D55; box-shadow: 0 16px 42px rgba(255,45,85,0.3);' : (!o.is_open ? 'opacity:0.85; border-color:rgba(239,68,68,0.3);' : '');
+        const btnText = o.is_open ? 'Pilih Cabang Ini &rarr;' : `Tutup (${o.open_time || '10:00'}-${o.close_time || '21:00'})`;
+        const btnStyle = !o.is_open ? 'background:rgba(255,255,255,0.1); color:#D1D5DB; border-color:rgba(255,255,255,0.2); box-shadow:none;' : '';
+        const safeName = (o.name || 'Cabang ini').replace(/'/g, "\\'");
 
         html += `
-        <div class="branch-card" style="${borderStyle}" onclick="selectBranchItem(${o.id})">
+        <div class="branch-card" style="${borderStyle}" onclick="selectBranchItem(${o.id}, ${o.is_open ? 'true' : 'false'}, '${safeName}', '${o.open_time || '10:00'}', '${o.close_time || '21:00'}')">
             <div>${badgeHtml}</div>
             <div class="branch-name">${o.name || 'Cabang Lumero'}</div>
             <div class="branch-address">${o.address || 'Alamat cabang belum dicantumkan'}</div>
             <div class="branch-footer">
-                <div class="branch-hours">🕒 Jam Buka: 10:00 - ${o.closing_hour || '22:00'}</div>
-                <button type="button" class="select-btn">Pilih Cabang Ini &rarr;</button>
+                <div class="branch-hours" style="${!o.is_open ? 'color:#FCA5A5;' : ''}">🕒 Jam Buka: ${o.open_time || '10:00'} - ${o.close_time || '21:00'}</div>
+                <button type="button" class="select-btn" style="${btnStyle}">${btnText}</button>
             </div>
         </div>`;
     });
@@ -217,7 +235,11 @@ function renderBranchCards(userLat, userLng) {
     container.innerHTML = html;
 }
 
-function selectBranchItem(outletId) {
+function selectBranchItem(outletId, isOpen, outletName, openTime, closeTime) {
+    if (!isOpen) {
+        alert(`Maaf, ${outletName} saat ini sedang tutup (Jam operasional: ${openTime} - ${closeTime} WIB).\n\nSilakan pilih cabang lain yang sedang buka atau kembali saat jam operasional berlangsung.`);
+        return;
+    }
     window.location.href = 'online-order.php?outlet_id=' + Number(outletId);
 }
 

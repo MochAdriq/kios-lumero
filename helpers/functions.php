@@ -572,3 +572,51 @@ function render_db_switcher(): string
     }
 }
 
+/**
+ * Cek status operasional outlet (buka/tutup berdasarkan jam kerja dan status is_active)
+ */
+function check_outlet_operating_status(int $outletId, ?array $outletRow = null): array
+{
+    $tz = new DateTimeZone(app_config('timezone', 'Asia/Jakarta'));
+    $now = new DateTime('now', $tz);
+    $currentTimeStr = $now->format('H:i:s');
+
+    if (!$outletRow) {
+        try {
+            $db = Database::connection();
+            $stmt = $db->prepare("SELECT id, name, is_active, closing_hour FROM outlets WHERE id = ? LIMIT 1");
+            $stmt->execute([$outletId]);
+            $outletRow = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {}
+    }
+
+    if (!$outletRow || empty($outletRow['is_active'])) {
+        return [
+            'is_open' => false,
+            'reason' => 'Cabang saat ini tidak aktif atau sedang tutup sementara.',
+            'opening_time' => '10:00',
+            'closing_time' => '21:00'
+        ];
+    }
+
+    $closingHour = trim((string)($outletRow['closing_hour'] ?? '21:00:00'));
+    if ($closingHour === '') $closingHour = '21:00:00';
+    if (strlen($closingHour) === 5) $closingHour .= ':00';
+    $openingHour = '10:00:00'; // Standard opening time
+
+    // Compare current time with opening and closing hours
+    if ($closingHour < $openingHour) {
+        // Closes past midnight (e.g. 02:00:00)
+        $isOpen = ($currentTimeStr >= $openingHour || $currentTimeStr < $closingHour);
+    } else {
+        $isOpen = ($currentTimeStr >= $openingHour && $currentTimeStr < $closingHour);
+    }
+
+    return [
+        'is_open' => $isOpen,
+        'reason' => $isOpen ? 'Buka' : 'Cabang saat ini di luar jam operasional (' . substr($openingHour, 0, 5) . ' - ' . substr($closingHour, 0, 5) . ' WIB).',
+        'opening_time' => substr($openingHour, 0, 5),
+        'closing_time' => substr($closingHour, 0, 5)
+    ];
+}
+

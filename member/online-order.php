@@ -261,6 +261,14 @@ try {
     if (isset($_GET['outlet_id'])) {
         $_SESSION['lumero_selected_outlet_id'] = (int)$_GET['outlet_id'];
     }
+    $activeOutletRow = null;
+    foreach ($activeOutletsList as $oL) {
+        if ((int)$oL['id'] === $activeOutletId) {
+            $activeOutletRow = $oL;
+            break;
+        }
+    }
+    $outletOpStatus = check_outlet_operating_status($activeOutletId, $activeOutletRow);
     $posModel = new POSModel();
     $categories = $posModel->categoriesWithProducts($activeOutletId);
     $preparedData = sim_pos_prepare_data($categories);
@@ -928,6 +936,25 @@ simInitTheme();
 </script>
 </head>
 <body class="pos-page sim-pos-template sim-pos-dcelup k2-body">
+<?php if (!empty($outletOpStatus) && !$outletOpStatus['is_open']): ?>
+<div id="storeClosedOverlay" style="position:fixed; inset:0; z-index:99999; background:rgba(9,9,11,0.92); backdrop-filter:blur(18px); display:flex; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:rgba(24,24,34,0.98); border:2px solid rgba(239,68,68,0.45); border-radius:28px; padding:36px 28px; max-width:480px; width:100%; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.85), 0 0 60px rgba(239,68,68,0.22); animation:popIn .35s cubic-bezier(.4,0,.2,1) both;">
+    <div style="font-size:54px; margin-bottom:14px;">🚫</div>
+    <h2 style="font-size:24px; font-weight:950; color:#FFFFFF; margin:0 0 10px; letter-spacing:-.02em;">Cabang Ini Sedang Tutup</h2>
+    <p style="font-size:15px; color:#F3F4F6; line-height:1.6; font-weight:600; margin:0 0 14px;">
+      <?= fo_e($activeOutletRow['name'] ?? 'Cabang Lumero') ?> saat ini sedang tidak beroperasi. <br>
+      <span style="color:#FCA5A5; font-size:14px; font-weight:700;">Jam Operasional: <?= fo_e($outletOpStatus['opening_time'] ?? '10:00') ?> - <?= fo_e($outletOpStatus['closing_time'] ?? '21:00') ?> WIB</span>
+    </p>
+    <div style="background:rgba(239,68,68,0.14); border:1px dashed rgba(239,68,68,0.4); border-radius:14px; padding:12px 16px; margin-bottom:24px; font-size:13.5px; color:#FECACA; font-weight:650;">
+      <?= fo_e($outletOpStatus['reason'] ?? 'Di luar jam operasional.') ?> <br>Pemesanan online untuk cabang ini ditutup sementara demi keamanan pesanan Anda.
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <a href="select-branch.php" style="background:linear-gradient(135deg, #FF2D55 0%, #FF6B00 100%); color:#FFFFFF; font-size:15px; font-weight:900; padding:14px 24px; border-radius:999px; text-decoration:none; box-shadow:0 10px 30px rgba(255,45,85,0.4); display:block; transition:transform .2s ease;">📍 Pilih Cabang Lain yang Buka</a>
+      <a href="welcome.php" style="color:#E5E7EB; font-size:14px; font-weight:700; text-decoration:underline; padding:8px 0; display:block;">&larr; Kembali ke Layar Sambutan</a>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
 
 <audio id="foBgm" src="<?=fo_e($freeOrderVoiceBase)?>slow-cafe.mp3?v=2" preload="auto" loop></audio>
 <audio class="fo-voice" id="foVoiceWelcome" src="<?=fo_e($freeOrderVoiceBase)?>welcome.mp3?v=2" preload="auto"></audio>
