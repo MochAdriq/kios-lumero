@@ -252,12 +252,12 @@ document.addEventListener('DOMContentLoaded', () => {
     detectBranchGPS();
 });
 
-// Idle timeout: 30 seconds of no interaction -> redirect to welcome
+// Idle timeout: 120 seconds (2 minutes) of no interaction -> redirect to welcome
 (function(){
   let idleTimer;
   const resetTimer = () => {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => { window.location.href = 'welcome.php?idle=1'; }, 30000);
+    idleTimer = setTimeout(() => { window.location.href = 'welcome.php?idle=1'; }, 120000);
   };
   ['mousemove','keydown','scroll','touchstart','click'].forEach(e => document.addEventListener(e, resetTimer, true));
   resetTimer();
