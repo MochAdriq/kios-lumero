@@ -1338,15 +1338,9 @@ simInitTheme();
     <button type="button" class="payBtn" data-pay="transfer">Transfer Bank</button>
   </div>
   <div class="fo-pay-preview active" id="qrisPreview" style="text-align:center; padding:20px;">
-    <b style="font-size:15px; display:block; margin-bottom:14px; color:var(--dp-text);">Scan QRIS Lumero / E-Wallet</b>
-    <div style="background:#fff; padding:14px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
-      <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero" style="width:240px; max-width:100%; height:auto; display:block; margin:0 auto; border-radius:10px; background:#fff; padding:0; border:none;">
-    </div>
-    <div style="margin-top:16px;">
-      <a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Lumero.png" style="box-shadow:0 4px 16px rgba(255,45,85,0.4); padding:10px 24px; font-size:13px;">⬇️ Download QRIS</a>
-    </div>
-    <div class="fo-info" style="margin-top:14px; font-size:12px; line-height:1.5; color:var(--dp-text-2);">
-      <?=fo_e(str_ireplace('midtrans', 'Lumero', $qrisInfo))?>. Simpan bukti pembayaran untuk diverifikasi kasir.
+    <b style="font-size:15px; display:block; margin-bottom:14px; color:var(--dp-text);">Pembayaran QRIS / E-Wallet</b>
+    <div style="background:#fff; padding:20px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
+      <p style="color:#000; font-size:14px; margin:0;">QRIS Pembayaran akan otomatis muncul di layar selanjutnya setelah Anda mengklik tombol <b>Proses Pembayaran</b>.</p>
     </div>
   </div>
   <div class="fo-pay-preview" id="transferPreview">
