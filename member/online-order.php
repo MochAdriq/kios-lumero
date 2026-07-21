@@ -2046,9 +2046,10 @@ function buildPickupOptions(){
 function renderCart(){
   cart = window.cart || cart || [];
   window.cart = cart;
-  const list=document.getElementById('cartList'); list.innerHTML='';
-  const sideList=document.getElementById('sideOrderItems');
-  if(sideList) sideList.innerHTML='';
+  const list = document.getElementById('cartList') || document.getElementById('cartListContainer');
+  if(list) list.innerHTML = '';
+  const sideList = document.getElementById('sideOrderItems');
+  if(sideList) sideList.innerHTML = '';
 
   let total=0, count=0;
   cart.forEach((it,i)=>{
@@ -2058,7 +2059,7 @@ function renderCart(){
     const div=document.createElement('div');
     div.className='fo-cart-item';
     div.innerHTML=`<div><b>${escapeHtml(name)}</b><br><small>${rupiah(it.price)} x ${it.qty||1}</small></div><div class="fo-qty"><button type="button" onclick="chgQty(${i},-1)">-</button><b>${it.qty||1}</b><button type="button" onclick="chgQty(${i},1)">+</button></div>`;
-    list.appendChild(div);
+    if(list) list.appendChild(div);
 
     if(sideList){
       const sideDiv=document.createElement('div');
@@ -2068,7 +2069,7 @@ function renderCart(){
     }
   });
   if(!cart.length){
-    list.innerHTML='<div class="fo-info">Keranjang masih kosong.</div>';
+    if(list) list.innerHTML='<div class="fo-info">Keranjang masih kosong.</div>';
     if(sideList){
       sideList.innerHTML='<div class="fo-order-empty"><div class="icon">🛒</div><p>Belum ada menu dipilih</p><small>Klik menu di kiri untuk menambah pesanan</small></div>';
     }
