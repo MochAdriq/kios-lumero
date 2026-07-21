@@ -27,8 +27,9 @@ class StoreModel extends Model
     }
     public function close(int $outletId, int $userId, float $physicalCash, string $notes): void
     {
-        $bizDate = business_date($outletId);
-        $session = $this->todaySession($outletId); if (!$session || $session['status'] !== 'open') throw new RuntimeException('Tidak ada sesi toko yang sedang terbuka.');
+        $session = $this->one("SELECT * FROM daily_store_sessions WHERE outlet_id=? AND status='open' ORDER BY id DESC LIMIT 1", [$outletId]);
+        if (!$session) throw new RuntimeException('Tidak ada sesi toko yang sedang terbuka.');
+        $bizDate = $session['business_date'];
         $cash = $this->one("SELECT COALESCE(SUM(p.amount),0) total FROM payments p JOIN orders o ON o.id=p.order_id WHERE o.outlet_id=? AND o.business_date=? AND p.payment_method='cash' AND p.status='paid'", [$outletId,$bizDate]);
         $systemCash = (float)$session['opening_cash'] + (float)($cash['total'] ?? 0);
         $diff = $physicalCash - $systemCash;

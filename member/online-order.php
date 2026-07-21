@@ -762,26 +762,34 @@ button,input,select,textarea{font:inherit}
 .fo-customer-found{display:none;background:var(--dp-green-soft);border:1px solid rgba(52,211,153,.2);color:var(--dp-green);border-radius:var(--dp-radius-sm);padding:9px 11px;font-size:12px;font-weight:700;line-height:1.4}
 .fo-customer-found.show{display:block}
 
-/* Checkout drawer overlay and modal styling */
-.fo-checkout-drawer{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:75;display:none;padding:18px;overflow-y:auto}
-.fo-checkout-drawer.show{display:grid;place-items:center}
-.fo-checkout-content{width:min(94vw,580px);max-height:90vh;overflow-y:auto;background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);padding:22px;box-shadow:var(--dp-shadow);color:var(--dp-text);text-align:left}
-.fo-checkout-body{margin:14px 0;display:grid;gap:16px}
-.fo-section{background:var(--dp-bg);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius-sm);padding:14px}
-.fo-section h4{margin:0 0 12px;font-size:15px;color:var(--dp-text);font-weight:800}
-.fo-form-group{margin-bottom:10px}
-.fo-form-group label{display:block;font-size:12px;font-weight:700;color:var(--dp-text-2);margin-bottom:4px}
-.fo-form-group input, .fo-form-group select, .fo-form-group textarea{width:100%;background:var(--dp-surface) !important;border:1px solid var(--dp-glass-border);border-radius:8px;padding:9px 12px;color:var(--dp-text) !important;font-size:13px}
-.fo-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fo-payment-options{display:grid;gap:8px}
-.fo-payment-item{background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:8px;padding:12px;text-align:left;cursor:pointer;transition:all .2s;color:var(--dp-text);display:block;width:100%}
-.fo-payment-item b{display:block;font-size:13px;font-weight:800}
-.fo-payment-item small{display:block;font-size:11px;color:var(--dp-muted);margin-top:2px}
-.fo-payment-item.active{background:var(--dp-red-soft);border-color:var(--dp-red);box-shadow:0 0 12px var(--dp-red-glow)}
-.fo-checkout-footer{border-top:1px solid var(--dp-glass-border);padding-top:14px}
-.fo-checkout-footer .summary-row{display:flex;justify-content:space-between;font-weight:800;font-size:16px;color:var(--dp-text);margin-bottom:12px}
-.fo-checkout-footer .summary-row span#drawerTotalText{color:var(--dp-red)}
-.btn-submit-order{width:100%;background:var(--dp-gradient);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(255,45,85,0.3)}
+/* Checkout Drawer */
+.fo-drawer{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;padding:18px;overflow:auto}.fo-drawer.show{display:block}
+.fo-panel{max-width:760px;margin:0 auto;background:var(--dp-surface);border:1px solid var(--dp-glass-border);border-radius:var(--dp-radius);padding:20px;box-shadow:var(--dp-shadow)}
+.fo-panel h2{margin:0 0 12px;font-size:28px;letter-spacing:-.04em;color:var(--dp-text)}
+.fo-cart-list{display:grid;gap:8px;margin-bottom:12px}
+.fo-checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fo-field{display:grid;gap:5px}
+.fo-field label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--dp-muted)}
+.fo-field input,.fo-field select,.fo-field textarea{border:1px solid var(--dp-glass-border);background:var(--dp-bg);border-radius:var(--dp-radius-sm);padding:10px 12px;font-weight:700;min-height:44px;color:var(--dp-text);transition:border-color var(--dp-transition)}
+.fo-field input:focus,.fo-field select:focus,.fo-field textarea:focus{border-color:var(--dp-red);box-shadow:0 0 0 2px var(--dp-red-soft);outline:none}
+.fo-field input::placeholder,.fo-field textarea::placeholder{color:var(--dp-muted)}
+.fo-time-hint{font-size:11px;color:var(--dp-muted);font-weight:600}
+
+/* Payment */
+.fo-payment{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+.payBtn{border:1px solid var(--dp-glass-border);background:var(--dp-surface);border-radius:var(--dp-radius-sm);padding:12px 10px;font-weight:800;color:var(--dp-text-2);cursor:pointer;transition:all var(--dp-transition)}
+.payBtn.active{background:var(--dp-red-soft);border-color:var(--dp-red);color:var(--dp-red);box-shadow:0 0 16px var(--dp-red-glow)}
+.fo-pay-preview{display:none;border:1px solid var(--dp-glass-border);background:var(--dp-bg);border-radius:var(--dp-radius);padding:14px;animation:foPayIn .2s ease both;color:var(--dp-text)}
+.fo-pay-preview.active{display:block}
+.fo-pay-preview b{color:var(--dp-text)}
+.fo-pay-preview img{max-width:100%;width:260px;border-radius:var(--dp-radius-sm);border:1px solid var(--dp-glass-border);background:var(--dp-bg-2);padding:8px}
+.fo-download-btn,.fo-copy-btn{display:inline-flex;align-items:center;justify-content:center;border:0;background:var(--dp-gradient);color:#fff;padding:10px 16px;border-radius:999px;font-weight:800;text-decoration:none;cursor:pointer;font-size:13px}
+.fo-copy-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.fo-info{font-size:13px;color:var(--dp-muted);line-height:1.55;font-weight:600}
+.fo-submit{width:100%;border:0;border-radius:14px;padding:14px;background:var(--dp-gradient);color:#fff;font-weight:800;font-size:17px;margin-top:14px;cursor:pointer;box-shadow:0 4px 24px var(--dp-red-glow);transition:all .3s ease}
+.fo-submit:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,45,85,.4)}
+.fo-close{margin-top:12px;display:inline-flex;justify-content:center;align-items:center;background:var(--dp-surface);color:var(--dp-text-2);border-radius:var(--dp-radius-sm);padding:12px 16px;font-weight:700;border:1px solid var(--dp-glass-border);cursor:pointer;text-decoration:none;width:100%;transition:all var(--dp-transition)}
+.fo-close:hover{background:var(--dp-surface-hover);color:var(--dp-text)}
 
 /* ═══════════════════════════════════
    VIDEO OVERLAY (kept, dark compatible)
@@ -1309,239 +1317,67 @@ simInitTheme();
       <button type="button" class="gold" onclick="continueToPayment()">Lanjut Bayar</button>
     </div>
   </div>
-</div><!-- end #pickupConfirmModal -->
-
-<!-- Deprecated layout B hidden -->
-<div id="deprecatedPosLayoutB" style="display:none !important;">
-<header class="fo-header">
-    <div class="fo-header-logo">
-      <div class="logo-img">🍗</div>
-      <div class="logo-text">
-        <h1>Lumero SELF-ORDER</h1>
-        <small id="activeBranchBadge" onclick="window.location.href='select-branch.php'" style="cursor:pointer;color:var(--dp-green);text-decoration:underline;font-weight:700;">📍 Pilih / Ganti Cabang (Klik di sini)</small>
-      </div>
-    </div>
-    <div class="fo-header-actions">
-      <div class="fo-audio-toggles">
-        <button class="fo-audio-toggle" id="toggleTheme" type="button" aria-pressed="false" onclick="simToggleTheme()">
-          <span class="theme-icon-light" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span>
-          <span class="theme-icon-dark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
-        </button>
-        <button class="fo-audio-toggle on" id="toggleBgm" type="button" aria-pressed="true">
-          <span>♪</span> Musik ON
-        </button>
-        <button class="fo-audio-toggle on" id="toggleVoice" type="button" aria-pressed="true">
-          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></span> Suara ON
-        </button>
-      </div>
-      <a href="../order-online/lacak.php" class="fo-track-link">
-        <span>📍</span> Lacak Pesanan
-      </a>
-      <button type="button" class="fo-cart-pill" onclick="document.querySelector('.fo-pos-right').classList.add('show')">
-        <span class="cart-icon">🛒</span>
-        <span class="cart-count" id="cartCountPill">0</span>
-      </button>
-    </div>
-  </header>
-  <div class="fo-pos-left">
-    <div class="fo-products-scroll">
-      <!-- AI Nudge Container -->
-      <div class="fo-ai-panel" id="foAiPanel">
-        <div class="fo-ai-header">
-          <div class="fo-ai-badge">🤖 Lumero AI Assistant</div>
-          <button type="button" class="fo-ai-close" onclick="closeAiPanel()">&times;</button>
-        </div>
-        <div class="fo-ai-title" id="foAiTitle">Rekomendasi Spesial</div>
-        <div class="fo-ai-desc" id="foAiDesc">Pilih menu favoritmu sekarang</div>
-        <div class="fo-ai-action">
-          <button type="button" class="btn btn-sm btn-light font-bold" id="foAiCta" onclick="aiCtaAction()">+ Lihat Rekomendasi</button>
-        </div>
-      </div>
-      <div class="fo-ai-nudge" id="foAiNudge" onclick="openAiPanel()">
-        <span>✨</span> <span id="foAiNudgeText">Bingung pilih menu? Klik untuk rekomendasi AI!</span>
-      </div>
-
-      <h2 style="font-size: 26px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em;">Pilih Varian Ayam & Saus Favoritmu</h2>
-      <p style="color: var(--dp-text-2); margin-bottom: 24px; font-size: 14px;">Klik varian ayam atau saus di bawah ini untuk melihat detail rasa dan menambahkannya ke keranjang.</p>
-
-      <div class="fo-grid" id="chickenCardsGrid">
-        <!-- Cards by JS -->
-      </div>
-    </div>
-  </div>
-  <aside class="fo-pos-right">
-    <div class="fo-cart-header">
-      <h3>Keranjang Pesanan</h3>
-      <button type="button" class="fo-close-mobile" onclick="document.querySelector('.fo-pos-right').classList.remove('show')">&times;</button>
-    </div>
-    <div class="fo-cart-items" id="cartListContainer">
-      <!-- Cart items by JS -->
-    </div>
-    <div class="fo-cart-summary">
-      <div class="summary-row">
-        <span>Subtotal</span>
-        <span id="cartSubtotalText">Rp 0</span>
-      </div>
-      <div class="summary-row total">
-        <span>Total</span>
-        <span id="cartGrandTotalText">Rp 0</span>
-      </div>
-      <button type="button" class="btn-checkout" onclick="openCheckout()">Lanjutkan Pemesanan &rarr;</button>
-    </div>
-  </aside>
 </div>
 
-<!-- Modal Pilihan & Detail Produk -->
-<div class="fo-modal" id="productModal" style="display:none;">
-  <div class="fo-modal-content">
-    <div class="fo-modal-header">
-      <h3 id="modalProductTitle">Pilih Varian</h3>
-      <button type="button" class="fo-modal-close" onclick="closeProductModal()">&times;</button>
+<div class="fo-drawer" id="checkoutDrawer"><div class="fo-panel">
+  <h2>Checkout Online Order</h2>
+  <div class="fo-cart-list" id="cartList"></div>
+  <div class="fo-payment-total-box">
+    <div id="checkoutFeeDetailRow" style="display:none; justify-content:space-between; margin-bottom:6px; font-size:12px; color:var(--dp-muted);"><span>Ongkos Kirim:</span> <b id="checkoutFeeDetailText" style="color:var(--dp-text);">Rp0</b></div>
+    <small>Total yang harus dibayar</small><b id="checkoutTotalText">Rp0</b><div class="items" id="checkoutTotalDetail">Keranjang masih kosong.</div>
+  </div>
+  <div class="fo-checkout-grid">
+    <div class="fo-field"><label>Nama Pemesan</label><input id="customerName" placeholder="Nama Anda" value="<?=fo_e($memberOnline['name'] ?? '')?>"></div>
+    <div class="fo-field"><label>Nomor WhatsApp</label><input id="customerPhone" inputmode="tel" placeholder="08xxxxxxxxxx" value="<?=fo_e($memberOnline['phone'] ?? '')?>"></div>
+  </div>
+  <div class="fo-field"><label>Catatan</label><textarea id="customerNote" placeholder="Catatan untuk kasir, opsional"></textarea></div>
+  <div class="fo-payment">
+    <button type="button" class="payBtn active" data-pay="qris">QRIS / E-Wallet</button>
+    <button type="button" class="payBtn" data-pay="transfer">Transfer Bank</button>
+  </div>
+  <div class="fo-pay-preview active" id="qrisPreview" style="text-align:center; padding:20px;">
+    <b style="font-size:15px; display:block; margin-bottom:14px; color:var(--dp-text);">Scan QRIS Lumero / E-Wallet</b>
+    <div style="background:#fff; padding:14px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
+      <img src="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>?v=<?=time()?>" alt="QRIS Lumero" style="width:240px; max-width:100%; height:auto; display:block; margin:0 auto; border-radius:10px; background:#fff; padding:0; border:none;">
     </div>
-    <div class="fo-modal-body" id="modalProductBody">
-      <!-- Dynamic form by JS -->
+    <div style="margin-top:16px;">
+      <a class="fo-download-btn" href="../<?=fo_e(ltrim($paymentQrisImage,'/'))?>" download="QRIS-Lumero.png" style="box-shadow:0 4px 16px rgba(255,45,85,0.4); padding:10px 24px; font-size:13px;">⬇️ Download QRIS</a>
     </div>
-    <div class="fo-modal-footer">
-      <button type="button" class="btn-add-modal" onclick="confirmModalAddToCart()">+ Tambahkan ke Keranjang</button>
+    <div class="fo-info" style="margin-top:14px; font-size:12px; line-height:1.5; color:var(--dp-text-2);">
+      <?=fo_e(str_ireplace('midtrans', 'Lumero', $qrisInfo))?>. Simpan bukti pembayaran untuk diverifikasi kasir.
     </div>
   </div>
-</div>
-
-<!-- Drawer Checkout -->
-<div class="fo-checkout-drawer" id="checkoutDrawer">
-  <div class="fo-checkout-content">
-    <div class="fo-modal-header">
-      <h3>Selesaikan Pesanan</h3>
-      <button type="button" class="fo-modal-close" onclick="closeCheckout()">&times;</button>
+  <div class="fo-pay-preview" id="transferPreview">
+    <b>Transfer Bank</b><br><br>
+    <div style="font-size:14px; margin-bottom:12px; color:var(--dp-text);">
+      Silakan transfer ke rekening berikut:<br>
+      <b>Bank BCA</b><br>
+      No. Rekening: <b style="font-size:16px; color:var(--dp-primary);"><?=$bankAccountNo?></b> 
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-2" data-copy="<?=$bankAccountNo?>" style="padding:2px 8px; font-size:11px;">Copy</button><br>
+      Atas Nama: <b><?=$bankAccountName?></b>
     </div>
-    <div class="fo-checkout-body">
-      <!-- Customer Info -->
-      <div class="fo-section">
-        <h4>1. Data Pemesan</h4>
-        <div class="fo-form-group">
-          <label>Nama Lengkap / Panggilan</label>
-          <input type="text" id="customerName" placeholder="Contoh: Budi">
-        </div>
-        <div class="fo-form-group">
-          <label>Nomor WhatsApp (Aktif)</label>
-          <input type="tel" id="customerPhone" placeholder="08xxxxxxxxxx" value="<?=fo_e($memberOnline['phone'] ?? '')?>">
-        </div>
-        <div class="fo-form-group">
-          <label>Catatan Tambahan (Opsional)</label>
-          <textarea id="customerNote" rows="2" placeholder="Contoh: Saus dipisah, ayam bagian paha atas..."></textarea>
-        </div>
-      </div>
-
-      <!-- Pickup Type Selection -->
-      <div class="fo-section">
-        <h4>2. Metode Pengambilan / Pengiriman</h4>
-        <div class="fo-pickup-options">
-          <button type="button" class="fo-pickup-option active" data-pickup="outlet">
-            <b>Ambil di Outlet (Pickup)</b>
-            <small>Siap sesuai jam yang dipilih</small>
-          </button>
-          <button type="button" class="fo-pickup-option <?= !$deliveryEnabled ? 'disabled' : '' ?>" data-pickup="delivery" <?= !$deliveryEnabled ? 'disabled title="Fitur Delivery saat ini belum aktif"' : '' ?>>
-            <b>Diantar Kurir (Delivery)</b>
-            <small><?= $deliveryEnabled ? 'Kurir Internal Lumero' : 'Belum Tersedia' ?></small>
-          </button>
-        </div>
-
-        <!-- Section Khusus Delivery -->
-        <div id="deliverySectionWrapDrawer" style="display:none; margin-top:16px; background:var(--dp-surface-2); padding:16px; border-radius:14px; border:1px solid var(--dp-glass-border);">
-          <div style="font-size:13px; font-weight:700; color:var(--dp-text); margin-bottom:8px;">📍 Penentuan Titik Lokasi Pengantaran</div>
-          <div style="font-size:12px; color:var(--dp-text-2); margin-bottom:12px; line-height:1.5;">Geser peta atau klik tombol di bawah untuk menentukan lokasi rumah/pengantaran Anda secara akurat.</div>
-          
-          <div style="display:flex; gap:8px; margin-bottom:12px;">
-            <button type="button" onclick="deliveryDetectGPS()" style="flex:1; background:var(--dp-primary); color:#fff; border:none; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
-              <span>🎯</span> Gunakan Lokasi GPS Saya
-            </button>
-          </div>
-
-          <div id="deliveryMapDrawer" style="width:100%; height:220px; border-radius:12px; overflow:hidden; border:1px solid var(--dp-glass-border); margin-bottom:12px; background:#1e1e2d;"></div>
-          
-          <div class="fo-form-group" style="margin-bottom:12px;">
-            <label style="font-size:12px;">Alamat Lengkap & Patokan Rumah</label>
-            <textarea id="deliveryAddressInputDrawer" rows="2" placeholder="Contoh: Jl. Raya Kalibunder No. 12, RT 02/01 (depan minimarket, pagar hitam)..."></textarea>
-          </div>
-
-          <div id="deliveryDistanceBox" style="background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:8px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="color:var(--dp-text-2);">Jarak Pengantaran:</span>
-              <strong id="deliveryDistanceTextDrawer" style="color:var(--dp-text); margin-left:4px;">0 km</strong>
-            </div>
-            <div>
-              <span style="color:var(--dp-text-2);">Ongkir:</span>
-              <strong id="deliveryFeeTextDrawer" style="color:var(--dp-green); margin-left:4px;">Rp 0</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pickup Date & Time -->
-      <div class="fo-section" id="pickupDateRowSide">
-        <h4>3. Waktu Pengambilan</h4>
-        <div class="fo-grid-2" id="outletDateTimeGridDrawer">
-          <div class="fo-form-group">
-            <label>Tanggal</label>
-            <select id="pickupDateDrawer" onchange="buildPickupTimeSlots()">
-              <option value="<?=fo_e($today)?>">Hari ini (<?=fo_e(date('d/m/Y', strtotime($today)))?>)</option>
-              <option value="<?=fo_e($tomorrow)?>">Besok (<?=fo_e(date('d/m/Y', strtotime($tomorrow)))?>)</option>
-            </select>
-          </div>
-          <div class="fo-form-group">
-            <label>Jam Ambil</label>
-            <select id="pickupTimeDrawer"></select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Payment Method -->
-      <div class="fo-section">
-        <h4>4. Pilih Pembayaran</h4>
-        <div class="fo-payment-options">
-          <button type="button" class="fo-payment-item active" data-pay="qris" onclick="setPayment('qris')">
-            <b>QRIS (Otomatis)</b>
-            <small>GoPay, OVO, Dana, ShopeePay, M-Banking</small>
-          </button>
-          <button type="button" class="fo-payment-item" data-pay="transfer" onclick="setPayment('transfer')">
-            <b>Transfer Bank BCA</b>
-            <small>Verifikasi manual oleh kasir</small>
-          </button>
-          <?php if($memberOnline && $memberPointBalance > 0): ?>
-          <button type="button" class="fo-payment-item" data-pay="point" onclick="setPayment('point')">
-            <b>Bayar Pakai Point</b>
-            <small>Saldo: <?=number_format($memberPointBalance,0,',','.')?> pts</small>
-          </button>
-          <?php endif; ?>
-        </div>
-        <div id="payInfo" style="font-size:12px; color:var(--dp-text-2); margin-top:10px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px;"></div>
-      </div>
-    </div>
-    <div class="fo-checkout-footer">
-      <div class="summary-row total">
-        <span>Total Dibayar</span>
-        <span id="drawerTotalText">Rp 0</span>
-      </div>
-      <form id="foForm" method="post">
-        <input type="hidden" name="cart" id="cartInput">
-        <input type="hidden" name="pickup_date" id="pickupDateInput">
-        <input type="hidden" name="pickup_time" id="pickupTimeInput">
-        <input type="hidden" name="payment_method" id="paymentInput" value="qris">
-        <input type="hidden" name="pickup_type" id="pickupTypeInput" value="outlet">
-        <input type="hidden" name="customer_name" id="customerNameInput">
-        <input type="hidden" name="customer_phone" id="customerPhoneInput">
-        <input type="hidden" name="customer_note" id="customerNoteInput">
-        <input type="hidden" name="delivery_address" id="deliveryAddressHiddenInput">
-        <input type="hidden" name="delivery_lat" id="deliveryLatHiddenInput">
-        <input type="hidden" name="delivery_lng" id="deliveryLngHiddenInput">
-        <input type="hidden" name="delivery_fee" id="deliveryFeeHiddenInput" value="0">
-        <input type="hidden" name="delivery_distance_km" id="deliveryDistanceHiddenInput" value="0">
-        <input type="hidden" name="outlet_id" id="outletIdInput" value="<?= fo_e((string)current_outlet_id()) ?>">
-        <button type="submit" class="btn-submit-order">Kirim Pesanan Sekarang &rarr;</button>
-      </form>
-    </div>
+    <div class="fo-info" style="margin-top:10px">Pesanan akan diproses setelah bukti pembayaran diverifikasi kasir.</div>
   </div>
-</div>
+  <div class="fo-info" id="payInfo" style="margin-top:10px">Metode pembayaran otomatis: QRIS / E-Wallet.</div>
+  <form method="post" id="foForm">
+    <input type="hidden" name="cart" id="cartInput">
+    <input type="hidden" name="pickup_date" id="pickupDateInput">
+    <input type="hidden" name="pickup_time" id="pickupTimeInput">
+    <input type="hidden" name="payment_method" id="paymentInput" value="">
+    <input type="hidden" name="pickup_type" id="pickupTypeInput" value="outlet">
+    <input type="hidden" name="customer_name" id="customerNameInput">
+    <input type="hidden" name="customer_phone" id="customerPhoneInput">
+    <input type="hidden" name="customer_note" id="customerNoteInput">
+    <input type="hidden" name="delivery_address" id="deliveryAddressHiddenInput">
+    <input type="hidden" name="delivery_lat" id="deliveryLatHiddenInput">
+    <input type="hidden" name="delivery_lng" id="deliveryLngHiddenInput">
+    <input type="hidden" name="delivery_fee" id="deliveryFeeHiddenInput" value="0">
+    <input type="hidden" name="delivery_distance_km" id="deliveryDistanceHiddenInput" value="0">
+    <input type="hidden" name="outlet_id" id="outletIdInput" value="<?= fo_e((string)current_outlet_id()) ?>">
+    <button class="fo-submit">Kirim Online Order</button>
+  </form>
+  <button class="fo-close" type="button" onclick="closeCheckout()">Tutup</button>
+</div></div>
 
 <!-- ===== POPUP: QRIS MIDTRANS ===== -->
 <div id="midtransQrisOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.82); backdrop-filter:blur(8px); align-items:center; justify-content:center;">

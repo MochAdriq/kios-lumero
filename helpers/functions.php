@@ -613,10 +613,10 @@ function check_outlet_operating_status(int $outletId, ?array $outletRow = null):
     // Cek status sesi toko di daily_store_sessions (Primary Source of Truth)
     try {
         $db = Database::connection();
-        $bizDate = function_exists('business_date') ? business_date($outletId) : $now->format('Y-m-d');
-        $sessStmt = $db->prepare("SELECT status FROM daily_store_sessions WHERE outlet_id = ? AND business_date = ? ORDER BY id DESC LIMIT 1");
-        $sessStmt->execute([$outletId, $bizDate]);
+        $sessStmt = $db->prepare("SELECT status, business_date FROM daily_store_sessions WHERE outlet_id = ? ORDER BY id DESC LIMIT 1");
+        $sessStmt->execute([$outletId]);
         $storeSession = $sessStmt->fetch(PDO::FETCH_ASSOC);
+        
         if ($storeSession && isset($storeSession['status'])) {
             if ($storeSession['status'] === 'open') {
                 return [
@@ -626,12 +626,15 @@ function check_outlet_operating_status(int $outletId, ?array $outletRow = null):
                     'closing_time' => $closingTimeFormatted
                 ];
             } elseif ($storeSession['status'] === 'closed') {
-                return [
-                    'is_open' => false,
-                    'reason' => 'Cabang sudah ditutup hari ini.',
-                    'opening_time' => $openingTimeFormatted,
-                    'closing_time' => $closingTimeFormatted
-                ];
+                $bizDate = function_exists('business_date') ? business_date($outletId) : $now->format('Y-m-d');
+                if ($storeSession['business_date'] === $bizDate) {
+                    return [
+                        'is_open' => false,
+                        'reason' => 'Cabang sudah ditutup hari ini.',
+                        'opening_time' => $openingTimeFormatted,
+                        'closing_time' => $closingTimeFormatted
+                    ];
+                }
             }
         }
     } catch (Throwable $e) {}
