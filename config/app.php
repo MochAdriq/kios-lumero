@@ -1,7 +1,7 @@
 <?php
 return [
     'name' => app_env('APP_NAME', 'Lumero POS'),
-    'company' => app_env('APP_COMPANY', 'PT. Lokapedia Karya Bersama'),
+    'company' => app_env('APP_COMPANY', 'PT. Lokapedia Sukses Bersama'),
     'timezone' => app_env('APP_TIMEZONE', 'Asia/Jakarta'),
     'base_url' => rtrim((string)app_env('APP_URL', ''), '/'),
     'debug' => app_bool(app_env('APP_DEBUG', app_is_local() ? 'true' : 'false'), app_is_local()),
