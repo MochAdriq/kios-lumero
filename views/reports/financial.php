@@ -704,21 +704,7 @@
         }
 </style>
 <div class="wrap">
-<header class="top">
-            <div class="brand">
-                <div class="logo"><img src="../assets/img/icon-192.png" alt="D'Celup"></div>
-                <div>
-                    <h1>Resume Laba Rugi Harian</h1>
-                    <p>D&#039;Celup Chicken Crispy • 01 Mei 2026 s.d. 25 Jul 2026 • Analisis omzet, HPP, pengeluaran,
-                        dan laba/rugi per tanggal.</p>
-                </div>
-            </div>
-            <div class="actions no-print">
-                <a class="btn white" href="index.php">Dashboard</a>
-                <a class="btn white" href="financial-report.php?from=2026-05-01&to=2026-07-25">Laporan Detail</a>
-                <button class="btn primary" type="button" onclick="window.print()">Print Resume</button>
-            </div>
-        </header>
+
 
         <form class="filter no-print" method="get">
             <label>Dari Tanggal<input type="date" name="from" value="<?= htmlspecialchars($from) ?>"></label>
