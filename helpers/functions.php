@@ -133,18 +133,17 @@ function app_base_url(): string
 function app_request_path(): string
 {
     if (!empty($_GET['route'])) {
-        $route = '/' . trim((string)$_GET['route'], '/');
-        return $route === '/' ? '/' : $route;
+        $path = '/' . trim((string)$_GET['route'], '/');
+    } else {
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+        $basePath = rtrim((string)parse_url(app_base_url(), PHP_URL_PATH), '/');
+        if ($basePath !== '' && str_starts_with($path, $basePath)) {
+            $path = substr($path, strlen($basePath));
+        }
     }
 
-    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-    $basePath = rtrim((string)parse_url(app_base_url(), PHP_URL_PATH), '/');
-    if ($basePath !== '' && str_starts_with($path, $basePath)) {
-        $path = substr($path, strlen($basePath));
-    }
-
-    $path = preg_replace('#/index\.php$#', '/', $path);
-    $path = preg_replace('#^/index\.php#', '', $path);
+    $path = preg_replace('#/index\.php$#i', '/', $path);
+    $path = preg_replace('#^/index\.php#i', '', $path);
     $path = '/' . trim((string)$path, '/');
     return $path === '//' ? '/' : $path;
 }

@@ -98,12 +98,11 @@ if (class_exists('LoyaltyController')) {
     $router->post('/loyalty/redemptions/update-status', [LoyaltyController::class, 'updateRedemptionStatus']);
     $router->post('/loyalty/settings/update', [LoyaltyController::class, 'updateSettings']);
 }
-$router->get('/member', function() {
-    $claim = trim((string)($_GET['claim'] ?? ''));
-    $query = $claim !== '' ? '?claim=' . rawurlencode($claim) : '';
-    header('Location: ' . url('/member/index.php', false) . $query);
-    exit;
-});
+$memberHandler = function() {
+    require __DIR__ . '/../member/index.php';
+};
+$router->get('/member', $memberHandler);
+$router->get('/member/index.php', $memberHandler);
 
 if (class_exists('POSController')) {
     $router->get('/pos', [POSController::class,'index']);
