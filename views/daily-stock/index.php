@@ -112,10 +112,120 @@ $statusClass = [
                     <td class="text-center"><strong><?= number_format((float)$item['sold_qty'], 0, ',', '.') ?></strong></td>
                     <td class="text-center text-muted">-</td>
                     <td class="text-center"><span class="stock-closing badge rounded-pill fs-6 px-4 bg-<?= $statusClass[$status] ?? 'secondary' ?>"><?= number_format((float)$item['closing_qty'], 0, ',', '.') ?></span></td>
-                    <td><span class="badge bg-light text-dark border w-100 py-2"><?= $statusLabel[$status] ?? 'Unknown' ?></span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="badge bg-light text-dark border w-100 py-2"><?= $statusLabel[$status] ?? 'Unknown' ?></span>
+                            <button type="button" class="btn btn-sm btn-light border btn-view-recipe" data-variant-id="<?= (int)$item['product_variant_id'] ?>" title="Lihat Resep & Stok">
+                                <?= sim_icon('ti-info-circle') ?>
+                            </button>
+                        </div>
+                    </td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="recipeStockModal" tabindex="-1" aria-labelledby="recipeStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="recipeStockModalLabel">Detail Kebutuhan Bahan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Menampilkan bahan mentah dasar berdasarkan <strong><span id="modalRecipeName">-</span></strong></p>
+                <div id="recipeStockLoading" class="text-center py-4 d-none">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted small">Mengambil data resep & stok...</p>
+                </div>
+                <div id="recipeStockError" class="alert alert-danger d-none"></div>
+                <div class="table-responsive">
+                    <table class="table align-middle sim-table" id="recipeStockTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Bahan Baku Dasar</th>
+                                <th class="text-center">Kebutuhan (1 Porsi)</th>
+                                <th class="text-center">Stok Outlet Saat Ini</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Loaded via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = new bootstrap.Modal(document.getElementById('recipeStockModal'));
+    const tableBody = document.querySelector('#recipeStockTable tbody');
+    const loading = document.getElementById('recipeStockLoading');
+    const error = document.getElementById('recipeStockError');
+    const recipeNameEl = document.getElementById('modalRecipeName');
+    const table = document.getElementById('recipeStockTable');
+
+    document.querySelectorAll('.btn-view-recipe').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const variantId = this.dataset.variantId;
+            
+            // Reset modal
+            tableBody.innerHTML = '';
+            error.classList.add('d-none');
+            table.classList.add('d-none');
+            loading.classList.remove('d-none');
+            recipeNameEl.textContent = 'Memuat...';
+            
+            modal.show();
+
+            fetch('<?= url('/daily-stock/ajax-recipe-stock') ?>?variant_id=' + variantId)
+                .then(res => res.json())
+                .then(data => {
+                    loading.classList.add('d-none');
+                    if (data.error) {
+                        error.textContent = data.error;
+                        error.classList.remove('d-none');
+                        return;
+                    }
+                    
+                    table.classList.remove('d-none');
+                    recipeNameEl.textContent = data.recipe_name;
+                    
+                    let html = '';
+                    if (!data.items || data.items.length === 0) {
+                        html = '<tr><td colspan="4" class="text-center text-muted">Tidak ada data bahan baku</td></tr>';
+                    } else {
+                        data.items.forEach(item => {
+                            const isDanger = item.is_bottleneck;
+                            const rowClass = isDanger ? 'table-danger' : '';
+                            const statusBadge = isDanger 
+                                ? '<span class="badge bg-danger">Habis/Kurang</span>'
+                                : '<span class="badge bg-success">Cukup</span>';
+                                
+                            html += `<tr class="${rowClass}">
+                                <td><strong>${item.name}</strong></td>
+                                <td class="text-center">${item.required} <small class="text-muted">${item.unit}</small></td>
+                                <td class="text-center fw-bold">${item.available} <small class="text-muted">${item.unit}</small></td>
+                                <td>${statusBadge}</td>
+                            </tr>`;
+                        });
+                    }
+                    tableBody.innerHTML = html;
+                })
+                .catch(err => {
+                    loading.classList.add('d-none');
+                    error.textContent = 'Terjadi kesalahan jaringan atau server.';
+                    error.classList.remove('d-none');
+                });
+        });
+    });
+});
+</script>

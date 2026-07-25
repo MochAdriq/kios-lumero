@@ -36,4 +36,66 @@ class DailyStockController extends Controller
         $qs = http_build_query(['date'=>$date,'category_id'=>$_POST['category_id'] ?? 0,'q'=>$_POST['q'] ?? '']);
         $this->redirect('/daily-stock?' . $qs);
     }
+    
+    public function ajaxRecipeStock(): void
+    {
+        Auth::requireLogin();
+        header('Content-Type: application/json');
+        
+        $variantId = (int)($_GET['variant_id'] ?? 0);
+        $outletId = current_outlet_id();
+        
+        if (!$variantId) {
+            echo json_encode(['error' => 'Variant ID required']);
+            return;
+        }
+
+        require_once __DIR__ . '/../recipes/RecipeModel.php';
+        $rm = new RecipeModel();
+        
+        $db = Database::connection();
+        $recipe = $db->query("SELECT id, name FROM recipes WHERE recipe_type = 'final' AND product_variant_id = $variantId AND outlet_id = $outletId LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$recipe) {
+            echo json_encode(['error' => 'Resep final tidak ditemukan untuk produk ini.']);
+            return;
+        }
+        
+        $bom = $rm->explodeBOM($recipe['id'], 1.0);
+        if (!$bom) {
+            echo json_encode(['error' => 'BOM kosong atau tidak valid.']);
+            return;
+        }
+        
+        $rmIds = array_keys($bom);
+        $placeholders = implode(',', array_fill(0, count($rmIds), '?'));
+        
+        $stmt = $db->prepare("
+            SELECT rm.id, rm.name, u.label as unit, COALESCE(orm.stock_qty, rm.stock_qty, 0) as available_stock
+            FROM raw_materials rm
+            LEFT JOIN units u ON rm.unit_id = u.id
+            LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
+            WHERE rm.id IN ($placeholders)
+        ");
+        $params = array_merge([$outletId], $rmIds);
+        $stmt->execute($params);
+        $rawMaterials = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $results = [];
+        foreach ($rawMaterials as $mat) {
+            $required = $bom[$mat['id']] ?? 0;
+            $results[] = [
+                'name' => $mat['name'],
+                'unit' => $mat['unit'] ?: '',
+                'required' => (float)$required,
+                'available' => (float)$mat['available_stock'],
+                'is_bottleneck' => ((float)$mat['available_stock'] < (float)$required)
+            ];
+        }
+        
+        echo json_encode([
+            'recipe_name' => $recipe['name'],
+            'items' => $results
+        ]);
+    }
 }

@@ -120,6 +120,7 @@ if (class_exists('POSController')) {
     }
 }
 $router->get('/daily-stock', [DailyStockController::class,'index']);
+$router->get('/daily-stock/ajax-recipe-stock', [DailyStockController::class,'ajaxRecipeStock']);
 $router->post('/daily-stock/save', [DailyStockController::class,'save']);
 $router->get('/purchases', [PurchaseController::class,'index']);
 $router->post('/purchases', [PurchaseController::class,'store']);
