@@ -151,9 +151,9 @@ class ExecutiveModel extends Model
             }
         }
         // Fallback to orders table
-        $gross = (float)($this->scalar("SELECT COALESCE(SUM(total),0) FROM orders WHERE DATE(created_at) BETWEEN ? AND ? AND payment_status='paid' AND status<>'cancelled'", [$from, $to]) ?? 0);
-        $hpp = (float)($this->scalar("SELECT COALESCE(SUM(total_hpp),0) FROM orders WHERE DATE(created_at) BETWEEN ? AND ? AND payment_status='paid' AND status<>'cancelled'", [$from, $to]) ?? 0);
-        $orders = (float)($this->scalar("SELECT COUNT(*) FROM orders WHERE DATE(created_at) BETWEEN ? AND ? AND payment_status='paid' AND status<>'cancelled'", [$from, $to]) ?? 0);
+        $gross = (float)($this->scalar("SELECT COALESCE(SUM(total),0) FROM orders WHERE outlet_id=? AND DATE(created_at) BETWEEN ? AND ? AND payment_status='paid' AND status<>'cancelled'", [$out, $from, $to]) ?? 0);
+        $hpp = (float)($this->scalar("SELECT COALESCE(SUM(total_hpp),0) FROM orders WHERE outlet_id=? AND DATE(created_at) BETWEEN ? AND ? AND payment_status='paid' AND status<>'cancelled'", [$out, $from, $to]) ?? 0);
+        $orders = (float)($this->scalar("SELECT COUNT(*) FROM orders WHERE outlet_id=? AND DATE(created_at) BETWEEN ? AND ? AND payment_status='paid' AND status<>'cancelled'", [$out, $from, $to]) ?? 0);
         $expenses = 0;
         if ($this->tableExists('expenses')) {
             $col = $this->colExists('expenses', 'expense_date') ? 'expense_date' : ($this->colExists('expenses', 'created_at') ? 'DATE(created_at)' : null);
@@ -192,7 +192,7 @@ class ExecutiveModel extends Model
             if ($n > 0) return $n;
         }
         if ($this->tableExists('orders')) {
-            $n = (int)($this->scalar("SELECT COUNT(*) FROM (SELECT DATE(created_at) d FROM orders WHERE DATE(created_at) BETWEEN ? AND ? AND payment_status='paid' GROUP BY DATE(created_at)) x", [$from, $to]) ?? 0);
+            $n = (int)($this->scalar("SELECT COUNT(*) FROM (SELECT DATE(created_at) d FROM orders WHERE outlet_id=? AND DATE(created_at) BETWEEN ? AND ? AND payment_status='paid' GROUP BY DATE(created_at)) x", [$out, $from, $to]) ?? 0);
             if ($n > 0) return $n;
         }
         return 1;
@@ -261,11 +261,12 @@ class ExecutiveModel extends Model
     public function topProducts(string $from, string $to): array
     {
         if (!$this->tableExists('order_items') || !$this->tableExists('orders')) return [];
+        $out = $this->outletId();
         return $this->safeAll("SELECT oi.item_name, SUM(oi.qty) qty, SUM(oi.line_total) revenue,
             SUM(COALESCE(oi.line_hpp,0)) hpp, SUM(oi.line_total)-SUM(COALESCE(oi.line_hpp,0)) gross_profit
             FROM order_items oi JOIN orders o ON o.id=oi.order_id
-            WHERE DATE(o.created_at) BETWEEN ? AND ? AND o.payment_status='paid' AND o.status<>'cancelled'
-            GROUP BY oi.item_name ORDER BY revenue DESC, qty DESC LIMIT 8", [$from, $to]);
+            WHERE o.outlet_id=? AND DATE(o.created_at) BETWEEN ? AND ? AND o.payment_status='paid' AND o.status<>'cancelled'
+            GROUP BY oi.item_name ORDER BY revenue DESC, qty DESC LIMIT 8", [$out, $from, $to]);
     }
 
     public function menuProfitMatrix(array $topProducts): array

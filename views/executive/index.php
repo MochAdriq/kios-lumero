@@ -40,7 +40,7 @@ $store = current_outlet_name();
     </header>
 
     <section class="ex-filter-section mb-4">
-        <form class="ex-form d-flex gap-3 align-items-end" method="get" action="<?= url('/executive') ?>">
+        <form class="ex-form d-flex gap-3 align-items-end" method="get" action="">
             <div class="form-group" style="flex: 0 0 160px">
                 <label class="d-block mb-1">Dari</label>
                 <input type="date" name="from" class="form-control" value="<?= $_e($from) ?>">
@@ -51,8 +51,8 @@ $store = current_outlet_name();
             </div>
             <div class="form-group d-flex gap-2">
                 <button class="btn btn-danger rounded-pill fw-bold" type="submit">Hitung Periode</button>
-                <a class="btn btn-outline-secondary rounded-pill" href="<?= url('/executive?from=' . date('Y-m-01') . '&to=' . $today) ?>">Bulan Ini</a>
-                <a class="btn btn-outline-secondary rounded-pill" href="<?= url('/executive?from=' . $today . '&to=' . $today) ?>">Hari Ini</a>
+                <a class="btn btn-outline-secondary rounded-pill" href="?from=<?= date('Y-m-01') ?>&to=<?= $today ?>">Bulan Ini</a>
+                <a class="btn btn-outline-secondary rounded-pill" href="?from=<?= $today ?>&to=<?= $today ?>">Hari Ini</a>
             </div>
         </form>
     </section>
