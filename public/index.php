@@ -128,6 +128,8 @@ $router->get('/purchases/edit/{id}', [PurchaseController::class,'edit']);
 $router->post('/purchases/update/{id}', [PurchaseController::class,'update']);
 $router->get('/expenses', [ExpenseController::class,'index']);
 $router->post('/expenses', [ExpenseController::class,'store']);
+$router->get('/expenses/edit/{id}', [ExpenseController::class,'edit']);
+$router->post('/expenses/update/{id}', [ExpenseController::class,'update']);
 $router->get('/categories', [CategoryController::class,'index']);
 $router->post('/categories/product', [CategoryController::class,'storeProductCategory']);
 $router->post('/categories/product/update', [CategoryController::class,'updateProductCategory']);
