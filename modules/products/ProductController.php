@@ -85,14 +85,12 @@ class ProductController extends Controller
         $catModel = new CategoryModel();
         $invModel = new InventoryModel();
         $csModel  = new CentralSettingsModel();
-        $prodModel = new ProductModel();
         
         $this->view('products/builder', [
             'pageTitle'  => 'Product Builder (Racik Produk Final)',
             'categories' => $catModel->productCategories(),
             'units'      => $invModel->units(),
             'compItems'  => $csModel->getAllItems(),
-            'productNames' => $prodModel->distinctProductNames(),
             'exp_id'     => (int)($_GET['exp_id'] ?? 0),
             'exp_name'   => $_GET['exp_name'] ?? '',
             'exp_hpp'    => (int)($_GET['exp_hpp'] ?? 0),
