@@ -71,7 +71,7 @@ class DailyStockController extends Controller
         $placeholders = implode(',', array_fill(0, count($rmIds), '?'));
         
         $stmt = $db->prepare("
-            SELECT rm.id, rm.name, u.label as unit, COALESCE(orm.stock_qty, rm.stock_qty, 0) as available_stock
+            SELECT rm.id, rm.name, u.symbol as unit, COALESCE(orm.stock_qty, rm.stock_qty, 0) as available_stock
             FROM raw_materials rm
             LEFT JOIN units u ON rm.unit_id = u.id
             LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
