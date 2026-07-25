@@ -132,7 +132,12 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted small fw-bold">Produk Induk (Nama Utama)</label>
-                    <input type="text" id="edit_product_name" name="product_name" class="form-control" required>
+                    <input type="text" id="edit_product_name" name="product_name" list="productNamesList" class="form-control" autocomplete="off" required>
+                    <datalist id="productNamesList">
+                        <?php foreach ($productNames ?? [] as $pn): ?>
+                            <option value="<?= htmlspecialchars($pn) ?>">
+                        <?php endforeach; ?>
+                    </datalist>
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted small fw-bold">Nama Varian (Tampil di Kasir)</label>

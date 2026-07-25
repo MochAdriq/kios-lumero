@@ -9,6 +9,7 @@ class ProductController extends Controller
         $this->view('products/index', [
             'items'      => $m->list($_GET['q'] ?? '', $categoryId),
             'categories' => $m->categories(),
+            'productNames' => $m->distinctProductNames(),
             'pageTitle'  => 'Produk & Menu',
         ]);
     }
