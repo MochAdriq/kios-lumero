@@ -13,16 +13,16 @@ class DailyStockModel extends Model
 
     public function categories(): array
     {
-        $scope = outlet_scope_sql('outlet_id', $this->outletId());
+        $scope = ['sql' => 'outlet_id = ?', 'params' => [$this->outletId()]];
         return $this->all("SELECT id, name FROM product_categories WHERE is_active=1 AND {$scope['sql']} ORDER BY sort_order, name", $scope['params']);
     }
 
     public function products(string $date, string $search = '', int $categoryId = 0): array
     {
         $outletId = $this->outletId();
-        $pScope = outlet_scope_sql('p.outlet_id', $outletId);
-        $pvScope = outlet_scope_sql('pv.outlet_id', $outletId);
-        $pcScope = outlet_scope_sql('pc.outlet_id', $outletId);
+        $pScope = ['sql' => 'p.outlet_id = ?', 'params' => [$outletId]];
+        $pvScope = ['sql' => 'pv.outlet_id = ?', 'params' => [$outletId]];
+        $pcScope = ['sql' => 'pc.outlet_id = ?', 'params' => [$outletId]];
         $where = "WHERE p.is_active=1 AND pv.is_active=1 AND pc.is_active=1
             AND {$pScope['sql']}
             AND {$pvScope['sql']}
