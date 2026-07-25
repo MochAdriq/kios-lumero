@@ -93,6 +93,7 @@
                                             <option value="8">x8 (1 Sachet Royco)</option>
                                             <option value="10">x10 (1 Sachet Ladaku)</option>
                                             <option value="4">x4 (1 Sachet Bawang putih bubuk)</option>
+                                            <option value="19000">x19.000 (1 Galon)</option>
                                         </select>
                                         <input type="hidden" name="qty[]" value="<?= (float)$it['qty'] ?>" class="item-qty">
                                     </div>

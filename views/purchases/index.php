@@ -85,6 +85,7 @@ $total = array_sum(array_map(fn($x) => (float)$x['grand_total'], $items ?? []));
                                             <option value="8">x8 (1 Sachet Royco)</option>
                                             <option value="10">x10 (1 Sachet Ladaku)</option>
                                             <option value="4">x4 (1 Sachet Bawang putih bubuk)</option>
+                                            <option value="19000">x19.000 (1 Galon)</option>
                                         </select>
                                         <input type="hidden" name="qty[]" class="item-qty">
                                     </div>
