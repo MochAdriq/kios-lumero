@@ -1,5 +1,95 @@
 <!-- ═══ PROFIL / DASHBOARD ═══ -->
 
+<?php if ($profilePercent === 0 || $profilePercent < 40): ?>
+<!-- ── ONBOARDING BANNER (Member Baru / Profil Kosong) ── -->
+<style>
+.onboard-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    border-radius: 24px; padding: 28px 32px;
+    margin-bottom: 32px; position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 24px;
+    animation: slideDownOnboard 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
+.onboard-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,199,44,0.06) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerOnboard 3s linear infinite;
+}
+@keyframes shimmerOnboard {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+@keyframes slideDownOnboard {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.onboard-icon {
+    width: 64px; height: 64px; flex-shrink: 0;
+    background: linear-gradient(135deg, #ffc72c 0%, #f59e0b 100%);
+    border-radius: 20px; display: flex; align-items: center;
+    justify-content: center; font-size: 28px;
+    box-shadow: 0 8px 24px rgba(255,199,44,0.3);
+    position: relative; z-index: 1;
+    animation: bounceIcon 2.5s ease-in-out infinite;
+}
+@keyframes bounceIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+.onboard-content { flex: 1; position: relative; z-index: 1; }
+.onboard-tag {
+    display: inline-block; font-size: 10px; font-weight: 900;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: #ffc72c; margin-bottom: 6px;
+}
+.onboard-title {
+    font-size: 18px; font-weight: 900; color: #fff;
+    letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 8px;
+}
+.onboard-desc {
+    font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; font-weight: 500;
+}
+.onboard-progress {
+    margin-top: 12px;
+    background: rgba(255,255,255,0.1); border-radius: 99px; height: 6px; overflow: hidden;
+}
+.onboard-progress-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, #ffc72c, #f59e0b);
+    width: <?= $profilePercent ?>%;
+    box-shadow: 0 0 10px rgba(255,199,44,0.5);
+    transition: width 1s ease;
+}
+.onboard-progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 6px; font-weight: 600;
+}
+@media (max-width: 640px) {
+    .onboard-banner { flex-direction: column; text-align: center; }
+    .onboard-icon { width: 56px; height: 56px; font-size: 24px; margin: 0 auto; }
+}
+</style>
+<div class="onboard-banner">
+    <div class="onboard-icon">🔐</div>
+    <div class="onboard-content">
+        <div class="onboard-tag">⚡ Satu Langkah Lagi</div>
+        <div class="onboard-title">Lengkapi Profil untuk Membuka Bonus <?= $bonusPoints ?> Poin!</div>
+        <div class="onboard-desc">
+            Profil Anda masih <?= $profilePercent ?>% terisi. Isi data di bawah ini agar poin kamu langsung bertambah dan akun kamu lebih aman.
+        </div>
+        <div class="onboard-progress">
+            <div class="onboard-progress-fill"></div>
+        </div>
+        <div class="onboard-progress-label">
+            <span>Progres <?= $profilePercent ?>%</span>
+            <span>Bonus +<?= $bonusPoints ?> Poin menanti!</span>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Klaim Struk -->
 <section class="section reveal reveal-delay-1">
   <div class="grid-2">
