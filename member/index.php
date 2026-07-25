@@ -52,8 +52,8 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
     $memberName      = $member['name'] ?? '';
     $isReturning     = $isLoggedIn;
-    $loginUrl        = 'login.php?claim=' . urlencode($claimCode);
-    $dashboardUrl    = 'dashboard.php';
+    $loginUrl        = url('/member/login.php') . '?claim=' . urlencode($claimCode);
+    $dashboardUrl    = url('/member/dashboard.php');
     $goalName        = htmlspecialchars($goalReward['name'] ?? 'Ayam Crispy Gratis');
     $goalPoints      = (int)($goalReward['required_points'] ?? 150);
     $currentBalance  = $isLoggedIn ? (int)($member['points_balance'] ?? 0) : 0;
@@ -1326,7 +1326,7 @@ function hook_reward_image(array $rw): string {
                 <span style="font-size: 13px; color: var(--muted);">Kode <strong><?= htmlspecialchars($claimCode) ?></strong> siap dikonversi ke saldo poin Anda.</span>
             </div>
         </div>
-        <a href="login.php?claim=<?= urlencode($claimCode) ?>" class="btn-stripe btn-primary" style="padding: 10px 20px; font-size: 13px;">Klaim &rarr;</a>
+        <a href="<?= url('/member/login.php') ?>?claim=<?= urlencode($claimCode) ?>" class="btn-stripe btn-primary" style="padding: 10px 20px; font-size: 13px;">Klaim &rarr;</a>
     </div>
     <?php endif; ?>
 
@@ -1336,10 +1336,10 @@ function hook_reward_image(array $rw): string {
             <h1 class="hero-title">Pesananmu,<br>Kini Jadi <span>Hadiah.</span></h1>
             <p class="hero-subtitle">Bukan sekadar transaksi. Kumpulkan poin secara otomatis dari setiap hidangan favoritmu dan nikmati berbagai sajian eksklusif secara cuma-cuma.</p>
             <div class="cta-stack">
-                <a href="login.php<?= $claimCode !== '' ? '?claim=' . urlencode($claimCode) : '' ?>" class="btn-stripe btn-primary">
+                <a href="<?= url('/member/login.php') ?><?= $claimCode !== '' ? '?claim=' . urlencode($claimCode) : '' ?>" class="btn-stripe btn-primary">
                     Mulai Gabung Sekarang &rarr;
                 </a>
-                <a href="login.php" class="btn-stripe btn-secondary">
+                <a href="<?= url('/member/login.php') ?>" class="btn-stripe btn-secondary">
                     Masuk ke Akun
                 </a>
             </div>
@@ -1368,7 +1368,7 @@ function hook_reward_image(array $rw): string {
         </div>
 
         <div class="reward-showcase">
-            <div class="reward-item" onclick="window.location.href='login.php'" style="cursor:pointer;">
+            <div class="reward-item" onclick="window.location.href='<?= url('/member/login.php') ?>'" style="cursor:pointer;">
                 <div class="free-badge">FREE / GRATIS</div>
                 <div class="item-visual-float">
                     <img src="../public/assets/images/pos-products/es-teh.png" alt="Es Teh Manis" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'">
@@ -1381,7 +1381,7 @@ function hook_reward_image(array $rw): string {
             </div>
 
             <?php foreach ($highlights as $rw): ?>
-            <div class="reward-item" onclick="window.location.href='login.php'" style="cursor:pointer;">
+            <div class="reward-item" onclick="window.location.href='<?= url('/member/login.php') ?>'" style="cursor:pointer;">
                 <div class="free-badge">FREE / GRATIS</div>
                 <div class="item-visual-float">
                     <img src="<?= htmlspecialchars(hook_reward_image($rw)) ?>" alt="<?= htmlspecialchars($rw['name']) ?>">
@@ -1397,7 +1397,7 @@ function hook_reward_image(array $rw): string {
         </div>
         
         <div style="text-align: center; margin-top: 40px;">
-            <a href="login.php" class="btn-stripe btn-primary">Login / Daftar untuk Klaim</a>
+            <a href="<?= url('/member/login.php') ?>" class="btn-stripe btn-primary">Login / Daftar untuk Klaim</a>
         </div>
     </section>
 
@@ -1423,7 +1423,7 @@ function hook_reward_image(array $rw): string {
                         <div class="menu-info">
                             <div class="menu-title"><?= htmlspecialchars($menu['name']) ?></div>
                             <div class="menu-price"><?= rupiah((float)$menu['min_price']) ?></div>
-                            <a href="online-order.php" class="menu-btn">Pesan Sekarang</a>
+                            <a href="<?= url('/member/online-order.php') ?>" class="menu-btn">Pesan Sekarang</a>
                         </div>
                     </div>
                     <?php endforeach; ?>
