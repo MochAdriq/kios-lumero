@@ -54,7 +54,7 @@ class DailyStockController extends Controller
         $rm = new RecipeModel();
         
         $db = Database::connection();
-        $recipe = $db->query("SELECT id, name FROM recipes WHERE recipe_type = 'final' AND product_variant_id = $variantId ORDER BY (outlet_id = $outletId) DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+        $recipe = $db->query("SELECT id, name FROM recipes WHERE recipe_type = 'final' AND product_variant_id = $variantId AND outlet_id IN ($outletId, 1) ORDER BY (outlet_id = $outletId) DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
         
         if (!$recipe) {
             echo json_encode(['error' => 'Resep final tidak ditemukan untuk produk ini.']);

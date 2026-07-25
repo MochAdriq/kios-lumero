@@ -186,7 +186,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             modal.show();
 
-            fetch('<?= url('/daily-stock/ajax-recipe-stock') ?>?variant_id=' + variantId)
+            const timestamp = new Date().getTime();
+            fetch('<?= url('/daily-stock/ajax-recipe-stock') ?>?variant_id=' + variantId + '&_=' + timestamp)
                 .then(res => res.json())
                 .then(data => {
                     loading.classList.add('d-none');
