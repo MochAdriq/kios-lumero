@@ -444,14 +444,14 @@ function inventory_get_material_stock(PDO $pdo, int $rmId, ?int $outletId = null
 
     $stmt = $pdo->prepare("
         SELECT rm.id, rm.name, rm.sku, rm.unit_id,
-               COALESCE(orm.stock_qty, (CASE WHEN ? = 1 THEN rm.stock_qty ELSE 0 END), 0) AS stock_qty,
+               COALESCE(orm.stock_qty, 0) AS stock_qty,
                COALESCE(orm.min_stock_qty, rm.min_stock_qty, 0) AS min_stock_qty,
                COALESCE(orm.average_cost, rm.average_cost, 0) AS average_cost
         FROM raw_materials rm
         LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
         WHERE rm.id = ?
     ");
-    $stmt->execute([$outletId, $outletId, $rmId]);
+    $stmt->execute([$outletId, $rmId]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$row) {
         return ['stock_qty' => 0.0, 'min_stock_qty' => 0.0, 'average_cost' => 0.0];
@@ -510,7 +510,7 @@ function check_variant_stock(PDO $pdo, int $variantId, ?int $outletId = null): b
 
     // Ambil kebutuhan bahan baku dan stok saat ini dari outlet_raw_materials
     $stmt = $pdo->prepare("
-        SELECT ri.qty as required_qty, COALESCE(orm.stock_qty, rm.stock_qty, 0) as stock_qty 
+        SELECT ri.qty as required_qty, COALESCE(orm.stock_qty, 0) as stock_qty 
         FROM recipe_items ri
         JOIN raw_materials rm ON ri.raw_material_id = rm.id
         LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?

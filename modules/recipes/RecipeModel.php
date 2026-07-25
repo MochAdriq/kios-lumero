@@ -412,7 +412,7 @@ class RecipeModel extends Model
 
         $stocks = [];
         $stmt = $this->db->prepare("
-            SELECT rm.id, COALESCE(orm.stock_qty, rm.stock_qty, 0) AS stock_qty
+            SELECT rm.id, COALESCE(orm.stock_qty, 0) AS stock_qty
             FROM raw_materials rm
             LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = ?
             WHERE rm.outlet_id = ?
