@@ -35,6 +35,9 @@ class ProductController extends Controller
                 'image' => trim($_POST['image'] ?? ''),
                 'selling_price' => max(0, (int)($_POST['selling_price'] ?? 0)),
             ];
+            if (isset($_POST['category_id'])) {
+                $d['category_id'] = (int)$_POST['category_id'];
+            }
             if (isset($_POST['cost_price'])) {
                 $d['hpp'] = max(0, (int)$_POST['cost_price']);
             }

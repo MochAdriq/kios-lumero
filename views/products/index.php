@@ -90,6 +90,7 @@
                                     data-product-name="<?= htmlspecialchars($it['product_name']) ?>"
                                     data-variant-name="<?= htmlspecialchars($it['variant_name']) ?>"
                                     data-image="<?= htmlspecialchars($it['image'] ?? 'images/pos-products/original.png') ?>"
+                                    data-category-id="<?= (int)$it['category_id'] ?>"
                                     data-selling-price="<?= (int)$it['selling_price'] ?>"
                                     data-hpp="<?= (int)$it['hpp'] ?>"
                                     title="Edit Produk">
@@ -138,6 +139,14 @@
                             <option value="<?= htmlspecialchars($pn) ?>">
                         <?php endforeach; ?>
                     </datalist>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Kategori Produk</label>
+                    <select id="edit_category_id" name="category_id" class="form-select" required>
+                        <?php foreach ($categories as $c): ?>
+                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted small fw-bold">Nama Varian (Tampil di Kasir)</label>
@@ -254,6 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit_sku').value = this.dataset.sku;
             document.getElementById('edit_product_name').value = this.dataset.productName;
             document.getElementById('edit_variant_name').value = this.dataset.variantName;
+            document.getElementById('edit_category_id').value = this.dataset.categoryId;
             document.getElementById('edit_selling_price').value = this.dataset.sellingPrice;
             document.getElementById('edit_hpp').value = this.dataset.hpp;
             
