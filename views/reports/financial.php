@@ -759,9 +759,9 @@
                         yang hanya memiliki pengeluaran.</div>
                 </div>
                 <div class="badges">
-                    <span class="badge good">Untung: 59 hari</span>
-                    <span class="badge bad">Rugi: 9 hari</span>
-                    <span class="badge">Impas: 0 hari</span>
+                    <span class="badge good">Untung: <?= count(array_filter($closings, fn($c) => $c['net_profit'] > 0)) ?> hari</span>
+                    <span class="badge bad">Rugi: <?= count(array_filter($closings, fn($c) => $c['net_profit'] < 0)) ?> hari</span>
+                    <span class="badge">Impas: <?= count(array_filter($closings, fn($c) => $c['net_profit'] == 0)) ?> hari</span>
                 </div>
             </div>
 
@@ -831,7 +831,7 @@
         </section>
 
         <div class="footer-print">
-            <div>Periode: <b>01 Mei 2026 s.d. 25 Jul 2026</b> • Dicetak 25/07/2026 14:02 WIB</div>
+            <div>Periode: <b><?= date('d M Y', strtotime($from)) ?> s.d. <?= date('d M Y', strtotime($to)) ?></b> &bull; Dicetak <?= date('d/m/Y H:i') ?> WIB</div>
             <div class="sign-grid">
                 <div class="sign"><b>Dicetak oleh</b>
                     <div class="sign-space"></div>(Admin D&#039;Celup Pasekon)
