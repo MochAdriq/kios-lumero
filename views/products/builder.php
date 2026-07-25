@@ -38,8 +38,13 @@
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <label class="form-label fw-bold">Nama Produk / Menu <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control form-control-lg" required placeholder="Contoh: Ayam Crispy Saus Keju" value="<?= htmlspecialchars($exp_name ?? '') ?>">
-                <small class="text-muted">Nama utama produk yang akan muncul di menu kasir.</small>
+                <input type="text" name="name" list="productNamesList" class="form-control form-control-lg" required placeholder="Contoh: Ayam Crispy Saus Keju" autocomplete="off" value="<?= htmlspecialchars($exp_name ?? '') ?>">
+                <datalist id="productNamesList">
+                    <?php foreach ($productNames ?? [] as $pn): ?>
+                        <option value="<?= htmlspecialchars($pn) ?>">
+                    <?php endforeach; ?>
+                </datalist>
+                <small class="text-muted">Pilih dari dropdown atau ketik nama baru.</small>
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-bold">Nama Varian (Opsional)</label>

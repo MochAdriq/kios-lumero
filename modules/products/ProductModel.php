@@ -23,6 +23,13 @@ class ProductModel extends Model
         );
     }
 
+    public function distinctProductNames(): array
+    {
+        $outletId = $this->outletId();
+        $names = $this->all("SELECT DISTINCT name FROM products WHERE is_active=1 AND outlet_id=? ORDER BY name", [$outletId]);
+        return array_column($names, 'name');
+    }
+
     public function ensureImageColumnsAndSeed(): void
     {
         try {
