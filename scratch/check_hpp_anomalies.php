@@ -1,40 +1,48 @@
 <?php
 require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../core/Database.php';
-
 $host = app_env('PROD_DB_HOST');
 $db   = app_env('PROD_DB_DATABASE');
 $user = app_env('PROD_DB_USERNAME');
 $pass = app_env('PROD_DB_PASSWORD');
+$pdo = new PDO("mysql:host={$host};dbname={$db};charset=utf8mb4", $user, $pass);
+$outlet_id = 8; // Pasekon
 
-$pdo = new PDO("mysql:host={$host};dbname={$db};charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-
-echo "=== CHECKING OUTLET 8 RECIPE ITEMS HPP VS OUTLET 5 ===\n";
-// Outlet 5 is kalibunder (source), Outlet 8 is pasekon (dest)
-
-$items8 = $pdo->query("SELECT ri.id, r.name, ri.qty, ri.cost_per_unit, ri.total_cost FROM recipe_items ri JOIN recipes r ON ri.recipe_id = r.id WHERE r.outlet_id = 8")->fetchAll(PDO::FETCH_ASSOC);
-
-$items5 = $pdo->query("SELECT r.name, sum(ri.total_cost) as total_hpp FROM recipe_items ri JOIN recipes r ON ri.recipe_id = r.id WHERE r.outlet_id = 5 GROUP BY r.id")->fetchAll(PDO::FETCH_KEY_PAIR);
-
-$totalHpp8 = $pdo->query("SELECT r.name, sum(ri.total_cost) as total_hpp FROM recipe_items ri JOIN recipes r ON ri.recipe_id = r.id WHERE r.outlet_id = 8 GROUP BY r.id")->fetchAll(PDO::FETCH_KEY_PAIR);
-
+// Check anomalies in recipe_items cost_per_unit vs current average_cost
 $anomalies = [];
-foreach ($totalHpp8 as $name => $hpp8) {
-    if (isset($items5[$name])) {
-        $hpp5 = $items5[$name];
-        if (abs($hpp8 - $hpp5) > 100) {
-            $anomalies[] = [
-                'name' => $name,
-                'hpp_kalibunder' => $hpp5,
-                'hpp_pasekon' => $hpp8
-            ];
-        }
+$stmt = $pdo->query("
+    SELECT 
+        ri.id as item_id, 
+        r.name as recipe_name, 
+        rm.name as rm_name, 
+        ri.cost_per_unit as item_cost, 
+        COALESCE(orm.average_cost, rm.average_cost, 0) as current_rm_cost
+    FROM recipe_items ri
+    JOIN recipes r ON ri.recipe_id = r.id
+    JOIN raw_materials rm ON ri.raw_material_id = rm.id
+    LEFT JOIN outlet_raw_materials orm ON orm.raw_material_id = rm.id AND orm.outlet_id = r.outlet_id
+    WHERE r.outlet_id = $outlet_id AND ri.item_type = 'raw_material'
+      AND ABS(ri.cost_per_unit - COALESCE(orm.average_cost, rm.average_cost, 0)) > 0.01
+");
+$rmAnomalies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+echo "--- RM Cost Anomalies (recipe_items vs raw_materials) ---\n";
+print_r(array_slice($rmAnomalies, 0, 10)); // print first 10
+if(count($rmAnomalies) > 10) echo "... and " . (count($rmAnomalies) - 10) . " more.\n";
+
+// Check if any "Bahan Jadi" in raw_materials has different cost than its sub_recipe
+$stmt = $pdo->query("
+    SELECT rm.id, rm.name as rm_name, rm.average_cost, sr.total_hpp, sr.yield_qty
+    FROM raw_materials rm
+    JOIN recipes sr ON rm.name LIKE CONCAT('%', sr.name, '%') AND sr.recipe_type = 'sub_recipe'
+    WHERE rm.name LIKE 'Bahan Jadi%' AND sr.outlet_id = $outlet_id
+");
+$bahanJadiAnomalies = [];
+foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $expectedCost = $row['yield_qty'] > 0 ? $row['total_hpp'] / $row['yield_qty'] : $row['total_hpp'];
+    if (abs($row['average_cost'] - $expectedCost) > 0.01) {
+        $row['expected_cost'] = $expectedCost;
+        $bahanJadiAnomalies[] = $row;
     }
 }
-
-if (count($anomalies) > 0) {
-    echo "Found " . count($anomalies) . " anomalous recipes where Pasekon HPP differs greatly from Kalibunder:\n";
-    print_r(array_slice($anomalies, 0, 10)); // just print first 10
-} else {
-    echo "All HPP match nicely!\n";
-}
+echo "\n--- Bahan Jadi Anomalies (raw_materials vs recipes) ---\n";
+print_r($bahanJadiAnomalies);

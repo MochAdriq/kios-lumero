@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../core/Database.php';
-require_once __DIR__ . '/../config/loyalty.php';
+require_once __DIR__ . '/helpers/functions.php';
+require_once __DIR__ . '/core/Database.php';
+require_once __DIR__ . '/config/loyalty.php';
 
 $pdo = Database::connection();
 loyalty_ensure_tables($pdo);
