@@ -99,6 +99,12 @@ if (class_exists('LoyaltyController')) {
     $router->post('/loyalty/settings/update', [LoyaltyController::class, 'updateSettings']);
     $router->get('/loyalty/eventClaims', [LoyaltyController::class, 'eventClaims']);
     $router->post('/loyalty/processEventClaim', [LoyaltyController::class, 'processEventClaim']);
+    
+    // Event Settings Routes
+    $router->get('/loyalty/eventSettings', [LoyaltyController::class, 'eventSettings']);
+    $router->post('/loyalty/eventSettings/savePrize', [LoyaltyController::class, 'saveEventPrize']);
+    $router->post('/loyalty/eventSettings/savePercentages', [LoyaltyController::class, 'saveEventPercentages']);
+    $router->post('/loyalty/eventSettings/deletePrize', [LoyaltyController::class, 'deleteEventPrize']);
 }
 $memberHandler = function() {
     require __DIR__ . '/../member/index.php';

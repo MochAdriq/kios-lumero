@@ -268,6 +268,11 @@ function loyalty_ensure_tables(PDO $pdo): void {
         }
     } catch (Throwable $e) {}
 
+    // event_prizes expansion
+    if (loyalty_table_exists($pdo, 'event_prizes')) {
+        loyalty_add_col($pdo, 'event_prizes', 'image_url', "image_url VARCHAR(255) DEFAULT NULL AFTER name");
+    }
+
     // Tabel pengeluaran otomatis untuk mencatat beban penukaran point.
     // Setiap transaksi/penukaran yang berhasil memakai point akan dibuatkan expense otomatis.
     try {

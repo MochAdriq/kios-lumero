@@ -6,6 +6,14 @@ $pdo = Database::connection();
 require_once __DIR__ . '/../config/loyalty.php';
 loyalty_ensure_tables($pdo);
 
+// Fetch active prizes for wheel rendering
+$stmtPrizes = $pdo->query("SELECT name, image_url FROM event_prizes WHERE event_id = 'kalibunder_go' AND is_active = 1 ORDER BY id ASC");
+$prizeIconsMap = [];
+while ($row = $stmtPrizes->fetch()) {
+    $prizeIconsMap[$row['name']] = !empty($row['image_url']) ? '../public/' . $row['image_url'] : '../public/assets/images/pos-products/product-dummy.svg';
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'spin_wheel') {
     header('Content-Type: application/json');
     try {
@@ -1196,15 +1204,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     const btnSpin = document.getElementById('btn-spin');
     const CARD_W = 88 + 12;
 
-    const itemIcons = {
-        'Es Krim Lumero':          '../public/assets/images/pos-products/matcha.png',
-        'Paket Ayam 1 Ekor':       '../public/assets/images/pos-products/original.png',
-        'Paket Ayam + Saos Favorit':'../public/assets/images/pos-products/sayap.png',
-        'Tumbler Eksklusif':       '../public/assets/images/pos-products/kopi.png',
-        'Handphone':               '../public/assets/images/pos-products/icon-192.png'
-    };
+    const itemIcons = <?= json_encode($prizeIconsMap ?? new stdClass()) ?>;
     const fallback = '../public/assets/images/pos-products/product-dummy.svg';
-    const baseItems = Object.keys(itemIcons);
+    const baseItems = Object.keys(itemIcons).length > 0 ? Object.keys(itemIcons) : ['Mystery Box'];
     const TARGET_IDX = 40;
 
     let state = 'idle', currentX = 0, velocity = 0.5, targetX = 0;

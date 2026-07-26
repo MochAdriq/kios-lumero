@@ -246,4 +246,139 @@ class LoyaltyController extends Controller
         header('Location: ' . url('/loyalty/eventClaims'));
         exit;
     }
+
+    public function eventSettings()
+    {
+        Auth::requireLogin();
+        $pdo = Database::connection();
+        
+        $stmt = $pdo->query("SELECT * FROM event_prizes WHERE event_id = 'kalibunder_go' ORDER BY id ASC");
+        $prizes = $stmt->fetchAll();
+
+        $this->view('loyalty/event_settings', [
+            'pageTitle' => 'Manajemen Hadiah Undian',
+            'prizes' => $prizes
+        ]);
+    }
+
+    public function saveEventPrize()
+    {
+        Auth::requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/loyalty/eventSettings'));
+            exit;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $name = trim($_POST['name'] ?? '');
+        $stock = (int)($_POST['stock'] ?? 0);
+        $isFallback = (int)($_POST['is_default_fallback'] ?? 0);
+        $isActive = (int)($_POST['is_active'] ?? 1);
+        
+        $pdo = Database::connection();
+        
+        try {
+            if ($name === '') throw new Exception('Nama hadiah tidak boleh kosong.');
+            
+            $imageUrl = null;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+                if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                    throw new Exception('Format gambar tidak didukung. Gunakan JPG/PNG/WEBP.');
+                }
+                
+                $uploadDir = __DIR__ . '/../../public/assets/images/event-prizes/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+                
+                $filename = 'prize_' . time() . '_' . mt_rand(1000, 9999) . '.' . $ext;
+                $targetFile = $uploadDir . $filename;
+                
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                    $imageUrl = 'assets/images/event-prizes/' . $filename;
+                } else {
+                    throw new Exception('Gagal mengupload gambar.');
+                }
+            }
+
+            if ($id > 0) {
+                if ($imageUrl !== null) {
+                    $stmt = $pdo->prepare("UPDATE event_prizes SET name=?, stock=?, is_default_fallback=?, is_active=?, image_url=? WHERE id=?");
+                    $stmt->execute([$name, $stock, $isFallback, $isActive, $imageUrl, $id]);
+                } else {
+                    $stmt = $pdo->prepare("UPDATE event_prizes SET name=?, stock=?, is_default_fallback=?, is_active=? WHERE id=?");
+                    $stmt->execute([$name, $stock, $isFallback, $isActive, $id]);
+                }
+                $_SESSION['flash_success'] = 'Hadiah berhasil diperbarui.';
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO event_prizes (event_id, name, chance_percentage, stock, is_default_fallback, is_active, image_url) VALUES ('kalibunder_go', ?, 0, ?, ?, ?, ?)");
+                $stmt->execute([$name, $stock, $isFallback, $isActive, $imageUrl]);
+                $_SESSION['flash_success'] = 'Hadiah baru berhasil ditambahkan.';
+            }
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+
+        header('Location: ' . url('/loyalty/eventSettings'));
+        exit;
+    }
+
+    public function saveEventPercentages()
+    {
+        Auth::requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/loyalty/eventSettings'));
+            exit;
+        }
+
+        $pdo = Database::connection();
+        $chances = $_POST['chances'] ?? [];
+
+        try {
+            $totalChance = 0;
+            foreach ($chances as $val) {
+                $totalChance += (float)$val;
+            }
+
+            if (round($totalChance, 2) != 100.00) {
+                throw new Exception('Total persentase harus tepat 100%. Saat ini: ' . round($totalChance, 2) . '%');
+            }
+
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare("UPDATE event_prizes SET chance_percentage = ? WHERE id = ?");
+            foreach ($chances as $prizeId => $chanceVal) {
+                $stmt->execute([(float)$chanceVal, (int)$prizeId]);
+            }
+            $pdo->commit();
+
+            $_SESSION['flash_success'] = 'Persentase undian berhasil diperbarui dan divalidasi 100%.';
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+
+        header('Location: ' . url('/loyalty/eventSettings'));
+        exit;
+    }
+
+    public function deleteEventPrize()
+    {
+        Auth::requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/loyalty/eventSettings'));
+            exit;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $pdo = Database::connection();
+
+        try {
+            $pdo->prepare("DELETE FROM event_prizes WHERE id = ?")->execute([$id]);
+            $_SESSION['flash_success'] = 'Hadiah berhasil dihapus.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = 'Gagal menghapus hadiah: ' . $e->getMessage();
+        }
+
+        header('Location: ' . url('/loyalty/eventSettings'));
+        exit;
+    }
 }
