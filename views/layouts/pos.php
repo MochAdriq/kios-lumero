@@ -62,14 +62,7 @@ $storeName = current_outlet_name();
     <?php endif; ?>
     <?php if (!isset($_GET['embed'])): ?>
     <header class="header pos-header sim-pos-header">
-        <div class="header-left active sim-pos-brand-wrap">
-            <a href="<?= url('/dashboard') ?>" class="logo logo-normal sim-pos-logo">
-                <img src="<?= asset('images/pos-products/dclup-pasekon.png') ?>" alt="<?= htmlspecialchars($storeName) ?>">
-            </a>
-            <a href="<?= url('/dashboard') ?>" class="logo-small sim-pos-logo-small">
-                <img src="<?= asset('images/pos-products/icon-192.png') ?>" alt="<?= htmlspecialchars($storeName) ?>">
-            </a>
-        </div>
+        <div class="header-left active sim-pos-brand-wrap" style="display: none;"></div>
 
         <ul class="nav user-menu sim-pos-top-menu">
             <li class="nav-item time-nav">
