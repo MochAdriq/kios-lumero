@@ -26,9 +26,16 @@
                 <div class="form-text">Pilih 'Otomatis' jika Anda ingin Midtrans langsung memproses QRIS. Pilih 'Manual' jika menggunakan gambar QRIS statis di bawah ini.</div>
 
                 <label class="form-label mt-3">Gambar QRIS Statis (Manual)</label>
-                <?php if (!empty($settings['payment_qris_image'])): ?>
+                <?php if (!empty($settings['payment_qris_image'])): 
+                    $qrisPath = $settings['payment_qris_image'];
+                    if (str_starts_with($qrisPath, 'public/assets/')) {
+                        $qrisUrl = asset(substr($qrisPath, 14));
+                    } else {
+                        $qrisUrl = url('/' . ltrim($qrisPath, '/'), false);
+                    }
+                ?>
                     <div class="mb-2">
-                        <img src="<?= url('/' . $settings['payment_qris_image'], false) ?>" alt="QRIS" class="img-thumbnail" style="max-height: 150px;">
+                        <img src="<?= $qrisUrl ?>" alt="QRIS" class="img-thumbnail" style="max-height: 150px;">
                     </div>
                 <?php endif; ?>
                 <input type="file" name="qris_image" class="form-control" accept="image/jpeg,image/png,image/webp">
@@ -48,11 +55,7 @@
                     <option value="false" <?= ($settings['printer_enabled']??'')==='false'?'selected':'' ?>>Nonaktif</option>
                 </select>
                 
-                <label class="form-label mt-2">Payment Gateway Mode</label>
-                <select name="settings[payment_gateway_mode]" class="form-select">
-                    <option value="sandbox" <?= ($settings['payment_gateway_mode']??'sandbox')==='sandbox'?'selected':'' ?>>Sandbox</option>
-                    <option value="production" <?= ($settings['payment_gateway_mode']??'')==='production'?'selected':'' ?>>Production</option>
-                </select>
+
             </div>
         </div>
     </div>
