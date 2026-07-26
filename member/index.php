@@ -1141,30 +1141,39 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             <p class="section-sub">Ini bukan undian kosong. Semua hadiah nyata, bisa langsung diambil di outlet kami.</p>
         </div>
         <div class="prize-grid">
+            <?php
+            $randomPrizesStmt = $pdo->query("SELECT * FROM event_prizes WHERE event_id = 'kalibunder_go' AND is_active = 1 ORDER BY RAND() LIMIT 4");
+            $randomPrizes = $randomPrizesStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $svgIcons = [
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>',
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>',
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.4)"><path d="M7 10h10V7a5 5 0 0 0-10 0v3zm-2 0a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H5z"/></svg>'
+            ];
+
+            foreach ($randomPrizes as $rp):
+                $badgeText = "Edisi Terbatas";
+                $badgeClass = "";
+                if ($rp['is_default_fallback']) {
+                    $badgeText = "Paling Banyak";
+                } elseif ($rp['chance_percentage'] < 10) {
+                    $badgeText = "Grand Prize";
+                    $badgeClass = "style='background:var(--gold); color:#000;'";
+                } elseif ($rp['stock'] > 0 && $rp['stock'] <= 50) {
+                    $badgeText = "Stok Terbatas";
+                }
+
+                $imgUrl = !empty($rp['image_url']) ? htmlspecialchars(loyalty_resolve_image_url($rp['image_url'])) : '../public/assets/images/pos-products/product-dummy.svg';
+                $randSvg = $svgIcons[array_rand($svgIcons)];
+            ?>
             <div class="prize-card">
-                <div class="prize-marquee"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
-                <img src="../public/assets/images/pos-products/original.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Paket Ayam">
-                <h4>Paket Ayam 1 Ekor</h4>
-                <div class="prize-badge">Stok Terbatas</div>
+                <div class="prize-marquee"><?= $randSvg ?></div>
+                <img src="<?= $imgUrl ?>" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="<?= htmlspecialchars($rp['name']) ?>">
+                <h4><?= htmlspecialchars($rp['name']) ?></h4>
+                <div class="prize-badge" <?= $badgeClass ?>><?= $badgeText ?></div>
             </div>
-            <div class="prize-card">
-                <div class="prize-marquee"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-                <img src="../public/assets/images/pos-products/icon-192.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Handphone">
-                <h4>Handphone</h4>
-                <div class="prize-badge">Grand Prize</div>
-            </div>
-            <div class="prize-card">
-                <div class="prize-marquee"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
-                <img src="../public/assets/images/pos-products/matcha.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Es Krim">
-                <h4>Es Krim Lumero</h4>
-                <div class="prize-badge">Paling Banyak</div>
-            </div>
-            <div class="prize-card">
-                <div class="prize-marquee"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.4)"><path d="M7 10h10V7a5 5 0 0 0-10 0v3zm-2 0a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H5z"/></svg></div>
-                <img src="../public/assets/images/pos-products/kopi.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Tumbler">
-                <h4>Tumbler Eksklusif</h4>
-                <div class="prize-badge">Edisi Terbatas</div>
-            </div>
+            <?php endforeach; ?>
         </div>
     </section>
 
