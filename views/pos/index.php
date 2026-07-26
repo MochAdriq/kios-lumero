@@ -145,7 +145,12 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
 
                                 <!-- QRIS Display Box -->
                                 <div class="sim-qris-section text-center p-3 mt-2 border rounded bg-light" id="simQrisBox" style="display: none;">
-                                    <img src="<?= asset('images/pos-products/qris-outlet.jpg') ?>" onerror="this.onerror=null; this.src='/lumero/assets/img/payment/qris-20260512-212418.jpg'" alt="QRIS Toko" class="img-fluid rounded border bg-white p-2 mb-2" style="max-height: 200px;">
+                                    <?php $posQris = function_exists('get_setting') ? get_setting('payment_qris_image', '') : ''; ?>
+                                    <?php if ($posQris !== ''): ?>
+                                        <img src="<?= url('/' . $posQris, false) ?>" alt="QRIS Toko" class="img-fluid rounded border bg-white p-2 mb-2" style="max-height: 200px;">
+                                    <?php else: ?>
+                                        <div class="alert alert-warning p-2 text-center" style="font-size: 14px;">Gambar QRIS belum diatur. Silakan atur di Setting Sistem.</div>
+                                    <?php endif; ?>
                                     <strong class="d-block text-dark fs-13">Scan QRIS Outlet di Kasir</strong>
                                     <small class="text-muted fs-11">Persilakan pelanggan scan kode QR di atas</small>
                                 </div>
