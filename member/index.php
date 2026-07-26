@@ -367,7 +367,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
                 Kejutan <span>Poin Hadiah!</span> <i class="fa-solid fa-wand-magic-sparkles" style="color:#f59e0b;"></i>
             <?php endif; ?>
         </div>
-        <p class="sub-headline">Pesananmu telah dikonversi. Undi roulette sekarang untuk mengamankan poin ekstra ke dompetmu!</p>
+        <p class="sub-headline">Pesananmu telah dikonversi. Putar undian sekarang untuk mengamankan poin ekstra ke dompetmu!</p>
 
         <!-- Roulette Ticker Viewport -->
         <div class="ticker-viewport">
@@ -378,7 +378,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
 
         <button class="btn-gacha" id="spinTickerBtn" onclick="startTickerSpin()">
-            <i class="fa-solid fa-bolt" style="margin-right:6px;"></i> Putar Roulette Sekarang
+            <i class="fa-solid fa-bolt" style="margin-right:6px;"></i> Putar Undian Sekarang
         </button>
 
         <div id="ticker-result" style="display:none; margin-top: 24px;">
@@ -619,7 +619,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Grand Opening Kalibunder â€” Lumero | Putar & Menang!</title>
-    <meta name="description" content="Putar roulette GRATIS dan menangkan hadiah eksklusif dari Lumero Kalibunder. 100% pasti menang!">
+    <meta name="description" content="Putar undian GRATIS dan menangkan hadiah eksklusif dari Lumero Kalibunder. 100% pasti menang!">
     <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1048,7 +1048,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <header class="hero-section">
         <div class="hero-label">Grand Opening Eksklusif</div>
         <h1 class="hero-title">Putar. Menang.<br><span class="accent">Langsung Klaim.</span></h1>
-        <p class="hero-sub">Dalam rangka Grand Opening Kalibunder, kami menyiapkan <b>kejutan spesial</b> untuk Anda. Putar roulette-nya dan amankan traktiran Anda hari ini!</p>
+        <p class="hero-sub">Dalam rangka Grand Opening Kalibunder, kami menyiapkan <b>kejutan spesial</b> untuk Anda. Putar undiannya dan amankan traktiran Anda hari ini!</p>
         <div class="guarantee-row">
             <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Spesial Warga Kalibunder</div>
             <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Gratis Sepenuhnya</div>
@@ -1057,7 +1057,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     </header>
 
     <div class="slot-card">
-        <div class="slot-card-title">Roulette Kejutan &mdash; Putar Sekarang</div>
+        <div class="slot-card-title">Undian Kejutan &mdash; Putar Sekarang</div>
         <div class="slot-viewport">
             <div class="slot-target-line"></div>
             <div class="slot-track" id="slot-track"></div>
@@ -1065,7 +1065,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         <div id="action-area">
             <button id="btn-spin" onclick="spinRoulette()" class="btn-spin">
                 <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-                Putar Roulette &mdash; GRATIS!
+                Putar Undian &mdash; GRATIS!
             </button>
             <p class="hint-text">Tanpa login &middot; Tanpa syarat &middot; Tanpa biaya tersembunyi</p>
         </div>
@@ -1100,7 +1100,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <section class="section">
         <div class="section-head">
             <div class="section-tag">Koleksi Hadiah</div>
-            <h2 class="section-title">Ada Apa Di Dalam Roulette?</h2>
+            <h2 class="section-title">Ada Apa Di Dalam Undian?</h2>
             <p class="section-sub">Ini bukan undian kosong. Semua hadiah nyata, bisa langsung diambil di outlet kami.</p>
         </div>
         <div class="prize-grid">
@@ -1137,7 +1137,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             <h2 class="section-title">Semudah 3 Langkah</h2>
         </div>
         <div class="steps">
-            <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Putar Roulette &mdash; GRATIS</h4><p>Klik tombol merah di atas. Tidak perlu daftar, tidak perlu bayar. Semua putaran dijamin mendapatkan hadiah nyata.</p></div></div>
+            <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Putar Undian &mdash; GRATIS</h4><p>Klik tombol merah di atas. Tidak perlu daftar, tidak perlu bayar. Semua putaran dijamin mendapatkan hadiah nyata.</p></div></div>
             <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Amankan Ke WhatsApp</h4><p>Setelah melihat hadiah Anda, masukkan nomor WA untuk mengunci tiket digital. Ini adalah "kunci brankas" hadiah Anda &mdash; jangan tunda!</p></div></div>
             <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Klaim di Outlet Kalibunder</h4><p>Tunjukkan tiket digital dari WA ke kasir Lumero Kalibunder. Hadiah langsung diserahkan di tempat!</p></div></div>
         </div>
@@ -1245,13 +1245,13 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             } else {
                 alert('Gagal memutar: ' + (data.error || 'Server error'));
                 btnSpin.disabled = false;
-                btnSpin.innerHTML = '<svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Putar Roulette &mdash; GRATIS!';
+                btnSpin.innerHTML = '<svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Putar Undian &mdash; GRATIS!';
             }
         })
         .catch(() => {
             alert('Koneksi gagal. Coba lagi.');
             btnSpin.disabled = false;
-            btnSpin.innerHTML = '<svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Putar Roulette &mdash; GRATIS!';
+            btnSpin.innerHTML = '<svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Putar Undian &mdash; GRATIS!';
         });
     }
 
