@@ -27,7 +27,7 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
 }
 
 .left-content { position: relative; z-index: 10; max-width: 480px; }
-.left-content img.logo { width: 85px; height: 85px; border-radius: 24px; box-shadow: 0 24px 48px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.4); margin-bottom: 28px; background: #fff; padding: 8px; }
+.left-content img.logo { width: 85px; height: 85px; border-radius: 24px; box-shadow: 0 24px 48px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.4); margin: 0 auto 28px auto; background: #fff; padding: 8px; display: block; }
 .left-content h1 { font-size: 46px; font-weight: 1000; letter-spacing: -0.05em; line-height: 1.1; margin: 0 0 16px; text-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 .left-content p { font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.9); line-height: 1.6; }
 
