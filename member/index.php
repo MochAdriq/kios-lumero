@@ -484,24 +484,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         <p class="sub-headline">Ada hadiah rahasia di dalam pod ini.<br>Ketuk pod misteri ini untuk membukanya!</p>
 
         <div class="pod-container" id="podContainer" onclick="openPod()">
-            <div class="native-gift" style="font-size: 100px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15)); animation: float 3s ease-in-out infinite;">🎁</div>
-            <style>
-                @keyframes float {
-                    0%, 100% { transform: translateY(0) rotate(0deg); }
-                    50% { transform: translateY(-12px) rotate(2deg); }
-                }
-                .pod-container {
-                    cursor: pointer;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: 160px;
-                    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
-                }
-                .pod-container:active {
-                    transform: scale(0.92);
-                }
-            </style>
+            <lottie-player src="../public/assets/images/reward.json" background="transparent" speed="1" style="width: 100%; height: 100%; pointer-events: none;" loop autoplay></lottie-player>
         </div>
 
         <div id="pod-result" style="display:none; margin-top:24px;">
