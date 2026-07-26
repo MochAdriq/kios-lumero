@@ -22,17 +22,18 @@
     <div class="col-md-5">
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-body p-4 text-center">
-                <div class="mb-4">
-                    <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                        <i class="ti ti-scan fs-1"></i>
-                    </div>
-                </div>
                 <div id="qr-reader" style="width:100%; display:none; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 2px solid var(--bs-primary);"></div>
-                <button type="button" id="btn-scan" class="btn btn-outline-primary mb-4 fw-bold rounded-pill w-100">
-                    <i class="ti ti-camera me-2"></i> Buka Kamera Scan QR
-                </button>
                 
-                <h4 class="fw-bold mb-3">Atau Input Kode Manual</h4>
+                <div class="mb-4">
+                    <button type="button" id="btn-scan" class="btn btn-primary rounded-circle shadow" style="width: 80px; height: 80px; padding: 0;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </div>
+                
+                <h4 class="fw-bold mb-3">Input Kode Manual</h4>
                 <form id="claim-form" action="<?= url('/loyalty/processEventClaim') ?>" method="POST">
                     <?= csrf_field() ?>
                     <div class="mb-4">
@@ -103,17 +104,22 @@ document.addEventListener("DOMContentLoaded", function() {
     const form = document.getElementById('claim-form');
     let html5QrcodeScanner = null;
 
+    const scanIcon = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const closeIcon = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
     btnScan.addEventListener('click', function() {
         if (html5QrcodeScanner) {
             html5QrcodeScanner.clear();
             html5QrcodeScanner = null;
             readerDiv.style.display = 'none';
-            btnScan.innerHTML = '<i class="ti ti-camera me-2"></i> Buka Kamera Scan QR';
+            btnScan.innerHTML = scanIcon;
+            btnScan.classList.replace('btn-danger', 'btn-primary');
         } else {
             readerDiv.style.display = 'block';
             html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
             html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-            btnScan.innerHTML = '<i class="ti ti-x me-2"></i> Tutup Kamera';
+            btnScan.innerHTML = closeIcon;
+            btnScan.classList.replace('btn-primary', 'btn-danger');
         }
     });
 
@@ -121,7 +127,8 @@ document.addEventListener("DOMContentLoaded", function() {
         html5QrcodeScanner.clear();
         html5QrcodeScanner = null;
         readerDiv.style.display = 'none';
-        btnScan.innerHTML = '<i class="ti ti-camera me-2"></i> Buka Kamera Scan QR';
+        btnScan.innerHTML = scanIcon;
+        btnScan.classList.replace('btn-danger', 'btn-primary');
         
         inputCode.value = decodedText;
         form.submit();
