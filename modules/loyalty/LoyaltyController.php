@@ -303,7 +303,7 @@ class LoyaltyController extends Controller
                 $targetFile = $uploadDir . $filename;
                 
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-                    $imageUrl = 'assets/images/event-prizes/' . $filename;
+                    $imageUrl = 'images/event-prizes/' . $filename;
                 } else {
                     throw new Exception('Gagal mengupload gambar.');
                 }

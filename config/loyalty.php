@@ -1093,6 +1093,9 @@ function loyalty_resolve_image_url(?string $imgUrl): string {
     if (str_starts_with($imgUrl, 'assets/img/')) {
         $imgUrl = 'images/pos-products/' . substr($imgUrl, strlen('assets/img/'));
     }
+    if (str_starts_with($imgUrl, 'assets/images/')) {
+        $imgUrl = 'images/' . substr($imgUrl, strlen('assets/images/'));
+    }
     if (str_starts_with($imgUrl, 'public/assets/')) {
         $imgUrl = substr($imgUrl, strlen('public/assets/'));
     }
