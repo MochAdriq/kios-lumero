@@ -1072,23 +1072,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
 
 
-<!-- Live Counter -->
-<div class="live-counter">
-    <div class="counter-item">
-        <div class="counter-number" id="counter-spins">247</div>
-        <div class="counter-label">Putaran Hari Ini</div>
-    </div>
-    <div class="counter-sep"></div>
-    <div class="counter-item">
-        <div class="counter-number" id="counter-left">53</div>
-        <div class="counter-label">Sisa Putaran</div>
-    </div>
-    <div class="counter-sep"></div>
-    <div class="counter-item">
-        <div class="counter-number" id="counter-timer">02:47:09</div>
-        <div class="counter-label">Waktu Tersisa Hari Ini</div>
-    </div>
-</div>
 
 <div class="wrapper" style="position: relative; z-index: 2;">
 
