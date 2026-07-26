@@ -1209,8 +1209,11 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     const baseItems = Object.keys(itemIcons).length > 0 ? Object.keys(itemIcons) : ['Mystery Box'];
     const TARGET_IDX = 40;
 
-    let state = 'idle', currentX = 0, velocity = 0.5, targetX = 0;
-    const LOOP_X = baseItems.length * CARD_W;
+    const baseLoop = baseItems.length * CARD_W;
+    const cycle = Math.ceil(1500 / baseLoop);
+    const safeStart = baseLoop * cycle;
+    
+    let state = 'idle', currentX = safeStart, velocity = 0.5, targetX = 0;
 
     function buildTrack(winner = null) {
         let h = '';
@@ -1228,7 +1231,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         if (state === 'done') return;
         currentX += velocity;
         if (state === 'idle') {
-            if (currentX >= LOOP_X) currentX -= LOOP_X;
+            if (currentX >= safeStart + baseLoop) currentX -= baseLoop;
         } else if (state === 'spin') {
             if (velocity < 45) velocity += 2;
             const d = 0.35, dist = velocity * velocity / (2 * d);
