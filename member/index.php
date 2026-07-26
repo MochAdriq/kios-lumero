@@ -1046,9 +1046,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 <body>
 
 <!-- Full Width Hero Background -->
-<div style="position: absolute; top: 0; left: 0; width: 100%; height: 80vh; min-height: 600px; z-index: 0; background-image: url('../public/assets/images/member-hero.jpeg?v=<?= time() ?>'); background-size: cover; background-position: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;">
+<div style="position: absolute; top: 0; left: 0; width: 100%; height: 80vh; min-height: 600px; z-index: 0; background-color: #0a0a0f; background-image: url('../public/assets/images/member-hero.jpeg?v=<?= time() ?>'); background-size: contain; background-position: top center; background-repeat: no-repeat; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;">
     <!-- Dark overlay for text readability -->
-    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,15,0.6) 0%, rgba(10,10,15,1) 100%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;"></div>
+    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,15,0.7) 0%, rgba(10,10,15,1) 90%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;"></div>
 </div>
 
 <div class="bg-wrap" style="z-index: -1;">
