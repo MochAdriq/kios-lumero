@@ -6,6 +6,19 @@ $pdo = Database::connection();
 require_once __DIR__ . '/../config/loyalty.php';
 loyalty_ensure_tables($pdo);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'spin_wheel') {
+    header('Content-Type: application/json');
+    try {
+        require_once __DIR__ . '/../helpers/RouletteHelper.php';
+        $prize = RouletteHelper::spinWheel($pdo, 'kalibunder_go');
+        $_SESSION['pending_event_reward'] = $prize;
+        echo json_encode(['success' => true, 'prize' => $prize]);
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 /* ──────────────────────────────────────────────────────
    SURPRISE FLOW: Intercept saat ada ?claim=KODE
    ────────────────────────────────────────────────────── */
@@ -1094,35 +1107,79 @@ function hook_reward_image(array $rw): string {
     </div>
     <?php endif; ?>
 
-    <header class="hero-section">
-        <div class="hero-content">
-            <div class="badge-pill">Lumero POS Loyalty Club</div>
-            <h1 class="hero-title">Pesananmu,<br>Kini Jadi <span>Hadiah.</span></h1>
-            <p class="hero-subtitle">Bukan sekadar transaksi. Kumpulkan poin secara otomatis dari setiap hidangan favoritmu dan nikmati berbagai sajian eksklusif secara cuma-cuma.</p>
-            <div class="cta-stack">
-                <a href="<?= url('/member/login.php') ?><?= $claimCode !== '' ? '?claim=' . urlencode($claimCode) : '' ?>" class="btn-stripe btn-primary">
-                    Mulai Gabung Sekarang &rarr;
+    <header class="hero-section" style="grid-template-columns: 1fr;">
+        <div class="hero-content" style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <div class="badge-pill">GRAND OPENING KALIBUNDER</div>
+            <h1 class="hero-title">Putar & <span>Menangkan</span> Kejutan Spesial!</h1>
+            <p class="hero-subtitle" style="margin: 0 auto 36px;">Khusus merayakan pembukaan Outlet Kalibunder. Dapatkan hidangan gratis tanpa syarat rumit. Tersisa <b id="countdown" style="color:var(--red);">3 Hari Lagi</b>!</p>
+            
+            <div id="roulette-container" style="position: relative; width: 320px; height: 320px; margin: 0 auto 40px; filter: drop-shadow(0 20px 40px rgba(196,18,48,0.3));">
+                <div style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:30px; height:40px; background:var(--ink); clip-path: polygon(50% 100%, 0 0, 100% 0); z-index:10;"></div>
+                <div id="roulette-wheel" style="width: 100%; height: 100%; border-radius: 50%; border: 8px solid #fff; transition: transform 4s cubic-bezier(0.1, 0.7, 0.1, 1); background: conic-gradient(#ffc72c 0deg 72deg, #c41230 72deg 144deg, #ffc72c 144deg 216deg, #c41230 216deg 288deg, #ffc72c 288deg 360deg);"></div>
+                <div style="position:absolute; inset: 0; pointer-events:none; border-radius: 50%; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);"></div>
+                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:60px; height:60px; background:#fff; border-radius:50%; border:5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:24px; color:var(--ink);">?</div>
+            </div>
+            
+            <div class="cta-stack" style="justify-content: center;" id="action-area">
+                <button id="btn-spin" onclick="spinRoulette()" class="btn-stripe btn-primary" style="font-size: 18px; padding: 18px 48px; border:none; cursor:pointer;">
+                    SPIN SEKARANG &rarr;
+                </button>
+            </div>
+            
+            <div id="result-modal" style="display:none; margin-top:30px; background:#fff; padding:24px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.1); border:1px solid var(--red);">
+                <h3 style="font-size:24px; font-weight:800; color:var(--ink); margin-bottom:10px;">SELAMAT! 🎉</h3>
+                <p style="font-size:16px; color:var(--muted); margin-bottom:20px;">Anda memenangkan <b id="prize-name" style="color:var(--red); font-size:18px;">-</b></p>
+                <a href="<?= url('/member/login.php') ?>" class="btn-stripe btn-primary" style="width:100%;">
+                    KLAIM TIKET SAYA SEKARANG
                 </a>
-                <a href="<?= url('/member/login.php') ?>" class="btn-stripe btn-secondary">
-                    Masuk ke Akun
-                </a>
+                <p style="font-size:12px; color:var(--muted); margin-top:12px;">*Wajib klaim ke Outlet Kalibunder.</p>
             </div>
         </div>
 
-        <div class="hero-visual">
-            <div class="isometric-card">
-                <div class="card-chip"></div>
-                <div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">MEMBER EXCLUSIVE</div>
-                <div style="font-size: 22px; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 32px;">LUMERO CLUB</div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                    <div>
-                        <div style="font-size: 11px; opacity: 0.7;">STATUS</div>
-                        <div style="font-size: 14px; font-weight: 700;">ACTIVE REWARD</div>
-                    </div>
-                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--gold); opacity: 0.9;"></div>
-                </div>
-            </div>
-        </div>
+        <script>
+            let isSpinning = false;
+            function spinRoulette() {
+                if (isSpinning) return;
+                isSpinning = true;
+                
+                const btn = document.getElementById('btn-spin');
+                btn.innerHTML = 'Memutar...';
+                btn.style.opacity = '0.7';
+                
+                fetch('', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'action=spin_wheel'
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const wheel = document.getElementById('roulette-wheel');
+                        const extraSpins = 5;
+                        const degrees = (extraSpins * 360) + Math.floor(Math.random() * 360);
+                        
+                        wheel.style.transform = `rotate(${degrees}deg)`;
+                        
+                        setTimeout(() => {
+                            document.getElementById('action-area').style.display = 'none';
+                            const resModal = document.getElementById('result-modal');
+                            resModal.style.display = 'block';
+                            document.getElementById('prize-name').innerText = data.prize.name;
+                            resModal.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        }, 4200);
+                    } else {
+                        alert("Gagal memutar: " + (data.error || 'Server error'));
+                        btn.innerHTML = 'COBA LAGI';
+                        isSpinning = false;
+                    }
+                })
+                .catch(e => {
+                    alert("Koneksi gagal.");
+                    btn.innerHTML = 'COBA LAGI';
+                    isSpinning = false;
+                });
+            }
+        </script>
     </header>
 
     <section>

@@ -1,5 +1,14 @@
 <!-- ═══ PROFIL / DASHBOARD ═══ -->
 
+<?php if (isset($pendingGrandOpeningClaim) && $pendingGrandOpeningClaim): ?>
+<div style="background: linear-gradient(135deg, #c41230 0%, #ffc72c 100%); border-radius: 24px; padding: 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; color: #fff; box-shadow: 0 10px 30px rgba(196,18,48,0.3);">
+    <div>
+        <h3 style="margin:0 0 8px; font-size:20px; font-weight:800;">🎉 Anda Punya Tiket Grand Opening!</h3>
+        <p style="margin:0; font-size:14px; opacity:0.9;">Tukarkan segera di Outlet Kalibunder sebelum hangus.</p>
+    </div>
+    <a href="reward-claim.php" class="btn" style="background:#fff; color:#c41230; padding:12px 24px; border-radius:99px; text-decoration:none; font-weight:800;">LIHAT TIKET</a>
+</div>
+<?php endif; ?>
 <?php if ($profilePercent === 0 || $profilePercent < 40): ?>
 <!-- ── ONBOARDING BANNER (Member Baru / Profil Kosong) ── -->
 <style>

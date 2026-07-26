@@ -32,6 +32,20 @@ function mem_auto_claim_pending(PDO $pdo, int $memberId): string{
     return ' Namun klaim otomatis belum berhasil: '.$e->getMessage().'. Kode tetap tersedia di form klaim.';
   }
 }
+function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
+    if (empty($_SESSION['pending_event_reward'])) return '';
+    $prize = $_SESSION['pending_event_reward'];
+    unset($_SESSION['pending_event_reward']);
+    $stmt = $pdo->prepare("SELECT id FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go')");
+    $stmt->execute([$memberId]);
+    if ($stmt->fetch()) {
+        return ' (Tiket Grand Opening lama Anda masih tersimpan di dompet).';
+    }
+    $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
+    $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 3 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
+    $pdo->prepare("UPDATE event_prizes SET stock = stock - 1 WHERE id = ? AND stock > 0")->execute([(int)$prize['id']]);
+    return ' Tiket Grand Opening berhasil diklaim: ' . mem_e($prize['name']) . '!';
+}
 list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; if($flashErr!=='') $err=$flashErr;
 
 if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(); header('Location: login.php'); exit; }
@@ -76,7 +90,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $m=loyalty_find_member_by_phone($pdo,$phone);
       if(!$m || empty($m['pin_hash']) || !password_verify($pin,$m['pin_hash'])){ loyalty_activity($pdo,(int)($m['id'] ?? 0),$phone,'member_login_failed','PIN salah'); throw new Exception('PIN salah. Silakan coba lagi.'); }
       if(($m['status'] ?? 'active')!=='active') throw new Exception('Member sedang nonaktif. Hubungi kasir/admin.');
-      $_SESSION['member_id']=(int)$m['id']; $autoMsg=mem_auto_claim_pending($pdo,(int)$m['id']); mem_clear_login_step(); loyalty_activity($pdo,(int)$m['id'],$phone,'member_login','Login berhasil halaman member'); mem_flash('Berhasil masuk. Selamat datang.'.$autoMsg); header('Location: dashboard.php'); exit;
+      $_SESSION['member_id']=(int)$m['id']; $autoMsg=mem_auto_claim_pending($pdo,(int)$m['id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$m['id']); mem_clear_login_step(); loyalty_activity($pdo,(int)$m['id'],$phone,'member_login','Login berhasil halaman member'); mem_flash('Berhasil masuk. Selamat datang.'.$autoMsg.$evtMsg); header('Location: dashboard.php'); exit;
     }elseif($action==='create_pin'){
       $phone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $mode=(string)($_SESSION['member_login_mode'] ?? 'register'); $pin=trim((string)($_POST['pin'] ?? '')); $pin2=trim((string)($_POST['pin_confirm'] ?? ''));
       if(strlen($phone)<9) throw new Exception('Sesi nomor HP tidak ditemukan. Masukkan nomor HP kembali.');
@@ -84,7 +98,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $m=loyalty_find_member_by_phone($pdo,$phone);
       if($m){ if(!empty($m['pin_hash']) && $mode==='register') throw new Exception('Nomor ini sudah memiliki PIN. Silakan masuk dengan PIN.'); $pdo->prepare("UPDATE members SET pin_hash=?, updated_at=NOW() WHERE id=?")->execute([password_hash($pin,PASSWORD_DEFAULT),(int)$m['id']]); $_SESSION['member_id']=(int)$m['id']; loyalty_activity($pdo,(int)$m['id'],$phone,'member_pin_setup','Membuat PIN dari halaman member'); }
       else{ $m=loyalty_create_member($pdo,$phone,'',$pin,null); $_SESSION['member_id']=(int)$m['id']; loyalty_activity($pdo,(int)$m['id'],$phone,'member_register','Registrasi nomor dan PIN dari halaman member'); }
-      $autoMsg=mem_auto_claim_pending($pdo,(int)$_SESSION['member_id']); mem_clear_login_step(); mem_flash('PIN berhasil disimpan. Silakan lengkapi data opsional untuk bonus point.'.$autoMsg); header('Location: dashboard.php'); exit;
+      $autoMsg=mem_auto_claim_pending($pdo,(int)$_SESSION['member_id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$_SESSION['member_id']); mem_clear_login_step(); mem_flash('PIN berhasil disimpan. Silakan lengkapi data opsional untuk bonus point.'.$autoMsg.$evtMsg); header('Location: dashboard.php'); exit;
     }
   }catch(Throwable $e){ $err=$e->getMessage(); }
 }
