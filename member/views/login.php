@@ -134,7 +134,6 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
                         </div>
                         <p style="font-size:13px; color:var(--muted); font-weight:600; line-height:1.5; margin:0;">
                             Kode 6 digit telah dikirim ke WhatsApp Anda. 
-                            <?php if(isset($_SESSION['debug_wa_otp'])) echo '<span style="color:#d97706; display:block; margin-top:4px;"><b>[DEBUG LOKAL: '.$_SESSION['debug_wa_otp'].']</b></span>'; ?>
                         </p>
                         <button class="btn-primary">Verifikasi OTP</button>
                     </form>
