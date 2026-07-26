@@ -1083,8 +1083,21 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 </div>
 
 <div class="wrapper">
-    <header class="hero-section" style="padding: 24px 0 16px;">
-        <img src="../public/assets/images/member-hero.jpeg?v=<?= time() ?>" alt="Event Banner" style="width: 100%; border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); display: block;">
+    <header class="hero-section" style="position: relative; overflow: hidden; border-radius: 24px; padding: 48px 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); margin-bottom: 32px; z-index: 1;">
+        <!-- Background Image with Overlay -->
+        <div style="position: absolute; inset: 0; background-image: url('../public/assets/images/member-hero.jpeg?v=<?= time() ?>'); background-size: cover; background-position: center; z-index: -2;"></div>
+        <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,20,0.4) 0%, rgba(10,10,20,0.85) 100%); z-index: -1;"></div>
+
+        <div style="position: relative; z-index: 2;">
+            <div class="hero-label" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff;">Grand Opening Eksklusif</div>
+            <h1 class="hero-title" style="text-shadow: 0 4px 12px rgba(0,0,0,0.6);">Putar. Menang.<br><span class="accent">Langsung Klaim.</span></h1>
+            <p class="hero-sub" style="text-shadow: 0 2px 8px rgba(0,0,0,0.8);">Dalam rangka Grand Opening Kalibunder, kami menyiapkan <b>kejutan spesial</b> untuk Anda. Putar undiannya dan amankan traktiran Anda hari ini!</p>
+            <div class="guarantee-row">
+                <div class="g-badge" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Spesial Warga Kalibunder</div>
+                <div class="g-badge" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Gratis Sepenuhnya</div>
+                <div class="g-badge" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Langsung Ambil di Outlet</div>
+            </div>
+        </div>
     </header>
 
     <div class="slot-card">
