@@ -46,7 +46,8 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             $autoMsg = 'success';
             loyalty_activity($pdo, $memberId, $member['phone'] ?? null, 'member_claim_auto_success', 'Auto klaim surprise dari QR ' . $claimCode);
         } catch (Throwable $e) {
-            $autoMsg = $e->getMessage();
+            error_log("Lumero Claim Error (Member ID {$memberId}): " . $e->getMessage());
+            $autoMsg = "Gagal memproses klaim otomatis. Silakan coba kembali atau hubungi kasir.";
         }
     }
 
@@ -247,152 +248,117 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
 
         /* ════════════════════════════════════════════════════
-           VARIASI A: SPIN THE WHEEL
+           VARIASI A: ROULETTE TICKER
            ════════════════════════════════════════════════════ */
-        .wheel-container {
-            position: relative;
-            width: 240px; height: 240px;
-            margin: 0 auto 28px;
+        .ticker-viewport {
+            position: relative; width: 100%; height: 120px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, rgba(15, 23, 42, 0.01) 100%);
+            border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 20px; margin: 28px 0;
+            display: flex; align-items: center; overflow: hidden;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.04);
         }
-        .wheel-pointer {
-            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-top: 24px solid var(--red);
-            z-index: 10;
-            filter: drop-shadow(0 4px 8px rgba(196,18,48,0.4));
+        .ticker-viewport::before, .ticker-viewport::after {
+            content: ''; position: absolute; top: 0; bottom: 0; width: 50px; z-index: 5; pointer-events: none;
         }
-        #spin-wheel {
-            width: 240px; height: 240px;
-            border-radius: 50%;
-            border: 6px solid #fff;
-            box-shadow: 0 0 0 3px var(--border), 0 16px 40px rgba(0,0,0,0.12);
-            transform-origin: center;
-            transition: transform 4s cubic-bezier(0.17,0.67,0.12,0.99);
-            cursor: pointer;
+        .ticker-viewport::before { left: 0; background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, transparent 100%); }
+        .ticker-viewport::after { right: 0; background: linear-gradient(-90deg, rgba(255, 255, 255, 0.9) 0%, transparent 100%); }
+
+        .ticker-selector {
+            position: absolute; left: 50%; top: 8px; bottom: 8px; width: 3px;
+            background: var(--red); transform: translateX(-50%); z-index: 10;
+            border-radius: 99px; box-shadow: 0 0 14px rgba(196, 18, 48, 0.6);
         }
-        #spin-wheel.spinning { cursor: default; }
-        .wheel-center {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-            width: 52px; height: 52px;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; z-index: 5;
+        .ticker-selector::before, .ticker-selector::after {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            color: var(--red); font-size: 11px; font-weight: 900;
         }
-        .spin-btn {
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 14px 32px; border-radius: 99px;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
-            color: var(--ink); font-size: 15px; font-weight: 800;
-            border: none; cursor: pointer;
-            box-shadow: 0 8px 20px rgba(255,199,44,0.35);
-            transition: all 0.3s;
-            margin-bottom: 20px;
+        .ticker-selector::before { content: '▼'; top: -10px; }
+        .ticker-selector::after { content: '▲'; top: auto; bottom: -10px; }
+
+        .ticker-track {
+            display: flex; gap: 12px; padding-left: 50%; 
+            will-change: transform; transition: transform 4.8s cubic-bezier(0.1, 0.88, 0.12, 1);
         }
-        .spin-btn:hover { transform: scale(1.05); box-shadow: 0 12px 28px rgba(255,199,44,0.5); }
-        .spin-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+        .ticker-card {
+            width: 96px; height: 88px; background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); flex-shrink: 0;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .ticker-card.gold-card {
+            background: linear-gradient(135deg, #fffcf0 0%, #fef3c7 100%);
+            border: 1.5px solid #f59e0b; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15);
+        }
+        .ticker-card .card-icon { font-size: 26px; line-height: 1; }
+        .ticker-card .card-val { font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+
+        .btn-gacha {
+            width: 100%; padding: 18px 28px;
+            background: linear-gradient(135deg, var(--red) 0%, #e01535 100%);
+            color: #ffffff; font-size: 16px; font-weight: 800;
+            border: none; border-radius: 16px; cursor: pointer;
+            box-shadow: 0 12px 30px rgba(196, 18, 48, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s; margin-bottom: 20px;
+        }
+        .btn-gacha:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(196, 18, 48, 0.4); }
+        .btn-gacha:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         /* ════════════════════════════════════════════════════
-           VARIASI B: PETI HARTA KARUN
+           VARIASI B: 3D MYSTERY POD (Lottie)
            ════════════════════════════════════════════════════ */
-        .chest-container {
-            position: relative;
-            width: 180px; height: 180px;
-            margin: 0 auto 24px;
+        .pod-container {
+            position: relative; width: 220px; height: 220px; margin: 0 auto 24px;
+            cursor: pointer; transition: transform 0.15s ease-out;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
         }
-        .chest-svg { width: 180px; height: 180px; }
-        .chest-lid { transform-origin: 90px 70px; transition: transform 1.2s cubic-bezier(0.34,1.56,0.64,1); }
-        .chest-lock { transition: opacity 0.5s 0.8s; }
-        .chest-container.opened .chest-lid { transform: rotate(-110deg); }
-        .chest-container.opened .chest-lock { opacity: 0; }
-        .chest-glow {
-            position: absolute; inset: -20px;
-            background: radial-gradient(circle, rgba(255,199,44,0.4) 0%, transparent 65%);
-            border-radius: 50%; opacity: 0;
-            transition: opacity 0.8s 0.5s;
-            pointer-events: none;
-        }
-        .chest-container.opened .chest-glow { opacity: 1; }
-        .coin-burst {
-            position: absolute; top: 0; left: 50%;
-            transform: translateX(-50%);
-            pointer-events: none;
-        }
-        .coin {
-            position: absolute;
-            font-size: 20px;
-            opacity: 0;
-        }
-        .chest-container.opened .coin {
-            animation: coinFly 1.2s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
-        }
-        @keyframes coinFly {
-            0%   { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.5); }
-            100% { opacity: 0; transform: var(--fly-to) rotate(var(--fly-rot)) scale(1.2); }
-        }
-        .open-chest-btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 14px 28px; border-radius: 99px;
-            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-            color: var(--ink); font-size: 15px; font-weight: 800;
-            border: none; cursor: pointer;
-            box-shadow: 0 8px 24px rgba(251,191,36,0.35);
-            transition: all 0.3s; margin-bottom: 20px;
-        }
-        .open-chest-btn:hover { transform: scale(1.05); }
-        .open-chest-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .pod-container:active { transform: scale(0.95); }
+        .pod-container lottie-player { width: 100%; height: 100%; pointer-events: none; }
 
         /* ════════════════════════════════════════════════════
-           VARIASI C: TARGET VISUAL (PROGRESS BAR)
+           VARIASI C: HOLD-TO-CHARGE METER
            ════════════════════════════════════════════════════ */
-        .goal-card {
+        .charge-card {
             background: linear-gradient(135deg, var(--ink) 0%, #1e293b 100%);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 24px;
-            position: relative; overflow: hidden;
-            text-align: left;
+            border-radius: 24px; padding: 24px; margin-bottom: 24px;
+            position: relative; overflow: hidden; text-align: left;
+            transition: box-shadow 0.3s, transform 0.1s;
         }
-        .goal-card::before {
-            content: '';
-            position: absolute; top: -40px; right: -40px;
-            width: 140px; height: 140px;
-            background: rgba(255,199,44,0.08);
-            border-radius: 50%;
+        .charge-card.shaking {
+            animation: shakeCard 0.1s linear infinite;
+            box-shadow: 0 0 25px #ffc72c;
         }
-        .goal-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-        .goal-product-name { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 16px; line-height: 1.2; }
-        .goal-product-img {
-            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-            width: 80px; height: 80px; object-fit: contain;
-            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+        @keyframes shakeCard {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            50% { transform: translate(-1px, -1px) rotate(-0.5deg); }
+            100% { transform: translate(1px, -1px) rotate(0.5deg); }
         }
+        .charge-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+        .charge-product-name { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 16px; line-height: 1.2; }
+        
         .progress-track {
-            background: rgba(255,255,255,0.1); border-radius: 99px;
-            height: 10px; overflow: hidden; margin-bottom: 8px;
+            background: rgba(255,255,255,0.1); border-radius: 99px; height: 14px; overflow: hidden; margin-bottom: 8px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
         .progress-fill {
-            height: 100%; border-radius: 99px;
+            height: 100%; border-radius: 99px; width: 0%;
             background: linear-gradient(90deg, var(--gold) 0%, #fbbf24 100%);
-            width: 0%;
-            transition: width 1.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.6s;
             box-shadow: 0 0 12px rgba(255,199,44,0.5);
+            transition: width 0.1s linear;
         }
-        .progress-labels {
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 600;
+        .btn-hold {
+            width: 100%; padding: 18px 28px; border-radius: 99px;
+            background: linear-gradient(135deg, var(--red) 0%, #e01535 100%);
+            color: #fff; font-size: 16px; font-weight: 800; border: none; cursor: pointer;
+            box-shadow: 0 12px 30px rgba(196,18,48,0.3); transition: transform 0.2s, background 0.3s;
+            user-select: none; -webkit-user-select: none;
+            touch-action: none; /* prevent scrolling when holding */
+            margin-bottom: 20px;
         }
-        .progress-labels .earned { color: var(--gold); font-weight: 800; font-size: 13px; }
-        .need-more {
-            background: rgba(255,199,44,0.12); border: 1px solid rgba(255,199,44,0.2);
-            border-radius: 12px; padding: 10px 14px;
-            font-size: 13px; font-weight: 700; color: var(--gold);
-            margin-top: 14px; text-align: center;
-        }
-
+        .btn-hold:active { transform: scale(0.96); }
+        .btn-hold.charging { background: linear-gradient(135deg, #e01535 0%, #990e23 100%); }
+        
         /* ── Success State (member sudah login) ── */
         .success-badge {
             display: inline-flex; align-items: center; gap: 8px;
@@ -422,52 +388,46 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     </div>
 
     <!-- ═══════════════════════════════════════════════════
-         VARIASI A: SPIN THE WHEEL
+         VARIASI A: ROULETTE TICKER
          ═══════════════════════════════════════════════════ -->
     <?php if ($variant === 'A'): ?>
     <div class="stage" id="stage-A">
         <div class="headline">
             <?php if ($isReturning && $memberName): ?>
-                Selamat datang kembali, <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?>!</span> 👑
-            <?php elseif ($isReturning): ?>
-                Senang bertemu lagi! <span>Putar Rodamu!</span> 👑
+                Selamat kembali, <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?>!</span> 👑
             <?php else: ?>
-                Ada <span>Hadiah</span> untukmu! 🎉
+                Kejutan <span>Poin Hadiah!</span> ✨
             <?php endif; ?>
         </div>
-        <p class="sub-headline">Dari pesanan tadi, kamu berhak mendapat poin.<br>Putar roda keberuntunganmu untuk mengungkap hadiahnya!</p>
+        <p class="sub-headline">Pesananmu telah dikonversi. Undi roulette sekarang untuk mengamankan poin ekstra ke dompetmu!</p>
 
-        <div class="wheel-container">
-            <div class="wheel-pointer"></div>
-            <canvas id="spin-wheel" width="240" height="240"></canvas>
-            <div class="wheel-center">🎰</div>
+        <!-- Roulette Ticker Viewport -->
+        <div class="ticker-viewport">
+            <div class="ticker-selector"></div>
+            <div class="ticker-track" id="tickerTrack">
+                <!-- Dynamically populated by JS -->
+            </div>
         </div>
 
-        <button class="spin-btn" id="spinBtn" onclick="startSpin()">
-            🎲 Putar Roda!
+        <button class="btn-gacha" id="spinTickerBtn" onclick="startTickerSpin()">
+            ⚡ Putar Roulette Sekarang
         </button>
 
-        <div id="spin-result" style="display:none">
-            <div class="points-badge">
+        <div id="ticker-result" style="display:none; margin-top: 24px;">
+            <div class="points-badge" style="animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;">
                 <div class="poin-num"><?= $points ?></div>
-                <div class="poin-label"><span>POIN</span><span>KAMU!</span></div>
+                <div class="poin-label"><span>POIN</span><span>BERHASIL!</span></div>
             </div>
             <br>
             <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
-                <div class="success-badge">✅ Poin berhasil masuk ke dompetmu!</div>
-                <a href="<?= $dashboardUrl ?>" class="cta-btn">
-                    <span class="cta-pulse"></span>
-                    🏆 Lihat Dompet Saya
-                </a>
-            <?php elseif ($isLoggedIn): ?>
-                <div style="font-size:13px;color:#ef4444;margin-bottom:16px;"><?= htmlspecialchars($autoMsg) ?></div>
-                <a href="<?= $dashboardUrl ?>" class="cta-btn">Ke Dashboard</a>
+                <div class="success-badge">✅ Poin otomatis masuk ke dompetmu!</div>
+                <a href="<?= $dashboardUrl ?>" class="cta-btn">🏆 Lihat Dompet Saya</a>
             <?php else: ?>
                 <a href="<?= $loginUrl ?>" class="cta-btn">
                     <span class="cta-pulse"></span>
-                    🔐 Amankan Poin Saya Sekarang!
+                    🔐 Amankan Poin Ini Sekarang!
                 </a>
-                <p class="helper-text">Masukkan nomor WhatsApp untuk mengunci poin ini ke akunmu.</p>
+                <p class="helper-text">Masuk dengan WhatsApp agar poin tidak hangus.</p>
             <?php endif; ?>
         </div>
     </div>
@@ -479,65 +439,30 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <div class="stage" id="stage-B">
         <div class="headline">
             <?php if ($isReturning && $memberName): ?>
-                Harta menanti, <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?>!</span> 👑
-            <?php elseif ($isReturning): ?>
-                Peti harta <span>sudah menunggumu!</span> 👑
+                Kejutan menanti, <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?>!</span> 👑
             <?php else: ?>
-                Peti harta <span>untukmu!</span> 🎁
+                Sebuah <span>Misteri!</span> 🎁
             <?php endif; ?>
         </div>
-        <p class="sub-headline">Dari pesanan tadi, ada poin yang tersimpan di dalam peti ini.<br>Buka peti untuk melihat isinya!</p>
+        <p class="sub-headline">Ada hadiah rahasia di dalam pod ini.<br>Ketuk pod misteri ini untuk membukanya!</p>
 
-        <div class="chest-container" id="chestContainer">
-            <div class="chest-glow"></div>
-            <!-- SVG Treasure Chest -->
-            <svg class="chest-svg" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-                <!-- Body -->
-                <rect x="20" y="100" width="140" height="65" rx="10" fill="#8B4513" stroke="#5D2E0C" stroke-width="2"/>
-                <rect x="25" y="108" width="130" height="50" rx="8" fill="#A0522D"/>
-                <!-- Metal bands body -->
-                <rect x="20" y="112" width="140" height="8" rx="2" fill="#8B6914" opacity="0.7"/>
-                <rect x="20" y="145" width="140" height="8" rx="2" fill="#8B6914" opacity="0.7"/>
-                <!-- Lid (animated) -->
-                <g class="chest-lid" id="chestLid">
-                    <rect x="20" y="68" width="140" height="38" rx="10 10 0 0" fill="#6B3410" stroke="#5D2E0C" stroke-width="2"/>
-                    <rect x="25" y="73" width="130" height="28" rx="8 8 0 0" fill="#8B4513"/>
-                    <!-- Metal bands lid -->
-                    <rect x="20" y="80" width="140" height="7" rx="2" fill="#8B6914" opacity="0.7"/>
-                    <!-- Hinge hint -->
-                    <rect x="78" y="103" width="24" height="6" rx="3" fill="#5D2E0C"/>
-                </g>
-                <!-- Lock -->
-                <g class="chest-lock" id="chestLock">
-                    <rect x="78" y="94" width="24" height="20" rx="4" fill="#DAA520" stroke="#B8860B" stroke-width="1.5"/>
-                    <path d="M 86 94 Q 90 82 94 94" fill="none" stroke="#DAA520" stroke-width="4" stroke-linecap="round"/>
-                    <circle cx="90" cy="102" r="3" fill="#5D2E0C"/>
-                </g>
-            </svg>
-            <!-- Coins untuk animasi burst -->
-            <div class="coin-burst" id="coinBurst"></div>
+        <div class="pod-container" id="podContainer" onclick="openPod()">
+            <lottie-player src="https://lottie.host/8cd6e55c-cfb3-40f0-8c29-3733e3eb2a29/a2v826HDBW.json" background="transparent" speed="1" loop autoplay></lottie-player>
         </div>
 
-        <button class="open-chest-btn" id="chestBtn" onclick="openChest()">
-            🔓 Buka Peti!
-        </button>
-
-        <div id="chest-result" style="display:none">
-            <div class="points-badge">
+        <div id="pod-result" style="display:none; margin-top:24px;">
+            <div class="points-badge" style="animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;">
                 <div class="poin-num"><?= $points ?></div>
                 <div class="poin-label"><span>POIN</span><span>UNTUKMU!</span></div>
             </div>
             <br>
             <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
-                <div class="success-badge">✅ Koin masuk ke dompetmu!</div>
+                <div class="success-badge">✅ Koin berhasil masuk ke dompetmu!</div>
                 <a href="<?= $dashboardUrl ?>" class="cta-btn">🏆 Lihat Dompet Saya</a>
-            <?php elseif ($isLoggedIn): ?>
-                <div style="font-size:13px;color:#ef4444;margin-bottom:16px;"><?= htmlspecialchars($autoMsg) ?></div>
-                <a href="<?= $dashboardUrl ?>" class="cta-btn">Ke Dashboard</a>
             <?php else: ?>
                 <a href="<?= $loginUrl ?>" class="cta-btn">
                     <span class="cta-pulse"></span>
-                    🔐 Klaim Hartamu Sekarang!
+                    🔐 Klaim Hadiah Sekarang!
                 </a>
                 <p class="helper-text">Daftarkan nomor WhatsApp agar poin ini tidak hangus!</p>
             <?php endif; ?>
@@ -552,281 +477,92 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         <div class="headline">
             <?php if ($isReturning && $memberName): ?>
                 Hei <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?></span>, makin dekat! 👑
-            <?php elseif ($isReturning): ?>
-                Kamu makin dekat ke <span>hadiah!</span> 👑
             <?php else: ?>
                 Kamu hampir <span>dapat hadiah!</span> 🎯
             <?php endif; ?>
         </div>
-        <p class="sub-headline">Dari pesanan tadi, kamu mendapat poin. Lihat seberapa dekat kamu ke hadiah gratis!</p>
+        <p class="sub-headline">Dari pesanan tadi, kamu berhak mendapat poin ekstra. Isi daya meteran untuk mengklaim!</p>
+    const btnHold = document.getElementById('btnHold');
+    const fill = document.getElementById('progressFill');
+    const card = document.getElementById('chargeCard');
+    const resultDiv = document.getElementById('charge-result');
 
-        <!-- Goal Card -->
-        <div class="goal-card" id="goalCard">
-            <div class="goal-label">Target Hadiahmu</div>
-            <div class="goal-product-name"><?= $goalName ?> Gratis!</div>
-            <img src="<?= $goalImg ?>" alt="<?= $goalName ?>" class="goal-product-img" onerror="this.src='../public/assets/images/pos-products/original.png'">
-            <div class="progress-track">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="progress-labels">
-                <span class="earned" id="progressEarned">+<?= $points ?> Pts hari ini!</span>
-                <span><?= $goalPoints ?> Pts goal</span>
-            </div>
-            <?php if ($pointsNeeded > 0): ?>
-            <div class="need-more">⚡ Hanya butuh <?= $pointsNeeded ?> Pts lagi untuk <?= $goalName ?> gratis!</div>
-            <?php else: ?>
-            <div class="need-more" style="color:#4ade80;">🎉 Kamu sudah cukup poin untuk tukar hadiah ini!</div>
-            <?php endif; ?>
-        </div>
+    let holdTimer;
+    let progress = 0;
+    let isClaimed = false;
+    let lastTime = 0;
 
-        <div class="points-badge" style="animation-delay:0.2s">
-            <div class="poin-num"><?= $points ?></div>
-            <div class="poin-label"><span>POIN</span><span>DIDAPAT!</span></div>
-        </div>
-        <br>
-        <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
-            <div class="success-badge">✅ Poin berhasil masuk ke dompetmu!</div>
-            <a href="<?= $dashboardUrl ?>" class="cta-btn" style="margin-top:16px">🏆 Lihat Progress Saya</a>
-        <?php elseif ($isLoggedIn): ?>
-            <div style="font-size:13px;color:#ef4444;margin-bottom:16px;"><?= htmlspecialchars($autoMsg) ?></div>
-            <a href="<?= $dashboardUrl ?>" class="cta-btn">Ke Dashboard</a>
-        <?php else: ?>
-            <a href="<?= $loginUrl ?>" class="cta-btn" style="margin-top:16px">
-                <span class="cta-pulse"></span>
-                ⚡ Amankan Poin Saya!
-            </a>
-            <p class="helper-text">Jangan biarkan <?= $points ?> poin ini hangus! Daftar sekarang gratis.</p>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
+    function startCharge(e) {
+        if (isClaimed) return;
+        // prevent default mobile touch behaviors
+        if (e && e.preventDefault && e.type !== 'pointerdown') e.preventDefault(); 
+        
+        btnHold.classList.add('charging');
+        lastTime = 0;
+        holdTimer = requestAnimationFrame(updateCharge);
+    }
 
-</div><!-- /surprise-wrapper -->
+    function updateCharge(time) {
+        if (!lastTime) lastTime = time;
+        const delta = time - lastTime;
+        lastTime = time;
+        
+        progress += (delta / 1500) * 100; // 1500ms to reach 100%
+        if (progress > 100) progress = 100;
+        
+        if (fill) fill.style.width = `${progress}%`;
+        
+        if (progress > 50 && card) {
+            card.classList.add('shaking');
+        }
 
-<script>
-/* ══════════════════════════════════════════
-   CONFETTI ENGINE
-   ══════════════════════════════════════════ */
-const confCanvas = document.getElementById('confetti-canvas');
-const ctx = confCanvas.getContext('2d');
-confCanvas.width = window.innerWidth;
-confCanvas.height = window.innerHeight;
-window.addEventListener('resize', () => { confCanvas.width = window.innerWidth; confCanvas.height = window.innerHeight; });
-
-const COLORS = ['#c41230','#ffc72c','#ffffff','#ff5e62','#fde68a','#f59e0b'];
-let confetti = [];
-let confRunning = false;
-
-function Confetti(x, y) {
-    return {
-        x, y,
-        vx: (Math.random() - 0.5) * 10,
-        vy: -(Math.random() * 14 + 4),
-        gravity: 0.45,
-        w: Math.random() * 10 + 5,
-        h: Math.random() * 5 + 3,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        angle: Math.random() * Math.PI * 2,
-        angVel: (Math.random() - 0.5) * 0.3,
-        life: 1
-    };
-}
-
-function spawnConfetti(x, y, n = 80) {
-    for (let i = 0; i < n; i++) confetti.push(Confetti(x ?? window.innerWidth / 2, y ?? window.innerHeight / 3));
-    if (!confRunning) animateConf();
-}
-
-function animateConf() {
-    confRunning = true;
-    ctx.clearRect(0, 0, confCanvas.width, confCanvas.height);
-    confetti.forEach((c, i) => {
-        c.x += c.vx; c.y += c.vy; c.vy += c.gravity;
-        c.angle += c.angVel; c.life -= 0.012;
-        ctx.save();
-        ctx.translate(c.x, c.y); ctx.rotate(c.angle);
-        ctx.globalAlpha = Math.max(0, c.life);
-        ctx.fillStyle = c.color;
-        ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
-        ctx.restore();
-    });
-    confetti = confetti.filter(c => c.life > 0 && c.y < window.innerHeight + 50);
-    if (confetti.length > 0) requestAnimationFrame(animateConf);
-    else confRunning = false;
-}
-
-/* ══════════════════════════════════════════
-   VARIASI A: SPIN THE WHEEL
-   ══════════════════════════════════════════ */
-<?php if ($variant === 'A'): ?>
-const wheelCanvas = document.getElementById('spin-wheel');
-const wctx = wheelCanvas.getContext('2d');
-const segments = [
-    { label: '<?= $points ?> Pts', color: '#c41230' },
-    { label: '🌟 Bonus!', color: '#ffc72c' },
-    { label: '<?= $points ?> Pts', color: '#1e293b' },
-    { label: '🎁 Klaim!', color: '#e01535' },
-    { label: '<?= $points ?> Pts', color: '#f59e0b' },
-    { label: '✨ Yes!', color: '#c41230' },
-];
-const segCount = segments.length;
-const segAngle = (Math.PI * 2) / segCount;
-let currentAngle = 0;
-let isSpinning = false;
-
-function drawWheel(angle) {
-    wctx.clearRect(0, 0, 240, 240);
-    const cx = 120, cy = 120, r = 116;
-    segments.forEach((seg, i) => {
-        const start = angle + i * segAngle;
-        const end = start + segAngle;
-        wctx.beginPath();
-        wctx.moveTo(cx, cy);
-        wctx.arc(cx, cy, r, start, end);
-        wctx.closePath();
-        wctx.fillStyle = seg.color;
-        wctx.fill();
-        wctx.strokeStyle = 'rgba(255,255,255,0.3)';
-        wctx.lineWidth = 1.5;
-        wctx.stroke();
-
-        // Label
-        wctx.save();
-        wctx.translate(cx, cy);
-        wctx.rotate(start + segAngle / 2);
-        wctx.textAlign = 'right';
-        wctx.fillStyle = '#fff';
-        wctx.font = 'bold 12px Plus Jakarta Sans, sans-serif';
-        wctx.fillText(seg.label, r - 12, 5);
-        wctx.restore();
-    });
-}
-
-drawWheel(0);
-
-// Animate idle rotation
-let idleAngle = 0;
-let idleRaf;
-function idleSpin() {
-    idleAngle += 0.003;
-    drawWheel(idleAngle);
-    idleRaf = requestAnimationFrame(idleSpin);
-}
-idleSpin();
-
-function startSpin() {
-    if (isSpinning) return;
-    isSpinning = true;
-    const btn = document.getElementById('spinBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Berputar...';
-    cancelAnimationFrame(idleRaf);
-
-    const totalRot = (Math.PI * 2) * (5 + Math.random() * 5);
-    const duration = 4000;
-    const start = performance.now();
-    const startAngle = idleAngle;
-
-    function animSpin(now) {
-        const elapsed = now - start;
-        const t = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - t, 4);
-        currentAngle = startAngle + totalRot * ease;
-        drawWheel(currentAngle);
-        if (t < 1) {
-            requestAnimationFrame(animSpin);
+        if (progress >= 100) {
+            finishCharge();
         } else {
-            onSpinEnd();
+            holdTimer = requestAnimationFrame(updateCharge);
         }
     }
-    requestAnimationFrame(animSpin);
-}
 
-function onSpinEnd() {
-    // Show result
-    document.getElementById('spin-result').style.display = 'block';
-    document.getElementById('spin-result').style.animation = 'popIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both';
-    spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 120);
-}
-<?php endif; ?>
+    function stopCharge() {
+        if (isClaimed) return;
+        cancelAnimationFrame(holdTimer);
+        lastTime = 0;
+        btnHold.classList.remove('charging');
+        if (card) card.classList.remove('shaking');
+        
+        // Reset progress if not full
+        progress = 0;
+        if (fill) fill.style.width = '0%';
+    }
 
-/* ══════════════════════════════════════════
-   VARIASI B: PETI HARTA KARUN
-   ══════════════════════════════════════════ */
-<?php if ($variant === 'B'): ?>
-let chestOpened = false;
+    function finishCharge() {
+        isClaimed = true;
+        if (card) card.classList.remove('shaking');
+        btnHold.style.display = 'none';
+        resultDiv.style.display = 'block';
+        fireConfetti();
+    }
 
-// Shake the chest gently
-const chest = document.getElementById('chestContainer');
-setInterval(() => {
-    if (chestOpened) return;
-    chest.style.transform = 'rotate(2deg)';
-    setTimeout(() => chest.style.transform = 'rotate(-2deg)', 100);
-    setTimeout(() => chest.style.transform = 'rotate(0)', 200);
-}, 2000);
+    if (btnHold) {
+        btnHold.addEventListener('pointerdown', startCharge);
+        btnHold.addEventListener('pointerup', stopCharge);
+        btnHold.addEventListener('pointerleave', stopCharge);
+        btnHold.addEventListener('pointercancel', stopCharge);
+        
+        // Fallbacks for older touch devices
+        btnHold.addEventListener('touchstart', startCharge, {passive: false});
+        btnHold.addEventListener('touchend', stopCharge);
+    }
+    <?php endif; ?>
 
-function openChest() {
-    if (chestOpened) return;
-    chestOpened = true;
-    const btn = document.getElementById('chestBtn');
-    btn.disabled = true;
-    btn.textContent = '🔓 Terbuka!';
-
-    chest.classList.add('opened');
-
-    // Spawn coin emojis
-    const burst = document.getElementById('coinBurst');
-    const coinEmojis = ['🪙','💰','⭐','✨','🏆','💛'];
-    const flies = [
-        'translate(-80px,-120px)',
-        'translate(80px,-120px)',
-        'translate(-50px,-160px)',
-        'translate(50px,-160px)',
-        'translate(-110px,-90px)',
-        'translate(110px,-90px)',
-        'translate(0,-180px)',
-    ];
-    coinEmojis.forEach((em, i) => {
-        const c = document.createElement('span');
-        c.className = 'coin';
-        c.textContent = em;
-        c.style.setProperty('--fly-to', flies[i % flies.length]);
-        c.style.setProperty('--fly-rot', (Math.random() * 60 - 30) + 'deg');
-        c.style.animationDelay = (i * 0.08) + 's';
-        burst.appendChild(c);
+    /* ══════════════════════════════════════════
+       AUTO-CLAIM SUCCESS CONFETTI (member logged in)
+       ══════════════════════════════════════════ */
+    <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
+    window.addEventListener('load', () => {
+        setTimeout(() => fireConfetti(), 600);
     });
-
-    setTimeout(() => {
-        document.getElementById('chest-result').style.display = 'block';
-        spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 150);
-    }, 1000);
-}
-<?php endif; ?>
-
-/* ══════════════════════════════════════════
-   VARIASI C: PROGRESS BAR
-   ══════════════════════════════════════════ */
-<?php if ($variant === 'C'): ?>
-const progressFill = document.getElementById('progressFill');
-const targetPct = <?= $progressPct ?>;
-// Trigger after short delay for visual effect
-setTimeout(() => {
-    progressFill.style.width = targetPct + '%';
-}, 300);
-
-// Also spawn some confetti for excitement
-setTimeout(() => {
-    spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 60);
-}, 1200);
-<?php endif; ?>
-
-/* ══════════════════════════════════════════
-   AUTO-CLAIM SUCCESS CONFETTI (member logged in)
-   ══════════════════════════════════════════ */
-<?php if ($isLoggedIn && $autoMsg === 'success'): ?>
-window.addEventListener('load', () => {
-    setTimeout(() => spawnConfetti(window.innerWidth / 2, window.innerHeight / 3, 100), 600);
-});
-<?php endif; ?>
+    <?php endif; ?>
 </script>
 
 </body>
