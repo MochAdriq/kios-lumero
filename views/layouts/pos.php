@@ -131,7 +131,8 @@ $storeName = current_outlet_name();
 <script src="<?= asset('pos-template/select2.min.js') ?>"></script>
 <script src="<?= asset('pos-template/owl.carousel.min.js') ?>"></script>
 <script src="<?= asset('pos-template/jquery.slimscroll.min.js') ?>"></script>
-<?php if (class_exists('MidtransService') && MidtransService::getClientKey() !== ''): ?>
+<?php $isMidtransEnabled = function_exists('get_setting') && get_setting('qris_payment_method', 'manual') === 'midtrans'; ?>
+<?php if ($isMidtransEnabled && class_exists('MidtransService') && MidtransService::getClientKey() !== ''): ?>
 <script src="<?= MidtransService::snapJsUrl() ?>" data-client-key="<?= htmlspecialchars(MidtransService::getClientKey()) ?>"></script>
 <?php endif; ?>
 <script src="<?= asset('js/pos-preadmin.js') ?>?v=<?= time() ?>"></script>

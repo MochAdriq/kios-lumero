@@ -45,7 +45,8 @@ class POSController extends Controller
                 $snapToken = null;
                 $qrisUrl = null;
                 $qrisString = null;
-                if ($paymentMethod !== 'cash' && class_exists('MidtransService') && MidtransService::getServerKey() !== '') {
+                $isMidtransEnabled = function_exists('get_setting') && get_setting('qris_payment_method', 'manual') === 'midtrans';
+                if ($paymentMethod !== 'cash' && $isMidtransEnabled && class_exists('MidtransService') && MidtransService::getServerKey() !== '') {
                     try {
                         if (in_array($paymentMethod, ['qris', 'ewallet'], true)) {
                             $qrisRes = MidtransService::createQrisCharge([

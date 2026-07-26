@@ -197,7 +197,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     }
 
     // === MIDTRANS QRIS: Intercept untuk payment QRIS via AJAX ===
-    if ($paymentMethod === 'qris' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+    $isMidtransQris = (get_setting('qris_payment_method', 'manual') === 'midtrans') && class_exists('MidtransService') && MidtransService::getServerKey() !== '';
+    if ($paymentMethod === 'qris' && $isMidtransQris && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         try {
             require_once __DIR__.'/../helpers/MidtransService.php';
             $items = [];
