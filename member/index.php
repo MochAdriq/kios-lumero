@@ -460,7 +460,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         { icon: '<i class="fa-solid fa-gift"></i>', val: '10 Pts' }, 
         { icon: '<i class="fa-solid fa-money-bill-wave"></i>', val: '50 Pts' }, 
         { icon: '<i class="fa-solid fa-wand-magic-sparkles"></i>', val: 'Zonk' }, 
-        { icon: '<i class="fa-solid fa-dice"></i>', val: 'Jackpot' }, 
+        { icon: '<i class="fa-solid fa-star"></i>', val: 'Bonus Spesial' },
         { icon: '<i class="fa-solid fa-fire"></i>', val: '5 Pts' }, 
         { icon: '<i class="fa-solid fa-gem"></i>', val: '100 Pts' }
     ];
