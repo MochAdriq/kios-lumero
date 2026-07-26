@@ -179,4 +179,71 @@ class LoyaltyController extends Controller
         header('Location: ' . url('/loyalty/members'));
         exit;
     }
+    public function eventClaims()
+    {
+        Auth::requireLogin();
+        $pdo = Database::connection();
+        
+        $stmt = $pdo->query("SELECT rc.*, m.name as member_name, m.phone as member_phone, ep.name as prize_name
+                             FROM reward_claims rc
+                             JOIN members m ON m.id = rc.user_id
+                             JOIN event_prizes ep ON ep.id = rc.prize_id
+                             ORDER BY rc.id DESC LIMIT 50");
+        $recentClaims = $stmt->fetchAll();
+
+        $this->view('loyalty/event_claims', [
+            'pageTitle' => 'Validasi Hadiah Undian',
+            'recentClaims' => $recentClaims
+        ]);
+    }
+
+    public function processEventClaim()
+    {
+        Auth::requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/loyalty/eventClaims'));
+            exit;
+        }
+
+        $code = trim($_POST['qr_code'] ?? '');
+        $pdo = Database::connection();
+
+        try {
+            if ($code === '') throw new Exception("Kode Klaim tidak boleh kosong.");
+
+            $pdo->beginTransaction();
+
+            $stmt = $pdo->prepare("SELECT rc.*, ep.id as ep_id, ep.stock, ep.name as prize_name 
+                                   FROM reward_claims rc 
+                                   JOIN event_prizes ep ON ep.id = rc.prize_id 
+                                   WHERE rc.qr_code = ? FOR UPDATE");
+            $stmt->execute([$code]);
+            $claim = $stmt->fetch();
+
+            if (!$claim) {
+                throw new Exception("Kode Klaim tidak ditemukan atau salah.");
+            }
+
+            if ($claim['status'] === 'CLAIMED') {
+                throw new Exception("Tiket ini sudah ditukarkan sebelumnya.");
+            }
+
+            if ($claim['stock'] <= 0) {
+                throw new Exception("Maaf, stok hadiah (" . $claim['prize_name'] . ") sudah habis!");
+            }
+
+            // Update status and stock
+            $pdo->prepare("UPDATE reward_claims SET status = 'CLAIMED' WHERE id = ?")->execute([$claim['id']]);
+            $pdo->prepare("UPDATE event_prizes SET stock = stock - 1 WHERE id = ?")->execute([$claim['ep_id']]);
+
+            $pdo->commit();
+            $_SESSION['flash_success'] = 'Berhasil! Hadiah "' . $claim['prize_name'] . '" telah ditukarkan dan stok dipotong.';
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+
+        header('Location: ' . url('/loyalty/eventClaims'));
+        exit;
+    }
 }

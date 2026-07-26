@@ -9,8 +9,37 @@ loyalty_ensure_tables($pdo);
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'spin_wheel') {
     header('Content-Type: application/json');
     try {
+        // 1. Hole 4: API Throttle (max 1 request per 10 seconds per session)
+        if (isset($_SESSION['last_spin_time']) && time() - $_SESSION['last_spin_time'] < 10) {
+            throw new Exception("Harap tunggu beberapa saat sebelum memutar lagi.");
+        }
+        $_SESSION['last_spin_time'] = time();
+
+        // 2. Hole 1: IP Limitation (max 3 spins per day per IP)
+        $pdo->exec("CREATE TABLE IF NOT EXISTS event_spin_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            ip_address VARCHAR(45) NOT NULL,
+            prize_id INT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_ip_date (ip_address, created_at)
+        )");
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $today = date('Y-m-d');
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM event_spin_logs WHERE ip_address = ? AND DATE(created_at) = ?");
+        $stmt->execute([$ip, $today]);
+        $spinCount = (int)$stmt->fetchColumn();
+
+        if ($spinCount >= 3) {
+            throw new Exception("Batas harian tercapai. Perangkat ini sudah memutar maksimal 3 kali hari ini.");
+        }
+
         require_once __DIR__ . '/../helpers/RouletteHelper.php';
         $prize = RouletteHelper::spinWheel($pdo, 'kalibunder_go');
+
+        // Log spin
+        $pdo->prepare("INSERT INTO event_spin_logs (ip_address, prize_id) VALUES (?, ?)")->execute([$ip, $prize['id']]);
+
         $_SESSION['pending_event_reward'] = $prize;
         echo json_encode(['success' => true, 'prize' => $prize]);
     } catch (Throwable $e) {

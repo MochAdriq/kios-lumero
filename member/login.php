@@ -43,7 +43,7 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     }
     $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
     $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 3 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
-    $pdo->prepare("UPDATE event_prizes SET stock = stock - 1 WHERE id = ? AND stock > 0")->execute([(int)$prize['id']]);
+
     return ' Tiket Grand Opening berhasil diklaim: ' . mem_e($prize['name']) . '!';
 }
 list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; if($flashErr!=='') $err=$flashErr;
