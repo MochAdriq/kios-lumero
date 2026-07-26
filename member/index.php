@@ -1083,15 +1083,8 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 </div>
 
 <div class="wrapper">
-    <header class="hero-section">
-        <div class="hero-label">Grand Opening Eksklusif</div>
-        <h1 class="hero-title">Putar. Menang.<br><span class="accent">Langsung Klaim.</span></h1>
-        <p class="hero-sub">Dalam rangka Grand Opening Kalibunder, kami menyiapkan <b>kejutan spesial</b> untuk Anda. Putar undiannya dan amankan traktiran Anda hari ini!</p>
-        <div class="guarantee-row">
-            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Spesial Warga Kalibunder</div>
-            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Gratis Sepenuhnya</div>
-            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Langsung Ambil di Outlet</div>
-        </div>
+    <header class="hero-section" style="padding: 24px 0 16px;">
+        <img src="../public/assets/images/member-hero.jpeg?v=<?= time() ?>" alt="Event Banner" style="width: 100%; border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); display: block;">
     </header>
 
     <div class="slot-card">
