@@ -36,10 +36,16 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     if (empty($_SESSION['pending_event_reward'])) return '';
     $prize = $_SESSION['pending_event_reward'];
     unset($_SESSION['pending_event_reward']);
-    $stmt = $pdo->prepare("SELECT id FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go')");
+    $stmt = $pdo->prepare("SELECT status FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go') ORDER BY id DESC LIMIT 1");
     $stmt->execute([$memberId]);
-    if ($stmt->fetch()) {
-        return ' 🚨 Sistem mendeteksi Anda sudah memiliki kupon Kalibunder di dompet Anda. Jangan serakah, simpan keberuntungan untuk kunjungan berikutnya. 😉';
+    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if ($row['status'] === 'PENDING') {
+            return ' 🚨 Maaf, Anda belum menukarkan kupon sebelumnya! Yuk, selesaikan dulu penukaran hadiah Anda di Outlet Lumero Kalibunder sebelum berburu kupon baru.';
+        } elseif ($row['status'] === 'CLAIMED') {
+            return ' 🚨 Sistem mendeteksi Anda sudah pernah mengambil hadiah Grand Opening ini. Terima kasih partisipasinya dan berikan kesempatan bagi yang lain ya! 😉';
+        } else {
+            return ' 🚨 Kupon Anda sebelumnya sudah hangus karena lewat batas 48 jam. Sayang sekali, kesempatan undian ini hanya berlaku satu kali untuk setiap akun.';
+        }
     }
     $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
     $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 3 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);

@@ -15,7 +15,7 @@ $stmt = $pdo->prepare("
     SELECT c.*, p.name as prize_name 
     FROM reward_claims c 
     JOIN event_prizes p ON c.prize_id = p.id 
-    WHERE c.user_id = ? AND c.status = 'PENDING' 
+    WHERE c.user_id = ? 
     ORDER BY c.created_at DESC LIMIT 1
 ");
 $stmt->execute([$memberId]);
@@ -61,6 +61,14 @@ if (!$claim) {
             display: inline-block; background: var(--red); color: #fff;
             padding: 16px 32px; border-radius: 99px; text-decoration: none; font-weight: 800; margin-top: 24px;
         }
+        .stamp {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg);
+            border: 4px solid #c41230; color: #c41230; font-size: 28px; font-weight: 900; letter-spacing: 2px;
+            padding: 12px 24px; border-radius: 8px; z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -70,8 +78,19 @@ if (!$claim) {
         <h3 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Tunjukkan ke Kasir</h3>
         <p style="color: #666; font-size: 14px;">Outlet Lumero Kalibunder</p>
         
-        <div class="qr-wrapper" id="qrcode"></div>
-        <div style="font-size: 20px; font-weight: 800; letter-spacing: 2px; color: var(--red);"><?= htmlspecialchars($claim['qr_code']) ?></div>
+        <?php if ($claim['status'] === 'PENDING'): ?>
+            <div class="qr-wrapper" id="qrcode"></div>
+            <div style="font-size: 20px; font-weight: 800; letter-spacing: 2px; color: var(--red);"><?= htmlspecialchars($claim['qr_code']) ?></div>
+        <?php else: ?>
+            <div class="qr-wrapper" style="opacity: 0.1; filter: grayscale(100%);" id="qrcode"></div>
+            <div style="font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #999; text-decoration: line-through;"><?= htmlspecialchars($claim['qr_code']) ?></div>
+            
+            <?php if ($claim['status'] === 'CLAIMED'): ?>
+                <div class="stamp" style="border-color: #16a34a; color: #16a34a;">SUDAH DITUKAR</div>
+            <?php else: ?>
+                <div class="stamp">HANGUS</div>
+            <?php endif; ?>
+        <?php endif; ?>
         
         <div style="margin-top: 24px; padding-top: 24px; border-top: 2px dashed #eee;">
             <p style="font-size: 13px; color: #666; margin-bottom: 4px;">HADIAH ANDA</p>
