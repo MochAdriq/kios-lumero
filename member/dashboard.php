@@ -38,7 +38,7 @@ function mem_auto_claim_pending(PDO $pdo, int $memberId): string{
   }
 }
 list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; if($flashErr!=='') $err=$flashErr;
-if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(); header('Location: login.php'); exit; }
+if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(); header('Location: index.php'); exit; }
 if(isset($_GET['ulang'])){ mem_clear_login_step(); header('Location: login.php'); exit; }
 $incomingClaim=strtoupper(trim((string)($_GET['claim'] ?? '')));
 if($incomingClaim!=='') $_SESSION['member_prefill_claim']=$incomingClaim;

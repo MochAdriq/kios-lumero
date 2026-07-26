@@ -50,7 +50,7 @@ list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; i
 if (isset($_GET['source']) && $_GET['source'] === 'event_kalibunder' && !empty($_SESSION['pending_event_reward']) && empty($msg)) {
     $msg = 'Selamat! Anda berkesempatan mendapatkan ' . mem_e($_SESSION['pending_event_reward']['name']) . '. Yuk lengkapi data pengambilan hadiahnya!';
 }
-if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(); header('Location: login.php'); exit; }
+if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(); header('Location: index.php'); exit; }
 if(isset($_GET['ulang'])){ mem_clear_login_step(); header('Location: login.php'); exit; }
 
 if (mem_current_id() > 0) {
