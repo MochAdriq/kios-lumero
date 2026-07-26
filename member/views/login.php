@@ -68,12 +68,6 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
 }
 </style>
 
-<!-- Flash Messages -->
-<div style="position: absolute; top: 20px; right: 20px; z-index: 999; max-width: 400px; width: calc(100% - 40px);">
-    <?php if($msg): ?><div class="alert ok" style="box-shadow: 0 12px 30px rgba(22, 101, 52, 0.15); border: 1px solid #a7f3d0; margin-top:0;">✨ <?=mem_e($msg)?></div><?php endif; ?>
-    <?php if($err): ?><div class="alert err" style="box-shadow: 0 12px 30px rgba(185, 28, 28, 0.15); border: 1px solid #fecaca; margin-top:0;">⚠️ <?=mem_e($err)?></div><?php endif; ?>
-</div>
-
 <div class="split-screen">
     <!-- Left Side: Branding & Glassmorphism -->
     <div class="split-left">
@@ -94,6 +88,14 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
     
     <!-- Right Side: Login Form -->
     <div class="split-right">
+        <!-- Flash Messages -->
+        <?php if($msg || $err): ?>
+        <div style="margin-bottom: 24px;">
+            <?php if($msg): ?><div class="alert ok" style="box-shadow: 0 12px 30px rgba(22, 101, 52, 0.15); border: 1px solid #a7f3d0; margin-top:0;">✨ <?=mem_e($msg)?></div><?php endif; ?>
+            <?php if($err): ?><div class="alert err" style="box-shadow: 0 12px 30px rgba(185, 28, 28, 0.15); border: 1px solid #fecaca; margin-top:0;">⚠️ <?=mem_e($err)?></div><?php endif; ?>
+        </div>
+        <?php endif; ?>
+
         <div class="login-box">
             <?php if(!$pendingPhone): ?>
                 <?php if (isset($_GET['source']) && $_GET['source'] === 'event_kalibunder' && !empty($_SESSION['pending_event_reward'])): ?>
