@@ -35,9 +35,11 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     $autoMsg    = '';
     $member     = null;
 
-    // Ambil reward produk terendah untuk Variasi C
-    $goalReward = $pdo->query("SELECT * FROM point_reward_products WHERE is_active=1 ORDER BY required_points ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-
+    // Ambil reward produk target (Prioritaskan Matcha sesuai request)
+    $goalReward = $pdo->query("SELECT * FROM point_reward_products WHERE is_active=1 AND name LIKE '%matcha%' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    if (!$goalReward) {
+        $goalReward = $pdo->query("SELECT * FROM point_reward_products WHERE is_active=1 ORDER BY required_points ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    }
     // Jika sudah login → auto-claim langsung
     if ($isLoggedIn) {
         $member = loyalty_member_by_id($pdo, $memberId);
@@ -291,12 +293,21 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             border: 1.5px solid #f59e0b; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15);
         }
         .ticker-card .card-icon { font-size: 26px; line-height: 1; margin-bottom: 2px; }
+        @keyframes iconIdle {
+            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+            50% { transform: translateY(-4px) scale(1.1) rotate(4deg); }
+        }
         .ticker-card .card-icon i {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 4px 6px rgba(245,158,11,0.3));
+            animation: iconIdle 2.5s ease-in-out infinite;
+            transform-origin: bottom center;
         }
+        .ticker-card:nth-child(odd) .card-icon i { animation-delay: 0.3s; animation-duration: 2.8s; }
+        .ticker-card:nth-child(3n) .card-icon i { animation-delay: 0.8s; animation-duration: 3.1s; }
+        .ticker-card:nth-child(5n) .card-icon i { animation-delay: 1.2s; }
         .ticker-card.gold-card .card-icon i {
             background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
             -webkit-text-fill-color: transparent;
