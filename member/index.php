@@ -1045,19 +1045,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 </head>
 <body>
 
-<!-- Full Width Hero Background -->
-<div style="position: absolute; top: 0; left: 0; width: 100%; height: 80vh; min-height: 600px; z-index: 0; background-color: #0a0a0f; background-image: url('../public/assets/images/member-hero.jpeg?v=<?= time() ?>'); background-size: contain; background-position: top center; background-repeat: no-repeat; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;">
-    <!-- Fade only at the very bottom so it blends with the dark theme -->
-    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,15,0) 60%, rgba(10,10,15,1) 95%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;"></div>
-</div>
-
-<div class="bg-wrap" style="z-index: -1;">
-    <div class="bg-grid"></div>
-    <div class="pulse-orb orb-1"></div>
-    <div class="pulse-orb orb-2"></div>
-</div>
-
-
 <!-- Navbar -->
 <nav class="navbar">
     <div class="nav-logo">
@@ -1069,6 +1056,21 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         <a href="<?= url('/member/login.php') ?>?source=organic" class="btn-nav">Login</a>
     </div>
 </nav>
+
+<!-- Hero Image (Full Bleed, Responsive Height) -->
+<div style="position: relative; width: 100%; z-index: 1; margin-top: -70px;">
+    <img src="../public/assets/images/member-hero.jpeg?v=<?= time() ?>" alt="Banner Promo" style="width: 100%; height: auto; display: block; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; max-height: 80vh; object-fit: cover; object-position: top center;">
+    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,15,0) 70%, rgba(10,10,15,1) 98%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; pointer-events: none;"></div>
+</div>
+
+<div class="bg-wrap" style="z-index: -1;">
+    <div class="bg-grid"></div>
+    <div class="pulse-orb orb-1"></div>
+    <div class="pulse-orb orb-2"></div>
+</div>
+
+
+
 
 <!-- Live Counter -->
 <div class="live-counter">
@@ -1089,8 +1091,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 </div>
 
 <div class="wrapper" style="position: relative; z-index: 2;">
-    <header class="hero-section" style="height: 50vh; min-height: 300px; margin-bottom: 0;">
-    </header>
 
     <div class="slot-card" style="margin-top: -50px; position: relative; z-index: 10;">
         <div class="slot-card-title">Undian Kejutan &mdash; Putar Sekarang</div>
