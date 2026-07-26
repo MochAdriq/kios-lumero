@@ -599,13 +599,20 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     /* ══════════════════════════════════════════
        AUTO-CLAIM SUCCESS CONFETTI (member logged in)
        ══════════════════════════════════════════ */
-{{ ... }}
+
     <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
     window.addEventListener('load', () => {
         setTimeout(() => fireConfetti(), 600);
     });
     <?php endif; ?>
 </script>
+</body>
+</html>
+<?php 
+    exit;
+} 
+?>
+
 <!doctype html>
 <html lang="id">
 <head>
