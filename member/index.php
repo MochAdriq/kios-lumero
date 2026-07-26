@@ -1021,7 +1021,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         Lumero
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
-        <div class="nav-badge">100% Menang</div>
+        <div class="nav-badge">Traktiran Eksklusif</div>
         <a href="<?= url('/member/login.php') ?>?source=organic" class="btn-nav">Cek Tiket</a>
     </div>
 </nav>
@@ -1048,11 +1048,11 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <header class="hero-section">
         <div class="hero-label">Grand Opening Eksklusif</div>
         <h1 class="hero-title">Putar. Menang.<br><span class="accent">Langsung Klaim.</span></h1>
-        <p class="hero-sub">Setiap putaran <b>dijamin menang.</b> Hadiah langsung diamankan ke nomor WhatsApp Anda dalam hitungan detik.</p>
+        <p class="hero-sub">Dalam rangka Grand Opening Kalibunder, kami menyiapkan <b>kejutan spesial</b> untuk Anda. Putar roulette-nya dan amankan traktiran Anda hari ini!</p>
         <div class="guarantee-row">
-            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 100% Pasti Menang</div>
-            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Tanpa Syarat Tersembunyi</div>
-            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Klaim Instan</div>
+            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Spesial Warga Kalibunder</div>
+            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Gratis Sepenuhnya</div>
+            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Langsung Ambil di Outlet</div>
         </div>
     </header>
 
@@ -1227,7 +1227,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     function spinRoulette() {
         if (state !== 'idle') return;
         btnSpin.disabled = true;
-        btnSpin.innerHTML = '<span style="font-size:18px;">â³</span> Mengundi Hadiah Anda...';
+        btnSpin.innerHTML = '<svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Mengundi Hadiah Anda...';
         fetch('', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -1245,13 +1245,13 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             } else {
                 alert('Gagal memutar: ' + (data.error || 'Server error'));
                 btnSpin.disabled = false;
-                btnSpin.innerHTML = '<span class="spin-icon">ðŸŽ°</span> Putar Roulette â€” GRATIS!';
+                btnSpin.innerHTML = '<svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Putar Roulette &mdash; GRATIS!';
             }
         })
         .catch(() => {
             alert('Koneksi gagal. Coba lagi.');
             btnSpin.disabled = false;
-            btnSpin.innerHTML = '<span class="spin-icon">ðŸŽ°</span> Putar Roulette â€” GRATIS!';
+            btnSpin.innerHTML = '<svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Putar Roulette &mdash; GRATIS!';
         });
     }
 
