@@ -97,6 +97,8 @@ if (class_exists('LoyaltyController')) {
     $router->get('/loyalty/redemptions', [LoyaltyController::class, 'redemptions']);
     $router->post('/loyalty/redemptions/update-status', [LoyaltyController::class, 'updateRedemptionStatus']);
     $router->post('/loyalty/settings/update', [LoyaltyController::class, 'updateSettings']);
+    $router->get('/loyalty/eventClaims', [LoyaltyController::class, 'eventClaims']);
+    $router->post('/loyalty/processEventClaim', [LoyaltyController::class, 'processEventClaim']);
 }
 $memberHandler = function() {
     require __DIR__ . '/../member/index.php';
