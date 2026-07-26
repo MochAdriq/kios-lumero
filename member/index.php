@@ -230,7 +230,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             display: flex; align-items: center; justify-content: center; gap: 10px;
             width: 100%; padding: 18px 28px;
             background: linear-gradient(135deg, var(--red) 0%, #e01535 100%);
-            color: var(--text-main); font-size: 16px; font-weight: 800;
+            color: #fff; font-size: 16px; font-weight: 800;
             border: none; border-radius: 16px; cursor: pointer;
             text-decoration: none;
             box-shadow: 0 12px 30px rgba(196,18,48,0.3);
@@ -644,33 +644,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     });
     <?php endif; ?>
 </script>
-
-<script>
-    function toggleTheme() {
-        const html = document.documentElement;
-        const isDark = html.getAttribute('data-theme') === 'dark';
-        if(isDark) {
-            html.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
-            document.querySelector('#themeToggle').innerHTML = '<i class="fa-solid fa-moon"></i>';
-        } else {
-            html.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            document.querySelector('#themeToggle').innerHTML = '<i class="fa-solid fa-sun"></i>';
-        }
-    }
-    // Init theme
-    if(localStorage.getItem('theme') === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        window.addEventListener('DOMContentLoaded', () => {
-            const btn = document.querySelector('#themeToggle');
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
-        });
-    } else {
-        // default to light as requested
-    }
-</script>
-
 </body>
 </html>
 <?php 
@@ -696,43 +669,19 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             --gold: #ffc72c;
             --gold-dark: #e6a800;
             --ink: #0f172a;
-            
-            /* Light Theme */
-            --bg-main: #fffcf5;
-            --bg-surface: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: rgba(0,0,0,0.08);
-            --card-bg: rgba(255,255,255,0.9);
-            --card-border: rgba(0,0,0,0.08);
-            --nav-bg: rgba(255, 252, 245, 1);
-            --hero-bg: #fffcf5;
-            --hero-overlay: linear-gradient(to bottom, rgba(255, 252, 245, 0) 0%, rgba(255, 252, 245, 1) 90%);
-        }
-
-        [data-theme="dark"] {
-            /* Dark Theme */
-            --bg-main: #0a0a0f;
-            --bg-surface: #12121a;
-            --text-main: #ffffff;
-            --text-muted: rgba(255,255,255,0.5);
-            --border-color: rgba(255,255,255,0.08);
-            --card-bg: rgba(255,255,255,0.04);
-            --card-border: rgba(255,255,255,0.1);
-            --nav-bg: rgba(10, 10, 20, 1);
-            --hero-bg: #0a0a0f;
-            --hero-overlay: linear-gradient(to bottom, rgba(10,10,15,0) 0%, rgba(10,10,15,1) 90%);
+            --muted: #64748b;
+            --surface: #fff;
+            --cream: #fffcf5;
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-            background: var(--bg-main);
-            color: var(--text-main);
+            background: #0a0a0f;
+            color: #fff;
             min-height: 100svh;
             overflow-x: hidden;
-            transition: background 0.3s, color 0.3s;
         }
 
         /* â”€â”€ Animated BG â”€â”€ */
@@ -764,20 +713,22 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .navbar {
             display: flex; justify-content: space-between; align-items: center;
             padding: 18px 20px; position: sticky; top: 0; z-index: 100;
-            background: var(--nav-bg); backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(10,10,20,0.7); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
-        .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 17px; color: var(--text-main); } .nav-logo img { width: 30px; height: 30px; border-radius: 8px; }
+        .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 17px; color: #fff; }
+        .nav-logo img { width: 30px; height: 30px; border-radius: 8px; }
         .nav-badge {
             background: linear-gradient(135deg, var(--red) 0%, #ff3d5a 100%);
-            color: var(--text-main); font-size: 11px; font-weight: 800; padding: 4px 10px;
+            color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px;
             border-radius: 99px; letter-spacing: 0.04em; text-transform: uppercase;
             animation: badgePulse 2s ease-in-out infinite;
         }
         @keyframes badgePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(196,18,48,0.5); } 50% { box-shadow: 0 0 0 8px rgba(196,18,48,0); } }
         .btn-nav {
             border: 1px solid rgba(255,255,255,0.2); padding: 9px 18px; border-radius: 99px;
-            text-decoration: none; color: var(--text-main); font-weight: 700; font-size: 12px; background: var(--border-color); backdrop-filter: blur(10px);
+            text-decoration: none; color: #fff; font-weight: 700; font-size: 12px;
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
             transition: all 0.2s;
         }
         .btn-nav:hover { background: rgba(255,255,255,0.18); }
@@ -797,12 +748,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         /* â”€â”€ Live Counter â”€â”€ */
         .live-counter {
             display: flex; align-items: center; justify-content: center; gap: 24px;
-            padding: 16px 20px; background: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
+            padding: 16px 20px; background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
         .counter-item { text-align: center; }
         .counter-number { font-size: 22px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
-        .counter-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+        .counter-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; }
         .counter-sep { width: 1px; height: 36px; background: rgba(255,255,255,0.1); }
 
         /* â”€â”€ Hero Section â”€â”€ */
@@ -827,10 +778,10 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
         .hero-sub {
-            font-size: 15px; color: var(--text-muted); font-weight: 500;
+            font-size: 15px; color: rgba(255,255,255,0.55); font-weight: 500;
             line-height: 1.7; max-width: 380px; margin: 0 auto 32px;
         }
-        .hero-sub b { color: var(--text-main); }
+        .hero-sub b { color: rgba(255,255,255,0.85); }
 
         /* â”€â”€ Guarantee Badges â”€â”€ */
         .guarantee-row {
@@ -839,15 +790,15 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
         .g-badge {
             display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.06); border: 1px solid var(--card-border);
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
             padding: 8px 14px; border-radius: 99px; font-size: 12px; font-weight: 700;
-            color: var(--text-main);
+            color: rgba(255,255,255,0.8);
         }
 
         /* â”€â”€ Slot Machine Card â”€â”€ */
         .slot-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
+            background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 28px; padding: 28px 20px 24px;
             margin-bottom: 20px; position: relative; overflow: hidden;
             backdrop-filter: blur(20px);
@@ -858,14 +809,14 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             pointer-events: none;
         }
         .slot-card-title {
-            font-size: 13px; font-weight: 800; color: var(--text-muted);
+            font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.4);
             text-transform: uppercase; letter-spacing: 0.1em; text-align: center;
             margin-bottom: 20px;
         }
 
         .slot-viewport {
             position: relative; width: 100%; height: 120px;
-            background: rgba(0,0,0,0.4); border: 1px solid var(--card-border);
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px; margin: 0 auto 24px; overflow: hidden;
             display: flex; align-items: center;
             box-shadow: inset 0 0 30px rgba(0,0,0,0.3);
@@ -896,7 +847,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .slot-item {
             width: 88px; height: 88px;
             background: rgba(255,255,255,0.06);
-            border: 1px solid var(--card-border);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px; display: flex; flex-direction: column; align-items: center;
             justify-content: center; gap: 6px; flex-shrink: 0; padding: 8px; text-align: center;
             transition: border-color 0.3s;
@@ -906,7 +857,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             box-shadow: 0 0 20px rgba(255,199,44,0.3), inset 0 0 20px rgba(255,199,44,0.05);
         }
         .slot-item img { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
-        .slot-item span { font-size: 10px; font-weight: 800; color: var(--text-main); line-height: 1.2; }
+        .slot-item span { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.85); line-height: 1.2; }
 
         /* â”€â”€ CTA Button â”€â”€ */
         .btn-spin {
@@ -914,7 +865,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             width: 100%; padding: 18px 24px;
             background: linear-gradient(135deg, var(--red) 0%, #ff2244 50%, var(--red) 100%);
             background-size: 200% 100%;
-            color: var(--text-main); font-size: 17px; font-weight: 900; border: none; border-radius: 18px;
+            color: #fff; font-size: 17px; font-weight: 900; border: none; border-radius: 18px;
             cursor: pointer; letter-spacing: -0.01em;
             box-shadow: 0 12px 40px rgba(196,18,48,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
             transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
@@ -948,9 +899,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
         @keyframes popIn { from { opacity:0; transform:scale(0.9) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
         .result-congrats { font-size: 32px; margin-bottom: 4px; }
-        .result-title { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 4px; }
+        .result-title { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px; }
         .result-prize-name { font-size: 26px; font-weight: 900; color: var(--gold); margin-bottom: 8px; letter-spacing: -0.02em; }
-        .result-sub { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 20px; line-height: 1.6; }
+        .result-sub { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 600; margin-bottom: 20px; line-height: 1.6; }
 
         .btn-claim {
             display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -969,14 +920,14 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         /* â”€â”€ Social Proof Ticker â”€â”€ */
         .ticker-wrap {
             overflow: hidden; padding: 14px 0;
-            border-top: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 40px; background: var(--card-bg);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 40px; background: rgba(0,0,0,0.2);
         }
         .ticker-track {
             display: inline-flex; gap: 48px; white-space: nowrap;
             animation: ticker 25s linear infinite;
-            font-size: 13px; font-weight: 600; color: var(--text-muted);
+            font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
         }
         .ticker-track .win { color: var(--gold); font-weight: 800; }
         @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -988,13 +939,13 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.1em;
             text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
         }
-        .section-title { font-size: 22px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
-        .section-sub { font-size: 14px; color: var(--text-muted); font-weight: 500; line-height: 1.6; }
+        .section-title { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+        .section-sub { font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 500; line-height: 1.6; }
 
         /* â”€â”€ Prize Grid â”€â”€ */
         .prize-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .prize-card {
-            background: var(--card-bg); border: 1px solid var(--card-border);
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px; padding: 20px 16px; text-align: center;
             transition: all 0.3s; position: relative; overflow: hidden;
         }
@@ -1002,7 +953,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .prize-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 70%, rgba(255,199,44,0.03) 100%); }
         .prize-card img { width: 72px; height: 72px; object-fit: contain; margin-bottom: 12px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); transition: transform 0.3s; }
         .prize-card:hover img { transform: scale(1.1) rotate(-3deg); }
-        .prize-card h4 { font-size: 13px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+        .prize-card h4 { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px; }
         .prize-card .prize-badge {
             font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px;
             background: rgba(255,199,44,0.15); color: var(--gold); letter-spacing: 0.04em;
@@ -1014,7 +965,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .steps { display: flex; flex-direction: column; gap: 16px; }
         .step {
             display: flex; align-items: flex-start; gap: 16px;
-            background: var(--card-bg); border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
             border-radius: 18px; padding: 18px;
         }
         .step-num {
@@ -1023,12 +974,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             font-size: 18px; font-weight: 900;
             background: linear-gradient(135deg, var(--red-dark) 0%, var(--red) 100%);
         }
-        .step-text h4 { font-size: 15px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
-        .step-text p { font-size: 13px; color: var(--text-muted); font-weight: 500; line-height: 1.5; }
+        .step-text h4 { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .step-text p { font-size: 13px; color: rgba(255,255,255,0.45); font-weight: 500; line-height: 1.5; }
 
         /* â”€â”€ Location Card â”€â”€ */
         .location-card {
-            background: var(--card-bg); border: 1px solid var(--card-border);
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 24px; overflow: hidden;
         }
         .location-header {
@@ -1043,12 +994,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             animation: countdownBlink 2s step-end infinite;
         }
         @keyframes countdownBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .location-header h3 { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 4px; }
-        .location-header p { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        .location-header h3 { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+        .location-header p { font-size: 14px; color: rgba(255,255,255,0.45); font-weight: 500; }
         .map-placeholder {
             height: 160px; background: rgba(0,0,0,0.3);
             display: flex; align-items: center; justify-content: center;
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid rgba(255,255,255,0.06);
         }
         .map-placeholder iframe { width: 100%; height: 100%; border: 0; }
 
@@ -1056,14 +1007,14 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .bottom-cta {
             text-align: center; padding: 40px 0 60px;
         }
-        .bottom-cta h2 { font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
-        .bottom-cta p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; font-weight: 500; line-height: 1.6; }
+        .bottom-cta h2 { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+        .bottom-cta p { font-size: 14px; color: rgba(255,255,255,0.4); margin-bottom: 24px; font-weight: 500; line-height: 1.6; }
 
         .btn-cta-big {
             display: inline-flex; align-items: center; justify-content: center; gap: 10px;
             padding: 18px 40px; border-radius: 18px;
             background: linear-gradient(135deg, var(--red) 0%, #ff2244 100%);
-            color: var(--text-main); font-size: 16px; font-weight: 900; text-decoration: none;
+            color: #fff; font-size: 16px; font-weight: 900; text-decoration: none;
             box-shadow: 0 12px 40px rgba(196,18,48,0.4);
             transition: all 0.3s;
         }
@@ -1094,7 +1045,11 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 </head>
 <body>
 
-
+<!-- Full Width Hero Background -->
+<div style="position: absolute; top: 0; left: 0; width: 100%; height: 80vh; min-height: 600px; z-index: 0; background-color: #0a0a0f; background-image: url('../public/assets/images/member-hero.jpeg?v=<?= time() ?>'); background-size: contain; background-position: top center; background-repeat: no-repeat; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;">
+    <!-- Dark overlay for text readability -->
+    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,15,0.7) 0%, rgba(10,10,15,1) 90%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;"></div>
+</div>
 
 <div class="bg-wrap" style="z-index: -1;">
     <div class="bg-grid"></div>
@@ -1110,20 +1065,10 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         Lumero
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
-        
-        <button id="themeToggle" class="btn-nav" style="margin-right:8px; cursor:pointer; width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" onclick="toggleTheme()">
-            <i class="fa-solid fa-moon"></i>
-        </button>
         <div class="nav-badge">Traktiran Eksklusif</div>
         <a href="<?= url('/member/login.php') ?>?source=organic" class="btn-nav">Login</a>
     </div>
 </nav>
-
-<!-- Full Width Hero Background (Relative to document flow) -->
-<div class="hero-image-wrapper" style="position: relative; width: 100%; height: 60vh; min-height: 400px; z-index: 0; background-color: var(--hero-bg); background-image: url('../public/assets/images/member-hero.jpeg?v=<?= time() ?>'); background-size: contain; background-position: top center; background-repeat: no-repeat; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; margin-top: 0;">
-    <!-- Fade out overlay -->
-    <div style="position: absolute; inset: 0; background: var(--hero-overlay); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;"></div>
-</div>
 
 <!-- Live Counter -->
 <div class="live-counter">
@@ -1166,7 +1111,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             </div>
             <div class="result-title">Selamat! Anda Menang!</div>
             <div class="result-prize-name" id="prize-name">Hadiah</div>
-            <p class="result-sub">Kupon hadiah ini <b style="color: var(--text-main);">akan hangus dalam 7 hari</b> jika tidak diamankan ke nomor WhatsApp Anda sekarang.<br>Jangan biarkan orang lain mengklaimnya!</p>
+            <p class="result-sub">Kupon hadiah ini <b style="color:rgba(255,255,255,0.8);">akan hangus dalam 7 hari</b> jika tidak diamankan ke nomor WhatsApp Anda sekarang.<br>Jangan biarkan orang lain mengklaimnya!</p>
             <a id="claim-btn" href="<?= url('/member/login.php') ?>?source=event_kalibunder" class="btn-claim">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
                 Amankan Hadiah Ke WhatsApp Saya
@@ -1375,33 +1320,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     }
     updateTimer();
     setInterval(updateTimer, 1000);
-</script>
-
-
-<script>
-    function toggleTheme() {
-        const html = document.documentElement;
-        const isDark = html.getAttribute('data-theme') === 'dark';
-        if(isDark) {
-            html.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
-            document.querySelector('#themeToggle').innerHTML = '<i class="fa-solid fa-moon"></i>';
-        } else {
-            html.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            document.querySelector('#themeToggle').innerHTML = '<i class="fa-solid fa-sun"></i>';
-        }
-    }
-    // Init theme
-    if(localStorage.getItem('theme') === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        window.addEventListener('DOMContentLoaded', () => {
-            const btn = document.querySelector('#themeToggle');
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
-        });
-    } else {
-        // default to light as requested
-    }
 </script>
 
 </body>
