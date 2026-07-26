@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../config/loyalty.php';
+
 class LoyaltyController extends Controller
 {
     public function members()
