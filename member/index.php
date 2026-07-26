@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../helpers/functions.php';
 require_once __DIR__ . '/../core/Database.php';
@@ -1013,10 +1013,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <div class="pulse-orb orb-2"></div>
 </div>
 
-<!-- Urgency Banner -->
-<div class="urgency-banner">
-    <span class="live-dot"></span> <span>LIVE</span> &nbsp;&middot;&nbsp; GRAND OPENING KALIBUNDER &nbsp;&middot;&nbsp; Event Terbatas &mdash; Hadiah Habis, Kesempatan Hangus!
-</div>
 
 <!-- Navbar -->
 <nav class="navbar">
@@ -1164,14 +1160,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
     </section>
 
-    <div class="bottom-cta">
-        <h2>Masih Ragu? Stok Hadiah Makin Menipis!</h2>
-        <p>Sudah <b style="color:#fff;">247 orang</b> memutar hari ini. Semakin lama menunggu, semakin besar kemungkinan hadiah terbaik habis.</p>
-        <a href="#action-area" class="btn-cta-big" onclick="document.getElementById('btn-spin').click(); return false;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Putar Sekarang &mdash; GRATIS
-        </a>
-    </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script>
