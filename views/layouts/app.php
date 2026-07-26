@@ -111,6 +111,7 @@ if ($isHQUser) {
         ['label' => 'Manajemen Modal Outlet',    'icon' => 'ti ti-wallet',                 'url' => '/capital',    'roles' => $ADMIN],
         ['label' => 'Inovasi & Uji Coba Menu',   'icon' => 'ti ti-bulb',                   'url' => '/innovation', 'roles' => $ADMIN],
         ['label' => 'Karyawan & Gaji Toko',      'icon' => 'ti ti-users',                  'url' => '/users',      'roles' => $ADMIN],
+        ['label' => 'Setting Sistem',            'icon' => 'ti ti-settings',               'url' => '/settings',   'roles' => $ADMIN],
     ];
 }
 ?>
