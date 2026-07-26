@@ -316,6 +316,36 @@ function outlet_scope_sql(string $column = 'outlet_id', ?int $outletId = null): 
     ];
 }
 
+function get_setting(string $key, string $default = ''): string
+{
+    static $cache = [];
+    $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+    $cacheKey = $outletId . ':' . $key;
+    if (array_key_exists($cacheKey, $cache)) {
+        return $cache[$cacheKey];
+    }
+    try {
+        $pdo = Database::connection();
+        // Prioritize exact outlet match, then NULL/0
+        $row = $pdo->prepare(
+            'SELECT setting_value FROM system_settings WHERE setting_key = ? AND outlet_id = ? LIMIT 1'
+        );
+        $row->execute([$key, $outletId]);
+        $val = $row->fetchColumn();
+        if ($val === false) {
+            $row2 = $pdo->prepare(
+                'SELECT setting_value FROM system_settings WHERE setting_key = ? AND (outlet_id IS NULL OR outlet_id = 0) LIMIT 1'
+            );
+            $row2->execute([$key]);
+            $val = $row2->fetchColumn();
+        }
+        $cache[$cacheKey] = $val !== false ? (string)$val : $default;
+    } catch (Throwable $e) {
+        $cache[$cacheKey] = $default;
+    }
+    return $cache[$cacheKey];
+}
+
 function rupiah($value): string
 {
     return 'Rp ' . number_format((float)$value, 0, ',', '.');

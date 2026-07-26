@@ -1,6 +1,6 @@
 <?php include __DIR__.'/../shared-flash.php'; ?>
 <div class="sim-hero mb-4"><div><span class="sim-kicker">System Configuration</span><h2>Setting Sistem</h2><p>Profil outlet, service charge, printer, payment gateway, dan konfigurasi umum.</p></div></div>
-<form method="post" enctype="multipart/form-data">
+<form method="post" action="<?= url('/settings') ?>" enctype="multipart/form-data">
     <?= csrf_field() ?>
     <div class="row g-4">
         <div class="col-lg-6">
