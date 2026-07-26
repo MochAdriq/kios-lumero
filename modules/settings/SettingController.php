@@ -18,15 +18,15 @@ class SettingController extends Controller
             if ($_FILES['qris_image']['error'] === UPLOAD_ERR_OK) {
                 $ext = strtolower(pathinfo($_FILES['qris_image']['name'], PATHINFO_EXTENSION));
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                    $uploadDir = __DIR__ . '/../../public/assets/images/pos-products/payment/';
+                    $uploadDir = __DIR__ . '/../../public/assets/qris/';
                     if (!is_dir($uploadDir)) @mkdir($uploadDir, 0755, true);
                     
-                    $filename = 'qris_' . time() . '.' . $ext;
+                    $filename = 'qris_outlet_' . current_outlet_id() . '_' . time() . '.' . $ext;
                     $targetFile = $uploadDir . $filename;
                     
                     if (move_uploaded_file($_FILES['qris_image']['tmp_name'], $targetFile)) {
                         if (!isset($postData['settings'])) $postData['settings'] = [];
-                        $postData['settings']['payment_qris_image'] = 'public/assets/images/pos-products/payment/' . $filename;
+                        $postData['settings']['payment_qris_image'] = 'public/assets/qris/' . $filename;
                     } else {
                         file_put_contents('scratch_upload_err.txt', "Failed to move uploaded file\n", FILE_APPEND);
                     }

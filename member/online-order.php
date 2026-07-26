@@ -69,8 +69,8 @@ $tomorrow=(new DateTime($today))->modify('+1 day')->format('Y-m-d');
 $nowTime=date('H:i');
 
 $qrisInfo=function_exists('get_setting')?get_setting('payment_qris_info','Scan QRIS outlet D\'Celup'):'Scan QRIS outlet D\'Celup';
-$paymentQrisImage=trim((string)(function_exists('get_setting')?get_setting('payment_qris_image','public/assets/images/pos-products/payment/qris-dana.jpeg'):'public/assets/images/pos-products/payment/qris-dana.jpeg'));
-if($paymentQrisImage==='' || $paymentQrisImage==='assets/img/payment/qris-dana.jpeg') $paymentQrisImage='public/assets/images/pos-products/payment/qris-dana.jpeg';
+$paymentQrisImage=trim((string)(function_exists('get_setting')?get_setting('payment_qris_image',''):''));
+if($paymentQrisImage==='assets/img/payment/qris-dana.jpeg' || $paymentQrisImage==='public/assets/images/pos-products/payment/qris-dana.jpeg') $paymentQrisImage='';
 $bankName='BCA';
 $bankAccountName='Sri Kusma Dewi';
 $bankAccountNo='0382731393';
