@@ -25,6 +25,12 @@ if (!$claim) {
     header('Location: dashboard.php');
     exit;
 }
+
+if ($claim['status'] === 'PENDING' && strtotime($claim['expired_at']) < time()) {
+    $pdo->prepare("UPDATE reward_claims SET status = 'EXPIRED' WHERE id = ?")->execute([$claim['id']]);
+    $claim['status'] = 'EXPIRED';
+}
+
 ?>
 <!doctype html>
 <html lang="id">
@@ -96,12 +102,45 @@ if (!$claim) {
             <p style="font-size: 13px; color: #666; margin-bottom: 4px;">HADIAH ANDA</p>
             <p style="font-size: 20px; font-weight: 800; color: var(--ink);"><?= htmlspecialchars($claim['prize_name']) ?></p>
         </div>
-        <p style="font-size: 11px; color: #999; margin-top: 20px;">Berlaku sampai: <?= date('d M Y H:i', strtotime($claim['expired_at'])) ?></p>
+        <?php if ($claim['status'] === 'PENDING'): ?>
+            <div style="margin-top: 20px; padding: 12px; border-radius: 12px; background: #fffaf0; border: 1px dashed var(--gold);">
+                <p style="margin:0 0 6px; font-size: 11px; font-weight: 800; color: var(--gold); text-transform: uppercase;">Kupon Berakhir Dalam</p>
+                <div id="countdown" style="font-size: 20px; font-weight: 900; color: var(--red); font-variant-numeric: tabular-nums;">-- : -- : --</div>
+            </div>
+        <?php else: ?>
+            <p style="font-size: 11px; color: #999; margin-top: 20px; font-weight: 600;">Berlaku sampai: <?= date('d M Y H:i', strtotime($claim['expired_at'])) ?></p>
+        <?php endif; ?>
     </div>
     
     <a href="dashboard.php" class="btn">Kembali ke Dashboard</a>
     
     <script>
+        <?php if ($claim['status'] === 'PENDING'): ?>
+        const expiredAt = new Date("<?= date('Y-m-d\TH:i:s', strtotime($claim['expired_at'])) ?>").getTime();
+        const cdEl = document.getElementById('countdown');
+        const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = expiredAt - now;
+            if (distance < 0) {
+                clearInterval(timer);
+                cdEl.innerHTML = "WAKTU HABIS";
+                setTimeout(() => window.location.reload(), 2000);
+                return;
+            }
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            let out = "";
+            if (days > 0) out += days + " Hari ";
+            out += String(hours).padStart(2, '0') + "j ";
+            out += String(minutes).padStart(2, '0') + "m ";
+            out += String(seconds).padStart(2, '0') + "d";
+            cdEl.innerHTML = out;
+        }, 1000);
+        <?php endif; ?>
+
         new QRCode(document.getElementById("qrcode"), {
             text: "<?= addslashes($claim['qr_code']) ?>",
             width: 200,

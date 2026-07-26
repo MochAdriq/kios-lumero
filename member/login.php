@@ -44,11 +44,11 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
         } elseif ($row['status'] === 'CLAIMED') {
             return ' 🚨 Sistem mendeteksi Anda sudah pernah mengambil hadiah Grand Opening ini. Terima kasih partisipasinya dan berikan kesempatan bagi yang lain ya! 😉';
         } else {
-            return ' 🚨 Kupon Anda sebelumnya sudah hangus karena lewat batas 48 jam. Sayang sekali, kesempatan undian ini hanya berlaku satu kali untuk setiap akun.';
+            return ' 🚨 Kupon Anda sebelumnya sudah hangus karena lewat batas 7 hari. Sayang sekali, kesempatan undian ini hanya berlaku satu kali untuk setiap akun.';
         }
     }
     $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
-    $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 3 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
+    $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
 
     return ' Kupon Grand Opening berhasil diklaim: ' . mem_e($prize['name']) . '!';
 }
