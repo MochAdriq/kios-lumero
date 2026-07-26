@@ -228,6 +228,13 @@ class LoyaltyController extends Controller
                 throw new Exception("Tiket ini sudah ditukarkan sebelumnya.");
             }
 
+            if ($claim['status'] === 'EXPIRED' || (!empty($claim['expired_at']) && strtotime($claim['expired_at']) < time())) {
+                if ($claim['status'] !== 'EXPIRED') {
+                    $pdo->prepare("UPDATE reward_claims SET status = 'EXPIRED' WHERE id = ?")->execute([$claim['id']]);
+                }
+                throw new Exception("Maaf, kupon ini sudah kedaluwarsa/hangus dan tidak berlaku lagi.");
+            }
+
             if ($claim['stock'] <= 0) {
                 throw new Exception("Maaf, stok hadiah (" . $claim['prize_name'] . ") sudah habis!");
             }
