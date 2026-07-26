@@ -115,7 +115,7 @@
                     <tr>
                         <td class="ps-4">
                             <?php if (!empty($p['image_url'])): ?>
-                                <img src="<?= url('/' . $p['image_url']) ?>" class="rounded-3 object-fit-cover shadow-sm" style="width: 48px; height: 48px;">
+                                <img src="<?= htmlspecialchars(loyalty_resolve_image_url($p['image_url'])) ?>" class="rounded-3 object-fit-cover shadow-sm" style="width: 48px; height: 48px;">
                             <?php else: ?>
                                 <div class="rounded-3 bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
                                     <i class="ti ti-photo fs-4"></i>
@@ -150,7 +150,7 @@
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= $p['id'] ?>">
                                 <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
-                                    <i class="ti ti-trash"></i>
+                                    <i class="ti ti-trash"></i> Hapus
                                 </button>
                             </form>
                         </td>
