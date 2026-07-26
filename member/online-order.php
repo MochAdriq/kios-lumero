@@ -71,6 +71,10 @@ $nowTime=date('H:i');
 $qrisInfo=function_exists('get_setting')?get_setting('payment_qris_info','Scan QRIS outlet D\'Celup'):'Scan QRIS outlet D\'Celup';
 $paymentQrisImage=trim((string)(function_exists('get_setting')?get_setting('payment_qris_image',''):''));
 if($paymentQrisImage==='assets/img/payment/qris-dana.jpeg' || $paymentQrisImage==='public/assets/images/pos-products/payment/qris-dana.jpeg') $paymentQrisImage='';
+
+require_once __DIR__.'/../helpers/MidtransService.php';
+$isMidtransQris = (get_setting('qris_payment_method', 'manual') === 'midtrans') && class_exists('MidtransService') && MidtransService::getServerKey() !== '';
+
 $bankName='BCA';
 $bankAccountName='Sri Kusma Dewi';
 $bankAccountNo='0382731393';
@@ -197,10 +201,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     }
 
     // === MIDTRANS QRIS: Intercept untuk payment QRIS via AJAX ===
-    $isMidtransQris = (get_setting('qris_payment_method', 'manual') === 'midtrans') && class_exists('MidtransService') && MidtransService::getServerKey() !== '';
     if ($paymentMethod === 'qris' && $isMidtransQris && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         try {
-            require_once __DIR__.'/../helpers/MidtransService.php';
             $items = [];
             foreach ($calc['items'] as $ci) {
                 $items[] = [
