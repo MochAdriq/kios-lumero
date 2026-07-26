@@ -236,7 +236,7 @@ a { text-decoration: none; color: inherit; }
       <div class="summary-note">Siap ditukarkan dengan hadiah</div>
     </div>
     <div class="summary-card">
-      <div class="summary-label">Total Tiket Hadiah</div>
+      <div class="summary-label">Total Kupon Hadiah</div>
       <div class="summary-value"><?=number_format(count($redemptions),0,',','.')?></div>
       <div class="summary-note">Klaim penukaran tercatat</div>
     </div>
@@ -246,8 +246,8 @@ a { text-decoration: none; color: inherit; }
   <section class="reveal reveal-delay-1">
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
       <div>
-        <h2 style="font-size:24px; font-weight:900; letter-spacing:-0.03em;">Tiket Pengambilan Hadiah</h2>
-        <p style="font-size:14px; color:var(--muted); font-weight:600; margin-top:4px;">Kasir akan memindai QR atau memasukkan kode tiket di POS saat penyerahan hadiah.</p>
+        <h2 style="font-size:24px; font-weight:900; letter-spacing:-0.03em;">Kupon Pengambilan Hadiah</h2>
+        <p style="font-size:14px; color:var(--muted); font-weight:600; margin-top:4px;">Kasir akan memindai QR atau memasukkan kode kupon di POS saat penyerahan hadiah.</p>
       </div>
       <button class="btn btn-gold no-print" onclick="window.print()">Cetak / Simpan PDF</button>
     </div>
@@ -299,7 +299,7 @@ a { text-decoration: none; color: inherit; }
         <div style="font-size:40px; color:var(--subtle); margin-bottom:16px;">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 5v2"/><path d="M15 11v2"/><path d="M15 17v2"/><path d="M5 5h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4V7a2 2 0 012-2z"/></svg>
         </div>
-        <div class="empty-state-title">Belum Ada Tiket Hadiah</div>
+        <div class="empty-state-title">Belum Ada Kupon Hadiah</div>
         <div class="empty-state-desc">Anda belum menukarkan poin dengan hadiah. Buka katalog penukaran sekarang.</div>
         <a class="btn btn-red" href="dashboard.php?page=penukaran">Lihat Katalog Penukaran</a>
       </div>

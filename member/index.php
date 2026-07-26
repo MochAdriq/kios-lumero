@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../helpers/functions.php';
 require_once __DIR__ . '/../core/Database.php';
@@ -1112,12 +1112,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             </div>
             <div class="result-title">Selamat! Anda Menang!</div>
             <div class="result-prize-name" id="prize-name">Hadiah</div>
-            <p class="result-sub">Tiket hadiah ini <b style="color:rgba(255,255,255,0.8);">akan hangus dalam 48 jam</b> jika tidak diamankan ke nomor WhatsApp Anda sekarang.<br>Jangan biarkan orang lain mengklaimnya!</p>
+            <p class="result-sub">Kupon hadiah ini <b style="color:rgba(255,255,255,0.8);">akan hangus dalam 48 jam</b> jika tidak diamankan ke nomor WhatsApp Anda sekarang.<br>Jangan biarkan orang lain mengklaimnya!</p>
             <a id="claim-btn" href="<?= url('/member/login.php') ?>?source=event_kalibunder" class="btn-claim">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
                 Amankan Hadiah Ke WhatsApp Saya
             </a>
-            <p class="claim-warning">*Masukkan nomor WA &middot; Tiket digital dikirim otomatis &middot; Klaim di Outlet Kalibunder</p>
+            <p class="claim-warning">*Masukkan nomor WA &middot; Kupon digital dikirim otomatis &middot; Klaim di Outlet Kalibunder</p>
         </div>
     </div>
 
@@ -1175,8 +1175,8 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
         <div class="steps">
             <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Putar Undian &mdash; GRATIS</h4><p>Klik tombol merah di atas. Tidak perlu daftar, tidak perlu bayar. Semua putaran dijamin mendapatkan hadiah nyata.</p></div></div>
-            <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Amankan Ke WhatsApp</h4><p>Setelah melihat hadiah Anda, masukkan nomor WA untuk mengunci tiket digital. Ini adalah "kunci brankas" hadiah Anda &mdash; jangan tunda!</p></div></div>
-            <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Klaim di Outlet Kalibunder</h4><p>Tunjukkan tiket digital dari WA ke kasir Lumero Kalibunder. Hadiah langsung diserahkan di tempat!</p></div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Amankan Ke WhatsApp</h4><p>Setelah melihat hadiah Anda, masukkan nomor WA untuk mengunci kupon digital. Ini adalah "kunci brankas" hadiah Anda &mdash; jangan tunda!</p></div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Klaim di Outlet Kalibunder</h4><p>Tunjukkan kupon digital dari WA ke kasir Lumero Kalibunder. Hadiah langsung diserahkan di tempat!</p></div></div>
         </div>
     </section>
 
@@ -1189,7 +1189,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             <div class="location-header">
                 <div class="event-countdown"><span class="live-dot"></span> Event Terbatas &middot; Jangan Sampai Kehabisan</div>
                 <h3>Lumero Outlet Kalibunder</h3>
-                <p>Tukarkan tiket digital Anda langsung di kasir kami sebelum hangus. Stok hadiah terbatas!</p>
+                <p>Tukarkan kupon digital Anda langsung di kasir kami sebelum hangus. Stok hadiah terbatas!</p>
             </div>
             <div class="map-placeholder">
                 <span style="color:rgba(255,255,255,0.25); font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.3)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> Peta Google Maps Kalibunder</span>

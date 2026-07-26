@@ -5,7 +5,7 @@
   <div class="section-row" style="align-items:center;">
     <div class="section-header" style="margin-bottom:0;">
       <h2 class="section-title">Katalog Reward</h2>
-      <p class="section-subtitle">Pilih menu reward impian Anda. Setelah diklaim, tunjukkan tiket digital ke kasir.</p>
+      <p class="section-subtitle">Pilih menu reward impian Anda. Setelah diklaim, tunjukkan kupon digital ke kasir.</p>
     </div>
     <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 20px; text-align:right; white-space:nowrap; box-shadow:var(--shadow-sm);">
       <span style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; display:block;">Saldo Poin</span>
@@ -83,7 +83,7 @@
   <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
     <div>
       <h3 style="font-size:18px; font-weight:900; letter-spacing:-0.02em;">Sudah Menukarkan Poin?</h3>
-      <p style="font-size:13px; color:var(--muted); font-weight:600; margin-top:4px;">Buka halaman tiket digital Anda untuk ditunjukkan ke kasir saat pengambilan hadiah.</p>
+      <p style="font-size:13px; color:var(--muted); font-weight:600; margin-top:4px;">Buka halaman kupon digital Anda untuk ditunjukkan ke kasir saat pengambilan hadiah.</p>
     </div>
     <a class="btn btn-gold" href="redemption-history.php">Buka Riwayat Penukaran</a>
   </div>

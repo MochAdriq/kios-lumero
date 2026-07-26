@@ -77,7 +77,7 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
         <div class="left-content">
             <img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero Logo" class="logo">
             <?php if (isset($_GET['source']) && $_GET['source'] === 'event_kalibunder' && !empty($_SESSION['pending_event_reward'])): ?>
-                <h1>Klaim Tiket VIP</h1>
+                <h1>Klaim Kupon</h1>
                 <p>Amankan hadiah kejutan Anda di dompet digital Lumero sebelum orang lain yang mengklaimnya.</p>
             <?php else: ?>
                 <h1>Member Loyalty Club</h1>
@@ -100,7 +100,7 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
             <?php if(!$pendingPhone): ?>
                 <?php if (isset($_GET['source']) && $_GET['source'] === 'event_kalibunder' && !empty($_SESSION['pending_event_reward'])): ?>
                     <h2 style="color:var(--red);">Amankan Hadiah Anda! 🚨</h2>
-                    <p class="subtitle">Jangan biarkan tiket <b><?= mem_e($_SESSION['pending_event_reward']['name']) ?></b> Anda hangus. Masukkan nomor WhatsApp sekarang untuk mengamankannya.</p>
+                    <p class="subtitle">Jangan biarkan kupon <b><?= mem_e($_SESSION['pending_event_reward']['name']) ?></b> Anda hangus. Masukkan nomor WhatsApp sekarang untuk mengamankannya.</p>
                 <?php else: ?>
                     <h2>Selamat Datang</h2>
                     <p class="subtitle">Masukkan nomor WhatsApp Anda untuk memulai sesi atau mendaftar member baru secara gratis.</p>
