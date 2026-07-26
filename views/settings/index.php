@@ -28,7 +28,7 @@
                 <label class="form-label mt-3">Gambar QRIS Statis (Manual)</label>
                 <?php if (!empty($settings['payment_qris_image'])): ?>
                     <div class="mb-2">
-                        <img src="<?= url('/' . $settings['payment_qris_image']) ?>" alt="QRIS" class="img-thumbnail" style="max-height: 150px;">
+                        <img src="<?= url('/' . $settings['payment_qris_image'], false) ?>" alt="QRIS" class="img-thumbnail" style="max-height: 150px;">
                     </div>
                 <?php endif; ?>
                 <input type="file" name="qris_image" class="form-control" accept="image/jpeg,image/png,image/webp">
