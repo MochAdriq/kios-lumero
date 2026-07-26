@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../helpers/functions.php';
 require_once __DIR__ . '/../core/Database.php';
@@ -1059,7 +1059,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
         <div class="nav-badge">Traktiran Eksklusif</div>
-        <a href="<?= url('/member/login.php') ?>?source=organic" class="btn-nav">Cek Tiket</a>
+        <a href="<?= url('/member/login.php') ?>?source=organic" class="btn-nav">Login</a>
     </div>
 </nav>
 
