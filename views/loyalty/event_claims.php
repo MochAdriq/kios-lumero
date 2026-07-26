@@ -27,11 +27,16 @@
                         <i class="ti ti-scan fs-1"></i>
                     </div>
                 </div>
-                <h4 class="fw-bold mb-3">Input Kode Klaim</h4>
-                <form action="<?= url('/loyalty/processEventClaim') ?>" method="POST">
+                <div id="qr-reader" style="width:100%; display:none; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 2px solid var(--bs-primary);"></div>
+                <button type="button" id="btn-scan" class="btn btn-outline-primary mb-4 fw-bold rounded-pill w-100">
+                    <i class="ti ti-camera me-2"></i> Buka Kamera Scan QR
+                </button>
+                
+                <h4 class="fw-bold mb-3">Atau Input Kode Manual</h4>
+                <form id="claim-form" action="<?= url('/loyalty/processEventClaim') ?>" method="POST">
                     <?= csrf_field() ?>
                     <div class="mb-4">
-                        <input type="text" name="qr_code" class="form-control form-control-lg text-center fw-bold" placeholder="Contoh: KAL-A1B2C3D4" required autofocus style="letter-spacing: 2px; font-size: 1.5rem;">
+                        <input type="text" id="qr_code_input" name="qr_code" class="form-control form-control-lg text-center fw-bold" placeholder="Contoh: KAL-A1B2C3D4" required autofocus style="letter-spacing: 2px; font-size: 1.5rem;">
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold">
                         <i class="ti ti-check me-2"></i> Tandai Sudah Diambil
@@ -88,5 +93,44 @@
         </div>
     </div>
 </div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const btnScan = document.getElementById('btn-scan');
+    const readerDiv = document.getElementById('qr-reader');
+    const inputCode = document.getElementById('qr_code_input');
+    const form = document.getElementById('claim-form');
+    let html5QrcodeScanner = null;
+
+    btnScan.addEventListener('click', function() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+            readerDiv.style.display = 'none';
+            btnScan.innerHTML = '<i class="ti ti-camera me-2"></i> Buka Kamera Scan QR';
+        } else {
+            readerDiv.style.display = 'block';
+            html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            btnScan.innerHTML = '<i class="ti ti-x me-2"></i> Tutup Kamera';
+        }
+    });
+
+    function onScanSuccess(decodedText, decodedResult) {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+        readerDiv.style.display = 'none';
+        btnScan.innerHTML = '<i class="ti ti-camera me-2"></i> Buka Kamera Scan QR';
+        
+        inputCode.value = decodedText;
+        form.submit();
+    }
+
+    function onScanFailure(error) {
+        // ignore errors while scanning
+    }
+});
+</script>
 
 <?php include __DIR__ . '/../../../views/layouts/footer.php'; ?>
