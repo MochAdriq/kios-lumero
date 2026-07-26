@@ -482,6 +482,138 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             <?php endif; ?>
         </div>
         <p class="sub-headline">Dari pesanan tadi, kamu berhak mendapat poin ekstra. Isi daya meteran untuk mengklaim!</p>
+
+        <!-- Goal Card -->
+        <div class="charge-card" id="chargeCard">
+            <div class="charge-label">Target Hadiahmu</div>
+            <div class="charge-product-name"><?= $goalName ?> Gratis!</div>
+            <img src="<?= $goalImg ?>" alt="<?= $goalName ?>" class="goal-product-img" onerror="this.src='../public/assets/images/pos-products/original.png'">
+            
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="progress-labels">
+                <span class="earned">+<?= $points ?> Pts hari ini!</span>
+                <span><?= $goalPoints ?> Pts goal</span>
+            </div>
+        </div>
+
+        <button class="btn-hold" id="btnHold">
+            ⚡ Tahan untuk Klaim Poin
+        </button>
+
+        <div id="charge-result" style="display:none; margin-top:24px;">
+            <div class="points-badge" style="animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;">
+                <div class="poin-num"><?= $points ?></div>
+                <div class="poin-label"><span>POIN</span><span>DIDAPAT!</span></div>
+            </div>
+            <br>
+            <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
+                <div class="success-badge">✅ Poin berhasil masuk ke dompetmu!</div>
+                <a href="<?= $dashboardUrl ?>" class="cta-btn">🏆 Lihat Progress Saya</a>
+            <?php else: ?>
+                <a href="<?= $loginUrl ?>" class="cta-btn">
+                    <span class="cta-pulse"></span>
+                    ⚡ Amankan Poin Saya!
+                </a>
+                <p class="helper-text">Jangan biarkan <?= $points ?> poin ini hangus! Daftar sekarang gratis.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+</div><!-- /surprise-wrapper -->
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+<script>
+    // Variables passed from PHP
+    const variant = '<?= $variant ?>';
+    const rewardPoints = <?= $points ?>;
+
+    function fireConfetti() {
+        if (typeof confetti === 'function') {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#c41230', '#ffc72c', '#ffffff', '#ff5e62', '#fde68a', '#f59e0b']
+            });
+        }
+    }
+
+    /* ══════════════════════════════════════════
+       VARIASI A: ROULETTE TICKER
+       ══════════════════════════════════════════ */
+    <?php if ($variant === 'A'): ?>
+    const track = document.getElementById('tickerTrack');
+    const btnSpin = document.getElementById('spinTickerBtn');
+    const resultDiv = document.getElementById('ticker-result');
+    const CARD_WIDTH = 96 + 12; // width + gap
+    
+    // Generate Cards
+    const items = [
+        { icon: '🎁', val: '10 Pts' }, { icon: '💸', val: '50 Pts' }, { icon: '✨', val: 'Zonk' }, 
+        { icon: '🎰', val: 'Jackpot' }, { icon: '🔥', val: '5 Pts' }, { icon: '💎', val: '100 Pts' }
+    ];
+    let cardsHTML = '';
+    for (let i = 0; i < 40; i++) {
+        const item = items[Math.floor(Math.random() * items.length)];
+        const isTarget = i === 28;
+        if (isTarget) {
+            cardsHTML += `<div class="ticker-card gold-card"><div class="card-icon">👑</div><div class="card-val">${rewardPoints} Pts</div></div>`;
+        } else {
+            cardsHTML += `<div class="ticker-card"><div class="card-icon">${item.icon}</div><div class="card-val">${item.val}</div></div>`;
+        }
+    }
+    if (track) track.innerHTML = cardsHTML;
+
+    window.startTickerSpin = function() {
+        btnSpin.disabled = true;
+        btnSpin.innerHTML = '⚡ Mengundi...';
+        
+        // Target index 28, center it
+        const viewportWidth = document.querySelector('.ticker-viewport').offsetWidth;
+        const centerOffset = (viewportWidth / 2) - (96 / 2); // 96 is card width
+        const targetX = (28 * CARD_WIDTH) - centerOffset;
+        
+        track.style.transform = `translate3d(-${targetX}px, 0, 0)`;
+        
+        setTimeout(() => {
+            fireConfetti();
+            btnSpin.style.display = 'none';
+            resultDiv.style.display = 'block';
+        }, 4800); // Wait for transition to complete
+    };
+
+    /* ══════════════════════════════════════════
+       VARIASI B: 3D MYSTERY POD (Lottie)
+       ══════════════════════════════════════════ */
+    <?php elseif ($variant === 'B'): ?>
+    let podOpened = false;
+    window.openPod = function() {
+        if (podOpened) return;
+        podOpened = true;
+        const pod = document.getElementById('podContainer');
+        const result = document.getElementById('pod-result');
+        
+        // Scale down effect via JS if needed
+        pod.style.transform = 'scale(0.95)';
+        setTimeout(() => { pod.style.transform = 'scale(1)'; }, 150);
+
+        setTimeout(() => {
+            fireConfetti();
+            pod.style.opacity = '0.5';
+            pod.style.pointerEvents = 'none';
+            result.style.display = 'block';
+        }, 300);
+    };
+
+    /* ══════════════════════════════════════════
+       VARIASI C: HOLD-TO-CHARGE METER
+       ══════════════════════════════════════════ */
+    <?php else: ?>
     const btnHold = document.getElementById('btnHold');
     const fill = document.getElementById('progressFill');
     const card = document.getElementById('chargeCard');
