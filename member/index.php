@@ -290,7 +290,18 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             background: linear-gradient(135deg, #fffcf0 0%, #fef3c7 100%);
             border: 1.5px solid #f59e0b; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15);
         }
-        .ticker-card .card-icon { font-size: 26px; line-height: 1; }
+        .ticker-card .card-icon { font-size: 26px; line-height: 1; margin-bottom: 2px; }
+        .ticker-card .card-icon i {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 6px rgba(245,158,11,0.3));
+        }
+        .ticker-card.gold-card .card-icon i {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 6px rgba(239,68,68,0.3));
+        }
         .ticker-card .card-val { font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
 
         .btn-gacha {
@@ -303,7 +314,10 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
         .btn-gacha:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(196, 18, 48, 0.4); }
         .btn-gacha:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
+    </style>
+    <!-- FontAwesome for Solid SVG Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
         /* ════════════════════════════════════════════════════
            VARIASI B: 3D MYSTERY POD (Lottie)
            ════════════════════════════════════════════════════ */
@@ -583,15 +597,19 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     
     // Generate Cards
     const items = [
-        { icon: '🎁', val: '10 Pts' }, { icon: '💸', val: '50 Pts' }, { icon: '✨', val: 'Zonk' }, 
-        { icon: '🎰', val: 'Jackpot' }, { icon: '🔥', val: '5 Pts' }, { icon: '💎', val: '100 Pts' }
+        { icon: '<i class="fa-solid fa-gift"></i>', val: '10 Pts' }, 
+        { icon: '<i class="fa-solid fa-money-bill-wave"></i>', val: '50 Pts' }, 
+        { icon: '<i class="fa-solid fa-wand-magic-sparkles"></i>', val: 'Zonk' }, 
+        { icon: '<i class="fa-solid fa-dice"></i>', val: 'Jackpot' }, 
+        { icon: '<i class="fa-solid fa-fire"></i>', val: '5 Pts' }, 
+        { icon: '<i class="fa-solid fa-gem"></i>', val: '100 Pts' }
     ];
     let cardsHTML = '';
     for (let i = 0; i < 40; i++) {
         const item = items[Math.floor(Math.random() * items.length)];
         const isTarget = i === 28;
         if (isTarget) {
-            cardsHTML += `<div class="ticker-card gold-card"><div class="card-icon">👑</div><div class="card-val">${rewardPoints} Pts</div></div>`;
+            cardsHTML += `<div class="ticker-card gold-card"><div class="card-icon"><i class="fa-solid fa-crown"></i></div><div class="card-val">${rewardPoints} Pts</div></div>`;
         } else {
             cardsHTML += `<div class="ticker-card"><div class="card-icon">${item.icon}</div><div class="card-val">${item.val}</div></div>`;
         }
