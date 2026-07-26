@@ -39,7 +39,7 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     $stmt = $pdo->prepare("SELECT id FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go')");
     $stmt->execute([$memberId]);
     if ($stmt->fetch()) {
-        return ' (Tiket Grand Opening lama Anda masih tersimpan di dompet).';
+        return ' 🚨 Sistem mendeteksi Anda sudah memiliki tiket VIP Kalibunder di dompet Anda. Jangan serakah, simpan keberuntungan untuk kunjungan berikutnya. 😉';
     }
     $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
     $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 3 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
@@ -47,7 +47,9 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     return ' Tiket Grand Opening berhasil diklaim: ' . mem_e($prize['name']) . '!';
 }
 list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; if($flashErr!=='') $err=$flashErr;
-
+if (isset($_GET['source']) && $_GET['source'] === 'event_kalibunder' && !empty($_SESSION['pending_event_reward']) && empty($msg)) {
+    $msg = 'Selamat! 1 ' . mem_e($_SESSION['pending_event_reward']['name']) . ' resmi menjadi milik Anda. Ke nomor WhatsApp mana tiket ini dititipkan?';
+}
 if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(); header('Location: login.php'); exit; }
 if(isset($_GET['ulang'])){ mem_clear_login_step(); header('Location: login.php'); exit; }
 
@@ -73,7 +75,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
           $_SESSION['member_login_mode'] = 'verify_otp';
           WhatsAppGateway::sendOtp($phone, $otpCode);
           loyalty_activity($pdo,null,$phone,'member_phone_check_new','Kirim OTP WhatsApp member baru'); 
-          $msg='Nomor belum terdaftar. Kode OTP 6 digit telah dikirim ke WhatsApp Anda.'; 
+          $msg = empty($_SESSION['pending_event_reward']) ? 'Nomor belum terdaftar. Kode OTP 6 digit telah dikirim ke WhatsApp Anda.' : 'Satu langkah terakhir. Masukkan 6 digit kunci brankas yang kami kirimkan ke WhatsApp Anda agar tiket tidak diklaim orang lain.';
       }
     }elseif($action==='verify_otp'){
       $phone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? ''));
