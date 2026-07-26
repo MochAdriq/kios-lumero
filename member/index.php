@@ -337,6 +337,18 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .charge-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
         .charge-product-name { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 16px; line-height: 1.2; }
         
+        .goal-product-img {
+            width: 130px; height: 130px; object-fit: contain;
+            margin: 0 auto 24px; display: block;
+            filter: drop-shadow(0 12px 24px rgba(0,0,0,0.3));
+        }
+        
+        .progress-labels {
+            display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;
+            color: rgba(255,255,255,0.6); margin-top: 8px;
+        }
+        .progress-labels .earned { color: #10b981; }
+
         .progress-track {
             background: rgba(255,255,255,0.1); border-radius: 99px; height: 14px; overflow: hidden; margin-bottom: 8px;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
@@ -503,7 +515,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         <!-- Goal Card -->
         <div class="charge-card" id="chargeCard">
             <div class="charge-label">Target Hadiahmu</div>
-            <div class="charge-product-name"><?= $goalName ?> Gratis!</div>
+            <div class="charge-product-name"><?= $goalName ?></div>
             <img src="<?= $goalImg ?>" alt="<?= $goalName ?>" class="goal-product-img" onerror="this.src='../public/assets/images/pos-products/original.png'">
             
             <div class="progress-track">
@@ -749,7 +761,7 @@ function hook_reward_image(array $rw): string {
         return preg_match('~^https?://~i', $img) ? $img : '../public/assets/images/pos-products/' . ltrim(basename($img), '/');
     }
     $name = strtolower((string)($rw['name'] ?? ''));
-    if (str_contains($name, 'kentang')) return '../public/assets/images/pos-products/kentang-kriwil.png';
+    if (str_contains($name, 'kentang')) return '../public/assets/images/pos-products/kentang-dcelup.png';
     if (str_contains($name, 'matcha')) return '../public/assets/images/pos-products/matcha.png';
     if (str_contains($name, 'ayam') || str_contains($name, 'original')) return '../public/assets/images/pos-products/original.png';
     if (str_contains($name, 'kopi')) return '../public/assets/images/pos-products/kopi.png';
