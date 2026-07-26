@@ -17,18 +17,22 @@ if ($claimCode !== '') {
 }
 
 // ── Pilih variasi anti-ulang ──────────────────────────
-function pick_surprise_variant(): string {
+function pick_surprise_variant(string $claimCode): string {
+    if (isset($_SESSION['surprise_variant_cache'][$claimCode])) {
+        return $_SESSION['surprise_variant_cache'][$claimCode];
+    }
     $all = ['A', 'B'];
     $last = $_SESSION['member_last_variant'] ?? null;
     $candidates = array_values(array_filter($all, fn($v) => $v !== $last));
     $chosen = $candidates[array_rand($candidates)];
     $_SESSION['member_last_variant'] = $chosen;
+    $_SESSION['surprise_variant_cache'][$claimCode] = $chosen;
     return $chosen;
 }
 
 // ── Jika kode klaim valid → tampilkan SURPRISE LANDING ──
 if ($claimCode !== '' && $claimCheck['valid'] === true) {
-    $variant    = pick_surprise_variant();
+    $variant    = pick_surprise_variant($claimCode);
     $points     = (int)($claimCheck['points'] ?? 0);
     $memberId   = (int)($_SESSION['member_id'] ?? 0);
     $isLoggedIn = $memberId > 0;
