@@ -281,8 +281,8 @@ class LoyaltyController extends Controller
         $id = (int)($_POST['id'] ?? 0);
         $name = trim($_POST['name'] ?? '');
         $stock = (int)($_POST['stock'] ?? 0);
-        $isFallback = (int)($_POST['is_default_fallback'] ?? 0);
-        $isActive = (int)($_POST['is_active'] ?? 1);
+        $isFallback = isset($_POST['is_default_fallback']) && $_POST['is_default_fallback'] ? 1 : 0;
+        $isActive = isset($_POST['is_active']) && $_POST['is_active'] ? 1 : 0;
         
         $pdo = Database::connection();
         
