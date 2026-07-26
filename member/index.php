@@ -18,7 +18,7 @@ if ($claimCode !== '') {
 
 // ── Pilih variasi anti-ulang ──────────────────────────
 function pick_surprise_variant(): string {
-    $all = ['A', 'B', 'C'];
+    $all = ['A', 'B'];
     $last = $_SESSION['member_last_variant'] ?? null;
     $candidates = array_values(array_filter($all, fn($v) => $v !== $last));
     $chosen = $candidates[array_rand($candidates)];
@@ -35,43 +35,10 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     $autoMsg    = '';
     $member     = null;
 
-    // Ambil reward produk target (Prioritaskan Matcha sesuai request)
-    $goalReward = $pdo->query("SELECT * FROM point_reward_products WHERE is_active=1 AND name LIKE '%matcha%' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-    if (!$goalReward) {
-        $goalReward = $pdo->query("SELECT * FROM point_reward_products WHERE is_active=1 ORDER BY required_points ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-    }
-    // Jika sudah login → auto-claim langsung
-    if ($isLoggedIn) {
-        $member = loyalty_member_by_id($pdo, $memberId);
-        try {
-            $res     = loyalty_claim_receipt($pdo, $memberId, $claimCode);
-            $autoMsg = 'success';
-            loyalty_activity($pdo, $memberId, $member['phone'] ?? null, 'member_claim_auto_success', 'Auto klaim surprise dari QR ' . $claimCode);
-        } catch (Throwable $e) {
-            error_log("Lumero Claim Error (Member ID {$memberId}): " . $e->getMessage());
-            $autoMsg = "Gagal memproses klaim otomatis. Silakan coba kembali atau hubungi kasir.";
-        }
-    }
-
     $memberName      = $member['name'] ?? '';
     $isReturning     = $isLoggedIn;
     $loginUrl        = url('/member/login.php') . '?claim=' . urlencode($claimCode);
     $dashboardUrl    = url('/member/dashboard.php');
-    $goalName        = htmlspecialchars($goalReward['name'] ?? 'Ayam Crispy Gratis');
-    $goalPoints      = (int)($goalReward['required_points'] ?? 150);
-    $currentBalance  = $isLoggedIn ? (int)($member['points_balance'] ?? 0) : 0;
-    $progressPct     = $goalPoints > 0 ? min(100, round(($points / $goalPoints) * 100)) : 0;
-    $pointsNeeded    = max(0, $goalPoints - $points);
-
-    // Gambar goal reward
-    $goalImgRaw = trim((string)($goalReward['image_url'] ?? ''));
-    if ($goalImgRaw === '') {
-        $goalImg = '../public/assets/images/pos-products/original.png';
-    } elseif (preg_match('~^https?://~i', $goalImgRaw)) {
-        $goalImg = htmlspecialchars($goalImgRaw);
-    } else {
-        $goalImg = '../public/assets/images/pos-products/' . htmlspecialchars(basename($goalImgRaw));
-    }
     ?>
 <!doctype html>
 <html lang="id">
@@ -341,60 +308,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .pod-container:active { transform: scale(0.95); }
         .pod-container lottie-player { width: 100%; height: 100%; pointer-events: none; }
 
-        /* ════════════════════════════════════════════════════
-           VARIASI C: HOLD-TO-CHARGE METER
-           ════════════════════════════════════════════════════ */
-        .charge-card {
-            background: linear-gradient(135deg, var(--ink) 0%, #1e293b 100%);
-            border-radius: 24px; padding: 24px; margin-bottom: 24px;
-            position: relative; overflow: hidden; text-align: left;
-            transition: box-shadow 0.3s, transform 0.1s;
-        }
-        .charge-card.shaking {
-            animation: shakeCard 0.1s linear infinite;
-            box-shadow: 0 0 25px #ffc72c;
-        }
-        @keyframes shakeCard {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            50% { transform: translate(-1px, -1px) rotate(-0.5deg); }
-            100% { transform: translate(1px, -1px) rotate(0.5deg); }
-        }
-        .charge-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-        .charge-product-name { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 16px; line-height: 1.2; }
-        
-        .goal-product-img {
-            width: 130px; height: 130px; object-fit: contain;
-            margin: 0 auto 24px; display: block;
-            filter: drop-shadow(0 12px 24px rgba(0,0,0,0.3));
-        }
-        
-        .progress-labels {
-            display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;
-            color: rgba(255,255,255,0.6); margin-top: 8px;
-        }
-        .progress-labels .earned { color: #10b981; }
 
-        .progress-track {
-            background: rgba(255,255,255,0.1); border-radius: 99px; height: 14px; overflow: hidden; margin-bottom: 8px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .progress-fill {
-            height: 100%; border-radius: 99px; width: 0%;
-            background: linear-gradient(90deg, var(--gold) 0%, #fbbf24 100%);
-            box-shadow: 0 0 12px rgba(255,199,44,0.5);
-            transition: width 0.1s linear;
-        }
-        .btn-hold {
-            width: 100%; padding: 18px 28px; border-radius: 99px;
-            background: linear-gradient(135deg, var(--red) 0%, #e01535 100%);
-            color: #fff; font-size: 16px; font-weight: 800; border: none; cursor: pointer;
-            box-shadow: 0 12px 30px rgba(196,18,48,0.3); transition: transform 0.2s, background 0.3s;
-            user-select: none; -webkit-user-select: none;
-            touch-action: none; /* prevent scrolling when holding */
-            margin-bottom: 20px;
-        }
-        .btn-hold:active { transform: scale(0.96); }
-        .btn-hold.charging { background: linear-gradient(135deg, #e01535 0%, #990e23 100%); }
         
         /* ── Success State (member sudah login) ── */
         .success-badge {
@@ -506,59 +420,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════
-         VARIASI C: TARGET VISUAL (PROGRESS BAR)
-         ═══════════════════════════════════════════════════ -->
-    <?php else: ?>
-    <div class="stage" id="stage-C">
-        <div class="headline">
-            <?php if ($isReturning && $memberName): ?>
-                Hei <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?></span>, makin dekat! <i class="fa-solid fa-crown" style="color:#f59e0b;"></i>
-            <?php else: ?>
-                Kamu hampir <span>dapat hadiah!</span> <i class="fa-solid fa-bullseye" style="color:#ef4444;"></i>
-            <?php endif; ?>
-        </div>
-        <p class="sub-headline">Dari pesanan tadi, kamu berhak mendapat poin ekstra. Isi daya meteran untuk mengklaim!</p>
 
-        <!-- Goal Card -->
-        <div class="charge-card" id="chargeCard">
-            <div class="charge-label">Target Hadiahmu</div>
-            <div class="charge-product-name"><?= $goalName ?></div>
-            <img src="<?= $goalImg ?>" alt="<?= $goalName ?>" class="goal-product-img" onerror="this.src='../public/assets/images/pos-products/original.png'">
-            
-            <div class="progress-track">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            
-            <div class="progress-labels">
-                <span class="earned">+<?= $points ?> Pts hari ini!</span>
-                <span><?= $goalPoints ?> Pts goal</span>
-            </div>
-        </div>
-
-        <button class="btn-hold" id="btnHold">
-            <i class="fa-solid fa-bolt" style="margin-right:6px;"></i> Tahan untuk Klaim Poin
-        </button>
-
-        <div id="charge-result" style="display:none; margin-top:24px;">
-            <div class="points-badge" style="animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;">
-                <div class="poin-num"><?= $points ?></div>
-                <div class="poin-label"><span>POIN</span><span>DIDAPAT!</span></div>
-            </div>
-            <br>
-            <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
-                <div class="success-badge"><i class="fa-solid fa-check-circle" style="color:#10b981; margin-right:4px;"></i> Poin berhasil masuk ke dompetmu!</div>
-                <a href="<?= $dashboardUrl ?>" class="cta-btn"><i class="fa-solid fa-trophy" style="margin-right:6px;"></i> Lihat Progress Saya</a>
-            <?php else: ?>
-                <a href="<?= $loginUrl ?>" class="cta-btn">
-                    <span class="cta-pulse"></span>
-                    <i class="fa-solid fa-bolt" style="margin-right:6px;"></i> Amankan Poin Saya!
-                </a>
-                <p class="helper-text">Jangan biarkan <?= $points ?> poin ini hangus! Daftar sekarang gratis.</p>
-            <?php endif; ?>
-        </div>
-    </div>
-    <?php endif; ?>
 
 </div><!-- /surprise-wrapper -->
 
@@ -653,81 +515,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }, 300);
     };
 
-    /* ══════════════════════════════════════════
-       VARIASI C: HOLD-TO-CHARGE METER
-       ══════════════════════════════════════════ */
-    <?php else: ?>
-    const btnHold = document.getElementById('btnHold');
-    const fill = document.getElementById('progressFill');
-    const card = document.getElementById('chargeCard');
-    const resultDiv = document.getElementById('charge-result');
-
-    let holdTimer;
-    let progress = 0;
-    let isClaimed = false;
-    let lastTime = 0;
-
-    function startCharge(e) {
-        if (isClaimed) return;
-        // prevent default mobile touch behaviors
-        if (e && e.preventDefault && e.type !== 'pointerdown') e.preventDefault(); 
-        
-        btnHold.classList.add('charging');
-        lastTime = 0;
-        holdTimer = requestAnimationFrame(updateCharge);
-    }
-
-    function updateCharge(time) {
-        if (!lastTime) lastTime = time;
-        const delta = time - lastTime;
-        lastTime = time;
-        
-        progress += (delta / 1500) * 100; // 1500ms to reach 100%
-        if (progress > 100) progress = 100;
-        
-        if (fill) fill.style.width = `${progress}%`;
-        
-        if (progress > 50 && card) {
-            card.classList.add('shaking');
-        }
-
-        if (progress >= 100) {
-            finishCharge();
-        } else {
-            holdTimer = requestAnimationFrame(updateCharge);
-        }
-    }
-
-    function stopCharge() {
-        if (isClaimed) return;
-        cancelAnimationFrame(holdTimer);
-        lastTime = 0;
-        btnHold.classList.remove('charging');
-        if (card) card.classList.remove('shaking');
-        
-        // Reset progress if not full
-        progress = 0;
-        if (fill) fill.style.width = '0%';
-    }
-
-    function finishCharge() {
-        isClaimed = true;
-        if (card) card.classList.remove('shaking');
-        btnHold.style.display = 'none';
-        resultDiv.style.display = 'block';
-        fireConfetti();
-    }
-
-    if (btnHold) {
-        btnHold.addEventListener('pointerdown', startCharge);
-        btnHold.addEventListener('pointerup', stopCharge);
-        btnHold.addEventListener('pointerleave', stopCharge);
-        btnHold.addEventListener('pointercancel', stopCharge);
-        
-        // Fallbacks for older touch devices
-        btnHold.addEventListener('touchstart', startCharge, {passive: false});
-        btnHold.addEventListener('touchend', stopCharge);
-    }
     <?php endif; ?>
 
     /* ══════════════════════════════════════════
