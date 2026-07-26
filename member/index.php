@@ -1075,7 +1075,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
 <div class="wrapper" style="position: relative; z-index: 2;">
 
-    <div class="slot-card" style="margin-top: -50px; position: relative; z-index: 10;">
+    <div class="slot-card" style="margin-top: -15px; position: relative; z-index: 10;">
         <div class="slot-card-title">Undian Kejutan &mdash; Putar Sekarang</div>
         <div class="slot-viewport">
             <div class="slot-target-line"></div>
