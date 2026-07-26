@@ -431,9 +431,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <div class="stage" id="stage-A">
         <div class="headline">
             <?php if ($isReturning && $memberName): ?>
-                Selamat kembali, <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?>!</span> 👑
+                Selamat kembali, <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?>!</span> <i class="fa-solid fa-crown" style="color:#f59e0b;"></i>
             <?php else: ?>
-                Kejutan <span>Poin Hadiah!</span> ✨
+                Kejutan <span>Poin Hadiah!</span> <i class="fa-solid fa-wand-magic-sparkles" style="color:#f59e0b;"></i>
             <?php endif; ?>
         </div>
         <p class="sub-headline">Pesananmu telah dikonversi. Undi roulette sekarang untuk mengamankan poin ekstra ke dompetmu!</p>
@@ -447,7 +447,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
 
         <button class="btn-gacha" id="spinTickerBtn" onclick="startTickerSpin()">
-            ⚡ Putar Roulette Sekarang
+            <i class="fa-solid fa-bolt" style="margin-right:6px;"></i> Putar Roulette Sekarang
         </button>
 
         <div id="ticker-result" style="display:none; margin-top: 24px;">
@@ -457,12 +457,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             </div>
             <br>
             <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
-                <div class="success-badge">✅ Poin otomatis masuk ke dompetmu!</div>
-                <a href="<?= $dashboardUrl ?>" class="cta-btn">🏆 Lihat Dompet Saya</a>
+                <div class="success-badge"><i class="fa-solid fa-check-circle" style="color:#10b981; margin-right:4px;"></i> Poin otomatis masuk ke dompetmu!</div>
+                <a href="<?= $dashboardUrl ?>" class="cta-btn"><i class="fa-solid fa-trophy" style="margin-right:6px;"></i> Lihat Dompet Saya</a>
             <?php else: ?>
                 <a href="<?= $loginUrl ?>" class="cta-btn">
                     <span class="cta-pulse"></span>
-                    🔐 Amankan Poin Ini Sekarang!
+                    <i class="fa-solid fa-lock" style="margin-right:6px;"></i> Amankan Poin Ini Sekarang!
                 </a>
                 <p class="helper-text">Masuk dengan WhatsApp agar poin tidak hangus.</p>
             <?php endif; ?>
@@ -476,9 +476,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <div class="stage" id="stage-B">
         <div class="headline">
             <?php if ($isReturning && $memberName): ?>
-                Kejutan menanti, <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?>!</span> 👑
+                Kejutan menanti, <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?>!</span> <i class="fa-solid fa-crown" style="color:#f59e0b;"></i>
             <?php else: ?>
-                Sebuah <span>Misteri!</span> 🎁
+                Sebuah <span>Misteri!</span> <i class="fa-solid fa-gift" style="color:#ef4444;"></i>
             <?php endif; ?>
         </div>
         <p class="sub-headline">Ada hadiah rahasia di dalam pod ini.<br>Ketuk pod misteri ini untuk membukanya!</p>
@@ -494,12 +494,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             </div>
             <br>
             <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
-                <div class="success-badge">✅ Koin berhasil masuk ke dompetmu!</div>
-                <a href="<?= $dashboardUrl ?>" class="cta-btn">🏆 Lihat Dompet Saya</a>
+                <div class="success-badge"><i class="fa-solid fa-check-circle" style="color:#10b981; margin-right:4px;"></i> Koin berhasil masuk ke dompetmu!</div>
+                <a href="<?= $dashboardUrl ?>" class="cta-btn"><i class="fa-solid fa-trophy" style="margin-right:6px;"></i> Lihat Dompet Saya</a>
             <?php else: ?>
                 <a href="<?= $loginUrl ?>" class="cta-btn">
                     <span class="cta-pulse"></span>
-                    🔐 Klaim Hadiah Sekarang!
+                    <i class="fa-solid fa-lock" style="margin-right:6px;"></i> Klaim Hadiah Sekarang!
                 </a>
                 <p class="helper-text">Daftarkan nomor WhatsApp agar poin ini tidak hangus!</p>
             <?php endif; ?>
@@ -513,9 +513,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <div class="stage" id="stage-C">
         <div class="headline">
             <?php if ($isReturning && $memberName): ?>
-                Hei <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?></span>, makin dekat! 👑
+                Hei <span><?= htmlspecialchars(explode(' ', $memberName)[0]) ?></span>, makin dekat! <i class="fa-solid fa-crown" style="color:#f59e0b;"></i>
             <?php else: ?>
-                Kamu hampir <span>dapat hadiah!</span> 🎯
+                Kamu hampir <span>dapat hadiah!</span> <i class="fa-solid fa-bullseye" style="color:#ef4444;"></i>
             <?php endif; ?>
         </div>
         <p class="sub-headline">Dari pesanan tadi, kamu berhak mendapat poin ekstra. Isi daya meteran untuk mengklaim!</p>
@@ -537,7 +537,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
 
         <button class="btn-hold" id="btnHold">
-            ⚡ Tahan untuk Klaim Poin
+            <i class="fa-solid fa-bolt" style="margin-right:6px;"></i> Tahan untuk Klaim Poin
         </button>
 
         <div id="charge-result" style="display:none; margin-top:24px;">
@@ -547,12 +547,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             </div>
             <br>
             <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
-                <div class="success-badge">✅ Poin berhasil masuk ke dompetmu!</div>
-                <a href="<?= $dashboardUrl ?>" class="cta-btn">🏆 Lihat Progress Saya</a>
+                <div class="success-badge"><i class="fa-solid fa-check-circle" style="color:#10b981; margin-right:4px;"></i> Poin berhasil masuk ke dompetmu!</div>
+                <a href="<?= $dashboardUrl ?>" class="cta-btn"><i class="fa-solid fa-trophy" style="margin-right:6px;"></i> Lihat Progress Saya</a>
             <?php else: ?>
                 <a href="<?= $loginUrl ?>" class="cta-btn">
                     <span class="cta-pulse"></span>
-                    ⚡ Amankan Poin Saya!
+                    <i class="fa-solid fa-bolt" style="margin-right:6px;"></i> Amankan Poin Saya!
                 </a>
                 <p class="helper-text">Jangan biarkan <?= $points ?> poin ini hangus! Daftar sekarang gratis.</p>
             <?php endif; ?>
