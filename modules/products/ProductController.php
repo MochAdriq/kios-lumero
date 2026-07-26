@@ -60,6 +60,10 @@ class ProductController extends Controller
         } catch (Throwable $e) {
             $_SESSION['flash_error'] = 'Gagal mengupdate: ' . $e->getMessage();
         }
+        if (!empty($_SERVER['HTTP_REFERER'])) {
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
         $this->redirect('/products');
     }
 
@@ -74,6 +78,10 @@ class ProductController extends Controller
             $_SESSION['flash_success'] = 'Produk berhasil dihapus.';
         } catch (Throwable $e) {
             $_SESSION['flash_error'] = 'Gagal menghapus: ' . $e->getMessage();
+        }
+        if (!empty($_SERVER['HTTP_REFERER'])) {
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
+            exit;
         }
         $this->redirect('/products');
     }
