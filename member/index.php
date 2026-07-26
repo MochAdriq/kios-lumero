@@ -1111,12 +1111,11 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             </div>
             <div class="result-title">Selamat! Anda Menang!</div>
             <div class="result-prize-name" id="prize-name">Hadiah</div>
-            <p class="result-sub">Kupon hadiah ini <b style="color:rgba(255,255,255,0.8);">akan hangus dalam 7 hari</b> jika tidak diamankan ke nomor WhatsApp Anda sekarang.<br>Jangan biarkan orang lain mengklaimnya!</p>
+            <p class="result-sub">Ambil dan tukarkan kupon hadiah sebelum 7 hari.</p>
             <a id="claim-btn" href="<?= url('/member/login.php') ?>?source=event_kalibunder" class="btn-claim">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-                Amankan Hadiah Ke WhatsApp Saya
+                AMBIL HADIAH ANDA SEKARANG
             </a>
-            <p class="claim-warning">*Masukkan nomor WA &middot; Kupon digital dikirim otomatis &middot; Klaim di Outlet Kalibunder</p>
         </div>
     </div>
 
