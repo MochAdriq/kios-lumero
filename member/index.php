@@ -250,7 +250,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
         .ticker-track {
             display: flex; gap: 12px; padding-left: 50%; 
-            will-change: transform; transition: transform 4.8s cubic-bezier(0.1, 0.88, 0.12, 1);
+            will-change: transform;
         }
         .ticker-card {
             width: 96px; height: 88px; background: #ffffff;
@@ -455,19 +455,29 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     const resultDiv = document.getElementById('ticker-result');
     const CARD_WIDTH = 96 + 12; // width + gap
     
-    // Generate Cards
+    // Generate Items (Removed Zonk)
     const items = [
         { icon: '<i class="fa-solid fa-gift"></i>', val: '10 Pts' }, 
         { icon: '<i class="fa-solid fa-money-bill-wave"></i>', val: '50 Pts' }, 
-        { icon: '<i class="fa-solid fa-wand-magic-sparkles"></i>', val: 'Zonk' }, 
+        { icon: '<i class="fa-solid fa-hand-holding-heart"></i>', val: '20 Pts' }, 
         { icon: '<i class="fa-solid fa-star"></i>', val: 'Bonus Spesial' },
         { icon: '<i class="fa-solid fa-fire"></i>', val: '5 Pts' }, 
         { icon: '<i class="fa-solid fa-gem"></i>', val: '100 Pts' }
     ];
+
+    // Create a base block of 10 items for seamless looping
+    let baseItems = [];
+    for (let i = 0; i < 10; i++) {
+        baseItems.push(items[Math.floor(Math.random() * items.length)]);
+    }
+    
+    const TARGET_INDEX = 65; // Place target far ahead
+    
+    // Build DOM (80 cards for a long runway)
     let cardsHTML = '';
-    for (let i = 0; i < 40; i++) {
-        const item = items[Math.floor(Math.random() * items.length)];
-        const isTarget = i === 28;
+    for (let i = 0; i < 80; i++) {
+        const item = baseItems[i % 10];
+        const isTarget = i === TARGET_INDEX;
         const isGold = i % 2 === 0;
         const cardClass = isGold ? 'ticker-card gold-card' : 'ticker-card';
         
@@ -479,21 +489,73 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     }
     if (track) track.innerHTML = cardsHTML;
 
+    // Physics Engine Variables
+    let state = 'idle'; // idle, spin, decel, done
+    let currentX = 0;
+    let velocity = 0.5; // pixels per frame
+    let targetX = 0;
+    const LOOP_RESET_X = 10 * CARD_WIDTH; // Reset after 10 cards
+    
+    function updatePhysics() {
+        if (state === 'done') return;
+        
+        currentX += velocity;
+        
+        if (state === 'idle') {
+            // Infinite seamless loop
+            if (currentX >= LOOP_RESET_X) {
+                currentX -= LOOP_RESET_X;
+            }
+        } else if (state === 'spin') {
+            // Accelerate
+            if (velocity < 38) velocity += 0.8;
+            
+            const decel = 0.2;
+            const distToStop = (velocity * velocity) / (2 * decel);
+            const distToTarget = targetX - currentX;
+            
+            // Start decelerating when distance to target matches stopping distance
+            if (distToTarget <= distToStop) {
+                state = 'decel';
+            }
+        } else if (state === 'decel') {
+            const decel = 0.2;
+            const distToTarget = Math.max(0, targetX - currentX);
+            
+            let idealVelocity = Math.sqrt(2 * decel * distToTarget);
+            if (idealVelocity < 0.6) idealVelocity = 0.6; // Creep speed so it doesn't freeze
+            
+            velocity = idealVelocity;
+            
+            if (distToTarget <= 0.6) {
+                velocity = 0;
+                currentX = targetX;
+                state = 'done';
+                
+                setTimeout(() => {
+                    fireConfetti();
+                    btnSpin.style.display = 'none';
+                    resultDiv.style.display = 'block';
+                }, 300);
+            }
+        }
+        
+        track.style.transform = `translate3d(-${currentX}px, 0, 0)`;
+        requestAnimationFrame(updatePhysics);
+    }
+    
+    // Start engine
+    requestAnimationFrame(updatePhysics);
+
     window.startTickerSpin = function() {
+        if (state !== 'idle') return;
+        
         btnSpin.disabled = true;
         btnSpin.innerHTML = '⚡ Mengundi...';
-        // Karena .ticker-track memiliki padding-left: 50%, posisi awal card 0 sudah di tengah layar.
-        // Kita hanya perlu menggeser sebanyak (index * CARD_WIDTH) + (Setengah Lebar Card)
-        const randomOffset = Math.floor(Math.random() * 24) - 12; // +/- 12px agar jatuhnya natural
-        const targetX = (28 * CARD_WIDTH) + (96 / 2) + randomOffset;
         
-        track.style.transform = `translate3d(-${targetX}px, 0, 0)`;
-        
-        setTimeout(() => {
-            fireConfetti();
-            btnSpin.style.display = 'none';
-            resultDiv.style.display = 'block';
-        }, 4800); // Wait for transition to complete
+        state = 'spin';
+        const randomOffset = Math.floor(Math.random() * 24) - 12; // +/- 12px natural offset
+        targetX = (TARGET_INDEX * CARD_WIDTH) + (96 / 2) + randomOffset;
     };
 
     /* ══════════════════════════════════════════
