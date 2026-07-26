@@ -1089,11 +1089,10 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 </div>
 
 <div class="wrapper" style="position: relative; z-index: 2;">
-    <!-- Text removed as requested because the image already has the text -->
-    <header class="hero-section" style="padding: 240px 0 40px; margin-bottom: 20px;">
+    <header class="hero-section" style="height: 50vh; min-height: 300px; margin-bottom: 0;">
     </header>
 
-    <div class="slot-card">
+    <div class="slot-card" style="margin-top: -100px; position: relative; z-index: 10;">
         <div class="slot-card-title">Undian Kejutan &mdash; Putar Sekarang</div>
         <div class="slot-viewport">
             <div class="slot-target-line"></div>
