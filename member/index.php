@@ -991,6 +991,18 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             .live-counter { gap: 12px; }
             .guarantee-row .g-badge { font-size: 11px; padding: 7px 10px; }
         }
+
+        /* ── Live dot ── */
+        .live-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: #ff4444; vertical-align: middle; margin-right: 2px;
+            animation: livePulse 1.2s ease-in-out infinite;
+        }
+        @keyframes livePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,68,68,0.6); } 50% { box-shadow: 0 0 0 5px rgba(255,68,68,0); } }
+
+        /* ── SVG spin icon ── */
+        .btn-spin .spin-icon { animation: spinIcon 3s linear infinite; }
+        @keyframes spinIcon { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -1003,7 +1015,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
 <!-- Urgency Banner -->
 <div class="urgency-banner">
-    ðŸ”´ <span>LIVE</span> &nbsp;Â·&nbsp; GRAND OPENING KALIBUNDER &nbsp;Â·&nbsp; Event Terbatas â€” Hadiah Habis, Kesempatan Hangus!
+    <span class="live-dot"></span> <span>LIVE</span> &nbsp;&middot;&nbsp; GRAND OPENING KALIBUNDER &nbsp;&middot;&nbsp; Event Terbatas &mdash; Hadiah Habis, Kesempatan Hangus!
 </div>
 
 <!-- Navbar -->
@@ -1037,100 +1049,85 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 </div>
 
 <div class="wrapper">
-    <!-- Hero Section -->
     <header class="hero-section">
-        <div class="hero-label">âœ¦ Grand Opening Eksklusif</div>
-        <h1 class="hero-title">
-            Putar. Menang.<br>
-            <span class="accent">Langsung Klaim.</span>
-        </h1>
-        <p class="hero-sub">
-            Setiap putaran <b>dijamin menang.</b> Hadiah langsung diamankan ke nomor WhatsApp Anda dalam hitungan detik.
-        </p>
-
-        <!-- Guarantee Badges -->
+        <div class="hero-label">Grand Opening Eksklusif</div>
+        <h1 class="hero-title">Putar. Menang.<br><span class="accent">Langsung Klaim.</span></h1>
+        <p class="hero-sub">Setiap putaran <b>dijamin menang.</b> Hadiah langsung diamankan ke nomor WhatsApp Anda dalam hitungan detik.</p>
         <div class="guarantee-row">
-            <div class="g-badge">âœ… 100% Pasti Menang</div>
-            <div class="g-badge">ðŸ”’ Tanpa Syarat Tersembunyi</div>
-            <div class="g-badge">âš¡ Klaim Instan</div>
+            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 100% Pasti Menang</div>
+            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Tanpa Syarat Tersembunyi</div>
+            <div class="g-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Klaim Instan</div>
         </div>
     </header>
 
-    <!-- Slot Machine Card -->
     <div class="slot-card">
-        <div class="slot-card-title">ðŸŽ° Roulette Kejutan â€” Putar Sekarang</div>
-
+        <div class="slot-card-title">Roulette Kejutan &mdash; Putar Sekarang</div>
         <div class="slot-viewport">
             <div class="slot-target-line"></div>
-            <div class="slot-track" id="slot-track"><!-- JS populated --></div>
+            <div class="slot-track" id="slot-track"></div>
         </div>
-
         <div id="action-area">
             <button id="btn-spin" onclick="spinRoulette()" class="btn-spin">
-                <span class="spin-icon">ðŸŽ°</span>
-                Putar Roulette â€” GRATIS!
+                <svg class="spin-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                Putar Roulette &mdash; GRATIS!
             </button>
-            <p class="hint-text">ðŸ”’ Tanpa login Â· Tanpa syarat Â· Tanpa biaya tersembunyi</p>
+            <p class="hint-text">Tanpa login &middot; Tanpa syarat &middot; Tanpa biaya tersembunyi</p>
         </div>
-
-        <!-- Result Modal (inline) -->
         <div id="result-modal">
-            <div class="result-congrats">ðŸŽ‰ðŸŽŠðŸŽ‰</div>
+            <div class="result-congrats">
+                <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8 14s-4 2-4 6h16c0-4-4-6-4-6"/></svg>
+            </div>
             <div class="result-title">Selamat! Anda Menang!</div>
             <div class="result-prize-name" id="prize-name">Hadiah</div>
-            <p class="result-sub">
-                Tiket hadiah ini <b style="color:rgba(255,255,255,0.8);">akan hangus dalam 48 jam</b> jika tidak diamankan ke nomor WhatsApp Anda sekarang.
-                <br>Jangan biarkan orang lain mengklaimnya!
-            </p>
+            <p class="result-sub">Tiket hadiah ini <b style="color:rgba(255,255,255,0.8);">akan hangus dalam 48 jam</b> jika tidak diamankan ke nomor WhatsApp Anda sekarang.<br>Jangan biarkan orang lain mengklaimnya!</p>
             <a id="claim-btn" href="<?= url('/member/login.php') ?>?source=event_kalibunder" class="btn-claim">
-                ðŸ” Amankan Hadiah Ke WhatsApp Saya
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                Amankan Hadiah Ke WhatsApp Saya
             </a>
-            <p class="claim-warning">*Masukkan nomor WA Â· Tiket digital dikirim otomatis Â· Klaim di Outlet Kalibunder</p>
+            <p class="claim-warning">*Masukkan nomor WA &middot; Tiket digital dikirim otomatis &middot; Klaim di Outlet Kalibunder</p>
         </div>
     </div>
 
-    <!-- Social Proof Ticker -->
     <div class="ticker-wrap">
         <div class="ticker-track">
-            <span>ðŸŽ‰ <span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
-            <span>ðŸ”¥ <span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
-            <span>âš¡ <span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
-            <span>ðŸ† <span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
-            <span>ðŸŽ‰ <span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
-            <span>ðŸ”¥ <span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
-            <span>âš¡ <span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
-            <span>ðŸ† <span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
+            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
         </div>
     </div>
 
-    <!-- Prize Showcase -->
     <section class="section">
         <div class="section-head">
-            <div class="section-tag">âœ¦ Koleksi Hadiah</div>
+            <div class="section-tag">Koleksi Hadiah</div>
             <h2 class="section-title">Ada Apa Di Dalam Roulette?</h2>
             <p class="section-sub">Ini bukan undian kosong. Semua hadiah nyata, bisa langsung diambil di outlet kami.</p>
         </div>
         <div class="prize-grid">
             <div class="prize-card">
-                <div class="prize-marquee">ðŸ”¥</div>
+                <div class="prize-marquee"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
                 <img src="../public/assets/images/pos-products/original.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Paket Ayam">
                 <h4>Paket Ayam 1 Ekor</h4>
                 <div class="prize-badge">Stok Terbatas</div>
             </div>
             <div class="prize-card">
-                <div class="prize-marquee">ðŸ“±</div>
+                <div class="prize-marquee"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
                 <img src="../public/assets/images/pos-products/icon-192.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Handphone">
                 <h4>Handphone</h4>
                 <div class="prize-badge">Grand Prize</div>
             </div>
             <div class="prize-card">
-                <div class="prize-marquee">âœ¨</div>
+                <div class="prize-marquee"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
                 <img src="../public/assets/images/pos-products/matcha.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Es Krim">
                 <h4>Es Krim Lumero</h4>
                 <div class="prize-badge">Paling Banyak</div>
             </div>
             <div class="prize-card">
-                <div class="prize-marquee">ðŸ’¼</div>
+                <div class="prize-marquee"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.4)"><path d="M7 10h10V7a5 5 0 0 0-10 0v3zm-2 0a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H5z"/></svg></div>
                 <img src="../public/assets/images/pos-products/kopi.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Tumbler">
                 <h4>Tumbler Eksklusif</h4>
                 <div class="prize-badge">Edisi Terbatas</div>
@@ -1138,67 +1135,44 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
     </section>
 
-    <!-- How It Works -->
     <section class="section">
         <div class="section-head">
-            <div class="section-tag">âœ¦ Cara Klaim</div>
+            <div class="section-tag">Cara Klaim</div>
             <h2 class="section-title">Semudah 3 Langkah</h2>
         </div>
         <div class="steps">
-            <div class="step">
-                <div class="step-num">1</div>
-                <div class="step-text">
-                    <h4>Putar Roulette â€” GRATIS</h4>
-                    <p>Klik tombol merah di atas. Tidak perlu daftar, tidak perlu bayar. Semua putaran dijamin mendapatkan hadiah nyata.</p>
-                </div>
-            </div>
-            <div class="step">
-                <div class="step-num">2</div>
-                <div class="step-text">
-                    <h4>Amankan Ke WhatsApp</h4>
-                    <p>Setelah melihat hadiah Anda, masukkan nomor WA untuk mengunci tiket digital. Ini adalah "kunci brankas" hadiah Anda â€” jangan tunda!</p>
-                </div>
-            </div>
-            <div class="step">
-                <div class="step-num">3</div>
-                <div class="step-text">
-                    <h4>Klaim di Outlet Kalibunder</h4>
-                    <p>Tunjukkan tiket digital dari WA ke kasir Lumero Kalibunder. Hadiah langsung diserahkan di tempat!</p>
-                </div>
-            </div>
+            <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Putar Roulette &mdash; GRATIS</h4><p>Klik tombol merah di atas. Tidak perlu daftar, tidak perlu bayar. Semua putaran dijamin mendapatkan hadiah nyata.</p></div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Amankan Ke WhatsApp</h4><p>Setelah melihat hadiah Anda, masukkan nomor WA untuk mengunci tiket digital. Ini adalah "kunci brankas" hadiah Anda &mdash; jangan tunda!</p></div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Klaim di Outlet Kalibunder</h4><p>Tunjukkan tiket digital dari WA ke kasir Lumero Kalibunder. Hadiah langsung diserahkan di tempat!</p></div></div>
         </div>
     </section>
 
-    <!-- Location Card -->
     <section class="section">
         <div class="section-head">
-            <div class="section-tag">âœ¦ Lokasi Klaim</div>
+            <div class="section-tag">Lokasi Klaim</div>
             <h2 class="section-title">Lumero Outlet Kalibunder</h2>
         </div>
         <div class="location-card">
             <div class="location-header">
-                <div class="event-countdown">
-                    ðŸ”´ Event Terbatas Â· Jangan Sampai Kehabisan
-                </div>
+                <div class="event-countdown"><span class="live-dot"></span> Event Terbatas &middot; Jangan Sampai Kehabisan</div>
                 <h3>Lumero Outlet Kalibunder</h3>
                 <p>Tukarkan tiket digital Anda langsung di kasir kami sebelum hangus. Stok hadiah terbatas!</p>
             </div>
             <div class="map-placeholder">
-                <span style="color:rgba(255,255,255,0.25); font-size:14px; font-weight:700;">ðŸ“ Peta Google Maps Kalibunder</span>
+                <span style="color:rgba(255,255,255,0.25); font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.3)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> Peta Google Maps Kalibunder</span>
             </div>
         </div>
     </section>
 
-    <!-- Bottom CTA -->
     <div class="bottom-cta">
         <h2>Masih Ragu? Stok Hadiah Makin Menipis!</h2>
         <p>Sudah <b style="color:#fff;">247 orang</b> memutar hari ini. Semakin lama menunggu, semakin besar kemungkinan hadiah terbaik habis.</p>
         <a href="#action-area" class="btn-cta-big" onclick="document.getElementById('btn-spin').click(); return false;">
-            âš¡ Putar Sekarang â€” GRATIS
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Putar Sekarang &mdash; GRATIS
         </a>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script>
     const track = document.getElementById('slot-track');
@@ -1320,3 +1294,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
 </body>
 </html>
+
+
+
