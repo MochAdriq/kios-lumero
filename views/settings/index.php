@@ -56,26 +56,45 @@
             </div>
         </div>
     </div>
+    </div>
+    
+    <?php
+    $midtrans = null;
+    foreach($gateways as $g) {
+        if ($g['provider'] === 'midtrans') {
+            $midtrans = $g;
+            break;
+        }
+    }
+    ?>
+    <div class="sim-card mt-4">
+        <h5>Gateway Config (Midtrans)</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Client Key</label>
+                <input type="text" name="gateway[midtrans][client_id]" value="<?= htmlspecialchars($midtrans['client_id']??'') ?>" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Server Key</label>
+                <input type="text" name="gateway[midtrans][client_secret]" value="<?= htmlspecialchars($midtrans['client_secret']??'') ?>" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Merchant ID</label>
+                <input type="text" name="gateway[midtrans][merchant_id]" value="<?= htmlspecialchars($midtrans['merchant_id']??'') ?>" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Mode</label>
+                <select name="gateway[midtrans][mode]" class="form-select">
+                    <option value="sandbox" <?= ($midtrans['mode']??'sandbox')==='sandbox'?'selected':'' ?>>Sandbox</option>
+                    <option value="production" <?= ($midtrans['mode']??'')==='production'?'selected':'' ?>>Production</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" name="gateway[midtrans][is_active]" value="1" <?= (!empty($midtrans['is_active']))?'checked':'' ?> id="midtransActive">
+            <label class="form-check-label" for="midtransActive">Aktifkan Midtrans untuk Outlet Ini</label>
+        </div>
+    </div>
+
     <button class="btn btn-danger rounded-pill px-5 mt-4">Simpan Setting</button>
 </form>
-
-<div class="sim-card mt-4">
-    <h5>Gateway Config</h5>
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr><th>Provider</th><th>Mode</th><th>Merchant</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-                <?php foreach($gateways as $g): ?>
-                <tr>
-                    <td><?= htmlspecialchars($g['provider']) ?></td>
-                    <td><?= htmlspecialchars($g['mode']) ?></td>
-                    <td><?= htmlspecialchars($g['merchant_id']) ?></td>
-                    <td><span class="badge bg-<?= $g['is_active']?'success':'secondary' ?>"><?= $g['is_active']?'Aktif':'Nonaktif' ?></span></td>
-                </tr>
-                <?php endforeach ?>
-            </tbody>
-        </table>
-    </div>
-</div>

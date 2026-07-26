@@ -5,23 +5,53 @@
  */
 class MidtransService
 {
+    private static ?array $dbConfig = null;
+    
+    private static function getDbConfig(): array
+    {
+        if (self::$dbConfig !== null) return self::$dbConfig;
+        self::$dbConfig = [];
+        try {
+            if (class_exists('Database')) {
+                $pdo = Database::connection();
+                $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+                $stmt = $pdo->prepare("SELECT * FROM payment_gateway_configs WHERE provider = 'midtrans' AND outlet_id = ? AND is_active = 1 LIMIT 1");
+                $stmt->execute([$outletId]);
+                if ($row = $stmt->fetch()) {
+                    self::$dbConfig = $row;
+                }
+            }
+        } catch (Throwable $e) {}
+        return self::$dbConfig;
+    }
+
     public static function isProduction(): bool
     {
+        $db = self::getDbConfig();
+        if (!empty($db['mode'])) {
+            return $db['mode'] === 'production';
+        }
         return app_bool(app_env('MIDTRANS_IS_PRODUCTION', 'false'));
     }
 
     public static function getServerKey(): string
     {
+        $db = self::getDbConfig();
+        if (!empty($db['client_secret'])) return trim($db['client_secret']);
         return trim((string)app_env('MIDTRANS_SERVER_KEY', ''));
     }
 
     public static function getClientKey(): string
     {
+        $db = self::getDbConfig();
+        if (!empty($db['client_id'])) return trim($db['client_id']);
         return trim((string)app_env('MIDTRANS_CLIENT_KEY', ''));
     }
 
     public static function getMerchantId(): string
     {
+        $db = self::getDbConfig();
+        if (!empty($db['merchant_id'])) return trim($db['merchant_id']);
         return trim((string)app_env('MIDTRANS_MERCHANT_ID', ''));
     }
 
