@@ -40,6 +40,7 @@
   const sauceDefs = [
     { key: 'keju', label: 'Keju', img: assets.keju, match: ['keju', 'cheese'] },
     { key: 'lada_hitam', label: 'Lada Hitam', img: assets.lada_hitam, match: ['lada hitam', 'black pepper', 'blackpepper'] },
+    { key: 'garlic', label: 'Garlic / Bawang', img: assets.garlic, match: ['garlic', 'bawang'] },
     { key: 'teriyaki', label: 'Teriyaki', img: assets.teriyaki, match: ['teriyaki'] },
     { key: 'sadis', label: 'Sadis / Pedas', img: assets.sadis, match: ['sadis', 'geprek', 'pedas', 'spicy'] },
     { key: 'bbq', label: 'BBQ Spicy', img: assets.bbq, match: ['bbq'] },

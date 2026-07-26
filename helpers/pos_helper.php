@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 if (!function_exists('sim_pos_img_asset')) {
     function sim_pos_img_asset(string $name): string { return asset('images/pos-products/' . ltrim($name, '/')); }
@@ -42,6 +42,7 @@ if (!function_exists('sim_pos_product_image')) {
         if (strpos($text, 'teriyaki') !== false) return sim_pos_img_asset('sauces/teriyaki.png');
         if (strpos($text, 'bbq') !== false) return sim_pos_img_asset('sauces/bbq.png');
         if (sim_contains_any($text, ['lada hitam', 'blackpepper', 'black pepper'])) return sim_pos_img_asset('sauces/blackpepper.png');
+        if (sim_contains_any($text, ['garlic', 'bawang'])) return sim_pos_img_asset('sauces/default.png');
         if (sim_contains_any($text, ['sadis', 'geprek', 'pedas', 'spicy'])) return sim_pos_img_asset('sauces/pedas.png');
         if (strpos($text, 'keju') !== false) return sim_pos_img_asset('sauces/keju.png');
         if (sim_contains_any($text, ['mentai', 'mayo'])) return sim_pos_img_asset('sauces/mayo.png');
@@ -103,6 +104,7 @@ if (!function_exists('sim_pos_prepare_data')) {
             'teriyaki' => sim_pos_img_asset('sauces/teriyaki.png'),
             'bbq' => sim_pos_img_asset('sauces/bbq.png'),
             'lada_hitam' => sim_pos_img_asset('sauces/blackpepper.png'),
+            'garlic' => sim_pos_img_asset('sauces/default.png'),
             'mentai' => sim_pos_img_asset('sauces/mayo.png'),
         ];
         return [
