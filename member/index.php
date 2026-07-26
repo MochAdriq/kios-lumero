@@ -1041,15 +1041,62 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         /* ── SVG spin icon ── */
         .btn-spin .spin-icon { animation: spinIcon 3s linear infinite; }
         @keyframes spinIcon { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* ── LIGHT THEME OVERRIDES (Matching login.php) ── */
+        body { background: #fafafa; color: #0f172a; }
+        .bg-wrap { display: none; }
+        .navbar { background: rgba(250,250,250,0.85); border-bottom: 1px solid rgba(0,0,0,0.04); }
+        .nav-logo { color: #0f172a; }
+        .btn-nav { color: #0f172a; background: #ffffff; border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-nav:hover { background: #f3f4f6; }
+        
+        .live-counter { background: #ffffff; border-bottom: 1px solid #e5e7eb; }
+        .counter-label { color: #64748b; }
+        .counter-sep { background: #e5e7eb; }
+        
+        .slot-card { background: #ffffff; border: 1px solid #e5e7eb; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .slot-card::before { display: none; }
+        .slot-card-title { color: #64748b; }
+        
+        .slot-viewport { background: #fafafa; border: 1px solid #e5e7eb; box-shadow: inset 0 0 10px rgba(0,0,0,0.02); }
+        .slot-viewport::before { background: linear-gradient(90deg, #fafafa 0%, transparent 100%); }
+        .slot-viewport::after { background: linear-gradient(-90deg, #fafafa 0%, transparent 100%); }
+        
+        .slot-item { background: #ffffff; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .slot-item span { color: #0f172a; }
+        
+        .hint-text { color: #64748b; }
+        
+        #result-modal { background: #ffffff; border: 1px solid #fde68a; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+        .result-title { color: #0f172a; }
+        .result-sub { color: #64748b; }
+        .claim-warning { color: #94a3b8; }
+        
+        .ticker-wrap { background: #ffffff; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }
+        .ticker-track { color: #64748b; }
+        
+        .section-title { color: #0f172a; }
+        .section-sub { color: #64748b; }
+        
+        .prize-card { background: #ffffff; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .prize-card h4 { color: #0f172a; }
+        
+        .step { background: #ffffff; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .step-text h4 { color: #0f172a; }
+        .step-text p { color: #64748b; }
+        
+        .location-card { background: #ffffff; border: 1px solid #e5e7eb; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+        .location-header { background: #fffcf5; }
+        .location-header h3 { color: #0f172a; }
+        .location-header p { color: #64748b; }
+        .map-placeholder { border-top: 1px solid #e5e7eb; }
+        
+        .bottom-cta h2 { color: #0f172a; }
+        .bottom-cta p { color: #64748b; }
     </style>
 </head>
 <body>
 
-<!-- Full Width Hero Background -->
-<div style="position: absolute; top: 0; left: 0; width: 100%; height: 80vh; min-height: 600px; z-index: 0; background-color: #0a0a0f; background-image: url('../public/assets/images/member-hero.jpeg?v=<?= time() ?>'); background-size: contain; background-position: top center; background-repeat: no-repeat; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;">
-    <!-- Dark overlay for text readability -->
-    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,15,0.7) 0%, rgba(10,10,15,1) 90%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;"></div>
-</div>
+
 
 <div class="bg-wrap" style="z-index: -1;">
     <div class="bg-grid"></div>
@@ -1069,6 +1116,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         <a href="<?= url('/member/login.php') ?>?source=organic" class="btn-nav">Login</a>
     </div>
 </nav>
+
+<!-- Hero Background (Placed below navbar) -->
+<div class="hero-image-wrapper" style="position: relative; width: 100%; height: 60vh; min-height: 400px; z-index: 0; background-color: #fafafa; background-image: url('../public/assets/images/member-hero.jpeg?v=<?= time() ?>'); background-size: contain; background-position: top center; background-repeat: no-repeat; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;">
+    <!-- Fade out overlay matching light background -->
+    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(250,250,250,0) 0%, rgba(250,250,250,1) 90%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;"></div>
+</div>
 
 <!-- Live Counter -->
 <div class="live-counter">
