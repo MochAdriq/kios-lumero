@@ -420,7 +420,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
     </div>
 
-
+    <?php endif; ?>
 
 </div><!-- /surprise-wrapper -->
 
