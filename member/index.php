@@ -447,7 +447,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         <p class="sub-headline">Ada hadiah rahasia di dalam pod ini.<br>Ketuk pod misteri ini untuk membukanya!</p>
 
         <div class="pod-container" id="podContainer" onclick="openPod()">
-            <lottie-player src="https://lottie.host/8cd6e55c-cfb3-40f0-8c29-3733e3eb2a29/a2v826HDBW.json" background="transparent" speed="1" loop autoplay></lottie-player>
+            <lottie-player src="https://assets-v2.lottiefiles.com/packages/lf20_touohxoe.json" background="transparent" speed="1" loop autoplay></lottie-player>
         </div>
 
         <div id="pod-result" style="display:none; margin-top:24px;">
