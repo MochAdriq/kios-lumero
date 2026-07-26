@@ -10,7 +10,8 @@ loyalty_ensure_tables($pdo);
 $stmtPrizes = $pdo->query("SELECT name, image_url FROM event_prizes WHERE event_id = 'kalibunder_go' AND is_active = 1 ORDER BY id ASC");
 $prizeIconsMap = [];
 while ($row = $stmtPrizes->fetch()) {
-    $prizeIconsMap[$row['name']] = !empty($row['image_url']) ? '../public/' . $row['image_url'] : '../public/assets/images/pos-products/product-dummy.svg';
+    $imgUrl = !empty($row['image_url']) ? loyalty_resolve_image_url($row['image_url']) : loyalty_resolve_image_url('images/pos-products/product-dummy.svg');
+    $prizeIconsMap[$row['name']] = $imgUrl;
 }
 
 
