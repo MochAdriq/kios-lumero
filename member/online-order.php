@@ -76,7 +76,7 @@ $bankAccountName='Sri Kusma Dewi';
 $bankAccountNo='0382731393';
 
 $freeOrderVideo='public/assets/video/self-order-cover.mp4';
-$freeOrderPoster='public/assets/images/pos-products/dclup-pasekon.png';
+$freeOrderPoster='public/assets/images/pos-products/lumero-pasekon.png';
 $freeOrderVoiceBase='../public/assets/audio/';
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
@@ -966,7 +966,7 @@ function simToggleTheme(){
 simInitTheme();
 </script>
 </head>
-<body class="pos-page sim-pos-template sim-pos-dcelup k2-body">
+<body class="pos-page sim-pos-template sim-pos-lumero k2-body">
 <?php if (!empty($outletOpStatus) && !$outletOpStatus['is_open']): ?>
 <div id="storeClosedOverlay" style="position:fixed; inset:0; z-index:99999; background:rgba(9,9,11,0.92); backdrop-filter:blur(18px); display:flex; align-items:center; justify-content:center; padding:20px;">
   <div style="background:rgba(24,24,34,0.98); border:2px solid rgba(239,68,68,0.45); border-radius:28px; padding:36px 28px; max-width:480px; width:100%; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,0.85), 0 0 60px rgba(239,68,68,0.22); animation:popIn .35s cubic-bezier(.4,0,.2,1) both;">
@@ -1437,7 +1437,7 @@ simInitTheme();
 window.LUMERO_ACTIVE_OUTLETS = <?= json_encode($activeOutletsList, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
 window.LUMERO_SELECTED_OUTLET_ID = <?= (int)($activeOutletId ?? current_outlet_id()) ?>;
 window.LUMERO_HAS_SELECTED_OUTLET = <?= isset($_GET['outlet_id']) || isset($_SESSION['lumero_selected_outlet_id']) ? 'true' : 'false' ?>;
-window.DCELUP_FREE_ORDER_POPUP = <?= $orderPopup ? 'true' : 'false' ?>;
+window.lumero_FREE_ORDER_POPUP = <?= $orderPopup ? 'true' : 'false' ?>;
 const today = <?=json_encode($today)?>;
 const tomorrow = <?=json_encode($tomorrow)?>;
 const serverNowTime = <?=json_encode($nowTime)?>;
@@ -2045,8 +2045,8 @@ function initChickenCards(){
 }
 
 let foAudioSettings={
-  music: localStorage.getItem('dcelup_online_music') !== 'off',
-  guide: localStorage.getItem('dcelup_online_guide_voice') !== 'off'
+  music: localStorage.getItem('lumero_online_music') !== 'off',
+  guide: localStorage.getItem('lumero_online_guide_voice') !== 'off'
 };
 
 function isMusicOn(){ return foAudioSettings.music !== false; }
@@ -2080,13 +2080,13 @@ function startBgm(){
 }
 function toggleMusicSetting(){
   foAudioSettings.music=!isMusicOn();
-  localStorage.setItem('dcelup_online_music', foAudioSettings.music ? 'on' : 'off');
+  localStorage.setItem('lumero_online_music', foAudioSettings.music ? 'on' : 'off');
   if(foAudioSettings.music) startBgm(); else stopBgm();
   updateAudioToggleButtons();
 }
 function toggleGuideSetting(){
   foAudioSettings.guide=!isGuideOn();
-  localStorage.setItem('dcelup_online_guide_voice', foAudioSettings.guide ? 'on' : 'off');
+  localStorage.setItem('lumero_online_guide_voice', foAudioSettings.guide ? 'on' : 'off');
   if(!foAudioSettings.guide){ stopAiRecommendationAudio(); stopAllVoices(); }
   updateAudioToggleButtons();
 }
@@ -2136,8 +2136,8 @@ function syncCustomerFields(source){
     if(da && dad) dad.value = da.value;
   }
   try{
-    if(topPhone && topPhone.value) localStorage.setItem('dcelup_customer_phone', normalizePhoneClient(topPhone.value));
-    if(topName && topName.value) localStorage.setItem('dcelup_customer_name', topName.value);
+    if(topPhone && topPhone.value) localStorage.setItem('lumero_customer_phone', normalizePhoneClient(topPhone.value));
+    if(topName && topName.value) localStorage.setItem('lumero_customer_name', topName.value);
   }catch(e){}
 }
 function applyCustomerData(name, phone){
@@ -2196,18 +2196,18 @@ function lookupCustomerFromVideo(showAlert=false){
     .then(data=>{
       if(data && data.found){
         applyCustomerData(data.name||'', data.phone||phone);
-        try{ localStorage.setItem('dcelup_customer_phone', data.phone||phone); localStorage.setItem('dcelup_customer_name', data.name||''); }catch(e){}
+        try{ localStorage.setItem('lumero_customer_phone', data.phone||phone); localStorage.setItem('lumero_customer_name', data.name||''); }catch(e){}
         setVideoPhoneInfo('Nomor dikenali. Nama akan otomatis diisi.','ok');
         return true;
       }
       applyCustomerData('', (data && data.phone) || phone);
-      try{ localStorage.setItem('dcelup_customer_phone', (data && data.phone) || phone); }catch(e){}
+      try{ localStorage.setItem('lumero_customer_phone', (data && data.phone) || phone); }catch(e){}
       setVideoPhoneInfo('Nomor tersimpan. Isi nama saat atur pengambilan.','warn');
       return false;
     })
     .catch(()=>{
       applyCustomerData('', phone);
-      try{ localStorage.setItem('dcelup_customer_phone', phone); }catch(e){}
+      try{ localStorage.setItem('lumero_customer_phone', phone); }catch(e){}
       setVideoPhoneInfo('Nomor dipakai untuk order ini.','warn');
       return false;
     });
@@ -2215,8 +2215,8 @@ function lookupCustomerFromVideo(showAlert=false){
 
 function initCustomerMemory(){
   try{
-    const p=localStorage.getItem('dcelup_customer_phone')||'';
-    const n=localStorage.getItem('dcelup_customer_name')||'';
+    const p=localStorage.getItem('lumero_customer_phone')||'';
+    const n=localStorage.getItem('lumero_customer_name')||'';
     applyCustomerData(n,p);
     const videoPhone=document.getElementById('videoPhoneInput'); if(videoPhone && p){ videoPhone.value=p; setVideoPhoneInfo('Nomor terakhir sudah terisi.','ok'); }
     if(p) lookupCustomerByPhone(p);
@@ -2789,7 +2789,7 @@ function _mqrisPrepareFormData(){
   }
   const oi = g('outletIdInput');
   if(oi) oi.value = window.LUMERO_SELECTED_OUTLET_ID || <?= current_outlet_id() ?>;
-  try{ localStorage.setItem('dcelup_customer_phone', phoneVal); localStorage.setItem('dcelup_customer_name', nameVal); }catch(_){}
+  try{ localStorage.setItem('lumero_customer_phone', phoneVal); localStorage.setItem('lumero_customer_name', nameVal); }catch(_){}
   return new FormData(foForm);
 }
 
@@ -2935,7 +2935,7 @@ document.getElementById('foForm').addEventListener('submit', e=>{
   }
 });
 
-if(window.DCELUP_FREE_ORDER_POPUP){ setTimeout(()=>foPlay('foVoiceSuccess'), 500); }
+if(window.lumero_FREE_ORDER_POPUP){ setTimeout(()=>foPlay('foVoiceSuccess'), 500); }
 
 updateAudioToggleButtons();
 buildPickupOptions();

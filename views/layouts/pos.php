@@ -43,7 +43,7 @@ $storeName = current_outlet_name();
     simInitTheme();
     </script>
 </head>
-<body class="pos-page sim-pos-template sim-pos-dcelup k2-body <?= isset($_GET['embed']) ? 'is-embed-modal' : '' ?>" style="<?= isset($_GET['embed']) ? 'background:#fff !important; padding:0 !important;' : '' ?>">
+<body class="pos-page sim-pos-template sim-pos-lumero k2-body <?= isset($_GET['embed']) ? 'is-embed-modal' : '' ?>" style="<?= isset($_GET['embed']) ? 'background:#fff !important; padding:0 !important;' : '' ?>">
 <div id="global-loader" style="display:none"><div class="whirly-loader"></div></div>
 
 <div class="main-wrapper pos-five">

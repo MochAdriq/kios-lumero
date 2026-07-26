@@ -24,7 +24,7 @@ if (isset($_GET['idle'])) {
 }
 
 $freeOrderVideo = 'public/assets/video/self-order-cover.mp4';
-$freeOrderPoster = 'public/assets/images/pos-products/dclup-pasekon.png';
+$freeOrderPoster = 'public/assets/images/pos-products/lumero-pasekon.png';
 $freeOrderVoiceBase = '../public/assets/audio/';
 ?>
 <!DOCTYPE html>

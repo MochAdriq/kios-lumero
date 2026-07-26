@@ -32,7 +32,7 @@ if (!function_exists('sim_pos_product_image')) {
         if (strpos($text, 'sayap') !== false) return sim_pos_img_asset('sayap.png');
         if (strpos($text, 'dada') !== false) return sim_pos_img_asset('dada.png');
         if (sim_contains_any($text, ['kentang kriwil', 'kriwil'])) return sim_pos_img_asset('kentang-kriwil.png');
-        if (strpos($text, 'kentang') !== false) return sim_pos_img_asset('kentang-dcelup.png');
+        if (strpos($text, 'kentang') !== false) return sim_pos_img_asset('kentang-lumero.png');
         if (strpos($text, 'taro') !== false) return sim_pos_img_asset('matcha/taro.png');
         if (sim_contains_any($text, ['coklat', 'choco', 'cocolate'])) return sim_pos_img_asset('matcha/choco.png');
         if (strpos($text, 'matcha') !== false || strpos($text, 'latte') !== false) return sim_pos_img_asset('matcha/latte.png');
