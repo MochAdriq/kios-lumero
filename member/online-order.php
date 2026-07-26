@@ -2927,11 +2927,11 @@ document.getElementById('foForm').addEventListener('submit', e=>{
   const formData = _mqrisPrepareFormData();
   if(!formData) return;
 
-  if(payment === 'qris'){
+  if(payment === 'qris' && <?= json_encode($isMidtransQris) ?>){
     // QRIS Midtrans: submit via AJAX → tampilkan popup
     _mqrisSubmitOrder(formData);
   } else {
-    // Non-QRIS (transfer, point): submit form biasa
+    // Non-QRIS (transfer, point, manual qris): submit form biasa
     document.getElementById('foForm').submit();
   }
 });
