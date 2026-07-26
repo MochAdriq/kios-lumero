@@ -1342,9 +1342,18 @@ simInitTheme();
   </div>
   <div class="fo-pay-preview active" id="qrisPreview" style="text-align:center; padding:20px;">
     <b style="font-size:15px; display:block; margin-bottom:14px; color:var(--dp-text);">Pembayaran QRIS / E-Wallet</b>
-    <div style="background:#fff; padding:20px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
-      <p style="color:#000; font-size:14px; margin:0;">QRIS Pembayaran akan otomatis muncul di layar selanjutnya setelah Anda mengklik tombol <b>Proses Pembayaran</b>.</p>
-    </div>
+    <?php if ($isMidtransQris): ?>
+      <div style="background:#fff; padding:20px; border-radius:18px; display:inline-block; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); max-width:100%;">
+        <p style="color:#000; font-size:14px; margin:0;">QRIS Pembayaran akan otomatis muncul di layar selanjutnya setelah Anda mengklik tombol <b>Proses Pembayaran</b>.</p>
+      </div>
+    <?php else: ?>
+      <?php if (!empty($paymentQrisImage)): ?>
+        <img src="../<?= fo_e(ltrim($paymentQrisImage, '/')) ?>?v=<?= time() ?>" alt="QRIS Manual" style="width:240px; max-width:100%; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.5); border:2px solid var(--dp-glass-border); background:#fff; margin: 0 auto; padding: 10px;">
+        <p style="font-size:13px; color:var(--dp-muted); margin-top:12px; margin-bottom:0;">Silakan scan kode QRIS di atas untuk melakukan pembayaran.<br>Pesanan akan diproses setelah bukti pembayaran diverifikasi kasir.</p>
+      <?php else: ?>
+        <p style="font-size:13px; color:var(--dp-red);">QRIS Toko belum dikonfigurasi. Silakan hubungi kasir.</p>
+      <?php endif; ?>
+    <?php endif; ?>
   </div>
   <div class="fo-pay-preview" id="transferPreview">
     <b>Transfer Bank</b><br><br>
