@@ -317,6 +317,12 @@ class LoyaltyController extends Controller
                     $stmt = $pdo->prepare("UPDATE event_prizes SET name=?, stock=?, is_default_fallback=?, is_active=? WHERE id=?");
                     $stmt->execute([$name, $stock, $isFallback, $isActive, $id]);
                 }
+                
+                // If inactive, reset chance_percentage to 0
+                if (!$isActive) {
+                    $pdo->prepare("UPDATE event_prizes SET chance_percentage = 0 WHERE id = ?")->execute([$id]);
+                }
+                
                 $_SESSION['flash_success'] = 'Hadiah berhasil diperbarui.';
             } else {
                 $stmt = $pdo->prepare("INSERT INTO event_prizes (event_id, name, chance_percentage, stock, is_default_fallback, is_active, image_url) VALUES ('kalibunder_go', ?, 0, ?, ?, ?, ?)");
@@ -343,9 +349,22 @@ class LoyaltyController extends Controller
         $chances = $_POST['chances'] ?? [];
 
         try {
+            // Get active map
+            $stmtPrizes = $pdo->query("SELECT id, is_active FROM event_prizes WHERE event_id = 'kalibunder_go'");
+            $activeMap = [];
+            while ($row = $stmtPrizes->fetch()) {
+                $activeMap[$row['id']] = (bool)$row['is_active'];
+            }
+
             $totalChance = 0;
-            foreach ($chances as $val) {
-                $totalChance += (float)$val;
+            $finalChances = [];
+            foreach ($chances as $prizeId => $val) {
+                // Ignore inactive prizes
+                if (empty($activeMap[$prizeId])) {
+                    $val = 0;
+                }
+                $finalChances[$prizeId] = (float)$val;
+                $totalChance += $finalChances[$prizeId];
             }
 
             if (round($totalChance, 2) != 100.00) {
@@ -354,7 +373,7 @@ class LoyaltyController extends Controller
 
             $pdo->beginTransaction();
             $stmt = $pdo->prepare("UPDATE event_prizes SET chance_percentage = ? WHERE id = ?");
-            foreach ($chances as $prizeId => $chanceVal) {
+            foreach ($finalChances as $prizeId => $chanceVal) {
                 $stmt->execute([(float)$chanceVal, (int)$prizeId]);
             }
             $pdo->commit();

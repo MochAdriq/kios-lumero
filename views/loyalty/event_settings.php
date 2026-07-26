@@ -61,7 +61,7 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <input type="number" step="0.01" min="0" max="100" class="form-control chance-input text-end <?= !$p['is_active'] ? 'bg-light' : '' ?>" name="chances[<?= $p['id'] ?>]" value="<?= (float)$p['chance_percentage'] ?>" <?= !$p['is_active'] ? 'readonly title="Nonaktif"' : '' ?>>
+                                <input type="number" step="0.01" min="0" max="100" class="form-control chance-input text-end <?= !$p['is_active'] ? 'bg-light' : '' ?>" name="chances[<?= $p['id'] ?>]" value="<?= $p['is_active'] ? (float)$p['chance_percentage'] : 0 ?>" <?= !$p['is_active'] ? 'readonly title="Nonaktif"' : '' ?>>
                             </td>
                         </tr>
                         <?php endforeach; ?>
