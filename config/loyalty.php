@@ -310,12 +310,15 @@ function loyalty_ensure_tables(PDO $pdo): void {
             user_id INT(11) NOT NULL,
             prize_id INT(11) NOT NULL,
             qr_code VARCHAR(100) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
             expired_at DATETIME NOT NULL,
             created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY(id),
             KEY idx_reward_claims_user (user_id),
             KEY idx_reward_claims_prize (prize_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        
+        loyalty_add_col($pdo, 'reward_claims', 'status', "status VARCHAR(20) NOT NULL DEFAULT 'PENDING' AFTER qr_code");
 
         if (loyalty_table_exists($pdo, 'event_prizes')) {
             $st = $pdo->prepare("SELECT COUNT(*) FROM event_prizes WHERE event_id = 'kalibunder_go'");
