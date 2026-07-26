@@ -1059,7 +1059,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
 <!-- Hero Image (Full Bleed, Responsive Height) -->
 <div style="position: relative; width: 100%; z-index: 1; margin-top: -70px;">
-    <img src="../public/assets/images/member-hero.jpeg?v=<?= time() ?>" alt="Banner Promo" style="width: 100%; height: auto; display: block; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; max-height: 80vh; object-fit: cover; object-position: top center;">
+    <img src="../public/assets/images/member-hero.png?v=<?= time() ?>" alt="Banner Promo" style="width: 100%; height: auto; display: block; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; max-height: 80vh; object-fit: cover; object-position: top center;">
     <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,15,0) 70%, rgba(10,10,15,1) 98%); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; pointer-events: none;"></div>
 </div>
 
