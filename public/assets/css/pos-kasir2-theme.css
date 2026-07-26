@@ -1454,6 +1454,12 @@ body.k2-body .pos-locked {
     max-width: 100vw !important;
   }
 
+  body.k2-body .page-wrapper.pos-pg-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
   body.k2-body .page-wrapper.pos-pg-wrapper,
   body.k2-body .content.pos-design,
   body.k2-body .pos-wrapper,
