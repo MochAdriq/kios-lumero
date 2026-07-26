@@ -602,10 +602,13 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     for (let i = 0; i < 40; i++) {
         const item = items[Math.floor(Math.random() * items.length)];
         const isTarget = i === 28;
+        const isGold = i % 2 === 0;
+        const cardClass = isGold ? 'ticker-card gold-card' : 'ticker-card';
+        
         if (isTarget) {
-            cardsHTML += `<div class="ticker-card gold-card"><div class="card-icon"><i class="fa-solid fa-crown"></i></div><div class="card-val">${rewardPoints} Pts</div></div>`;
+            cardsHTML += `<div class="${cardClass}"><div class="card-icon"><i class="fa-solid fa-crown"></i></div><div class="card-val">${rewardPoints} Pts</div></div>`;
         } else {
-            cardsHTML += `<div class="ticker-card"><div class="card-icon">${item.icon}</div><div class="card-val">${item.val}</div></div>`;
+            cardsHTML += `<div class="${cardClass}"><div class="card-icon">${item.icon}</div><div class="card-val">${item.val}</div></div>`;
         }
     }
     if (track) track.innerHTML = cardsHTML;
