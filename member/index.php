@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../helpers/functions.php';
 require_once __DIR__ . '/../core/Database.php';
@@ -19,9 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'spin_
     exit;
 }
 
-/* ──────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    SURPRISE FLOW: Intercept saat ada ?claim=KODE
-   ────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 $claimCode = strtoupper(trim((string)($_GET['claim'] ?? '')));
 $claimCheck = ['valid' => false];
 
@@ -29,7 +29,7 @@ if ($claimCode !== '') {
     $claimCheck = loyalty_check_claim_code($pdo, $claimCode);
 }
 
-// ── Pilih variasi anti-ulang ──────────────────────────
+// â”€â”€ Pilih variasi anti-ulang â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function pick_surprise_variant(string $claimCode): string {
     if (isset($_SESSION['surprise_variant_cache'][$claimCode])) {
         return $_SESSION['surprise_variant_cache'][$claimCode];
@@ -43,7 +43,7 @@ function pick_surprise_variant(string $claimCode): string {
     return $chosen;
 }
 
-// ── Jika kode klaim valid → tampilkan SURPRISE LANDING ──
+// â”€â”€ Jika kode klaim valid â†’ tampilkan SURPRISE LANDING â”€â”€
 if ($claimCode !== '' && $claimCheck['valid'] === true) {
     $variant    = pick_surprise_variant($claimCode);
     $points     = (int)($claimCheck['points'] ?? 0);
@@ -62,7 +62,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>Kejutan Spesial Untukmu! — Lumero</title>
+    <title>Kejutan Spesial Untukmu! â€” Lumero</title>
     <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,7 +87,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             position: relative;
         }
 
-        /* ── Animated Background ── */
+        /* â”€â”€ Animated Background â”€â”€ */
         .bg-mesh {
             position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
             background: radial-gradient(ellipse at 20% 20%, rgba(255,199,44,0.18) 0%, transparent 55%),
@@ -105,7 +105,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             100% { transform: translate(4vw, 4vh) scale(1.12); }
         }
 
-        /* ── Wrapper ── */
+        /* â”€â”€ Wrapper â”€â”€ */
         .surprise-wrapper {
             position: relative; z-index: 2;
             width: min(480px, 100%);
@@ -114,7 +114,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             text-align: center; gap: 0;
         }
 
-        /* ── Brand Logo ── */
+        /* â”€â”€ Brand Logo â”€â”€ */
         .brand-pill {
             display: inline-flex; align-items: center; gap: 8px;
             background: rgba(255,255,255,0.85); backdrop-filter: blur(10px);
@@ -125,7 +125,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
         .brand-pill img { width: 24px; height: 24px; border-radius: 6px; }
 
-        /* ── Stage (Container animasi utama) ── */
+        /* â”€â”€ Stage (Container animasi utama) â”€â”€ */
         .stage {
             width: 100%;
             background: rgba(255,255,255,0.75);
@@ -164,7 +164,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             margin-bottom: 32px; font-weight: 500;
         }
 
-        /* ── POIN BADGE ── */
+        /* â”€â”€ POIN BADGE â”€â”€ */
         .points-badge {
             display: inline-flex; align-items: center; gap: 10px;
             background: linear-gradient(135deg, var(--ink) 0%, #1e293b 100%);
@@ -187,7 +187,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             to   { transform: scale(1) rotate(0deg); opacity: 1; }
         }
 
-        /* ── CTA Button ── */
+        /* â”€â”€ CTA Button â”€â”€ */
         .cta-btn {
             display: flex; align-items: center; justify-content: center; gap: 10px;
             width: 100%; padding: 18px 28px;
@@ -228,14 +228,14 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             font-size: 12px; color: var(--muted); margin-top: 14px; font-weight: 500;
         }
 
-        /* ── Confetti Canvas ── */
+        /* â”€â”€ Confetti Canvas â”€â”€ */
         #confetti-canvas {
             position: fixed; inset: 0; pointer-events: none; z-index: 999;
         }
 
-        /* ════════════════════════════════════════════════════
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
            VARIASI A: ROULETTE TICKER
-           ════════════════════════════════════════════════════ */
+           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         .ticker-viewport {
             position: relative; width: 100%; height: 120px;
             background: linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, rgba(15, 23, 42, 0.01) 100%);
@@ -258,8 +258,8 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             position: absolute; left: 50%; transform: translateX(-50%);
             color: var(--red); font-size: 11px; font-weight: 900;
         }
-        .ticker-selector::before { content: '▼'; top: -10px; }
-        .ticker-selector::after { content: '▲'; top: auto; bottom: -10px; }
+        .ticker-selector::before { content: 'â–¼'; top: -10px; }
+        .ticker-selector::after { content: 'â–²'; top: auto; bottom: -10px; }
 
         .ticker-track {
             display: flex; gap: 12px; padding-left: 50%; 
@@ -313,9 +313,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <!-- FontAwesome for Solid SVG Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ════════════════════════════════════════════════════
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
            VARIASI B: 3D MYSTERY POD (Lottie)
-           ════════════════════════════════════════════════════ */
+           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         .pod-container {
             position: relative; width: 220px; height: 220px; margin: 0 auto 24px;
             cursor: pointer; transition: transform 0.15s ease-out;
@@ -327,7 +327,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
 
         
-        /* ── Success State (member sudah login) ── */
+        /* â”€â”€ Success State (member sudah login) â”€â”€ */
         .success-badge {
             display: inline-flex; align-items: center; gap: 8px;
             background: #f0fdf4; border: 1.5px solid #86efac;
@@ -355,9 +355,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         Lumero Club
     </div>
 
-    <!-- ═══════════════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          VARIASI A: ROULETTE TICKER
-         ═══════════════════════════════════════════════════ -->
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <?php if ($variant === 'A'): ?>
     <div class="stage" id="stage-A">
         <div class="headline">
@@ -400,9 +400,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          VARIASI B: PETI HARTA KARUN
-         ═══════════════════════════════════════════════════ -->
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <?php elseif ($variant === 'B'): ?>
     <div class="stage" id="stage-B">
         <div class="headline">
@@ -459,9 +459,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
     }
 
-    /* ══════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        VARIASI A: ROULETTE TICKER
-       ══════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     <?php if ($variant === 'A'): ?>
     const track = document.getElementById('tickerTrack');
     const btnSpin = document.getElementById('spinTickerBtn');
@@ -564,16 +564,16 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         if (state !== 'idle') return;
         
         btnSpin.disabled = true;
-        btnSpin.innerHTML = '⚡ Mengundi...';
+        btnSpin.innerHTML = 'âš¡ Mengundi...';
         
         state = 'spin';
         const randomOffset = Math.floor(Math.random() * 24) - 12; // +/- 12px natural offset
         targetX = (TARGET_INDEX * CARD_WIDTH) + (96 / 2) + randomOffset;
     };
 
-    /* ══════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        VARIASI B: 3D MYSTERY POD (Lottie)
-       ══════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     <?php elseif ($variant === 'B'): ?>
     let podOpened = false;
     window.openPod = function() {
@@ -596,9 +596,9 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
     <?php endif; ?>
 
-    /* ══════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        AUTO-CLAIM SUCCESS CONFETTI (member logged in)
-       ══════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     <?php if ($isLoggedIn && $autoMsg === 'success'): ?>
     window.addEventListener('load', () => {
@@ -618,7 +618,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>Grand Opening Kalibunder — Lumero | Putar & Menang!</title>
+    <title>Grand Opening Kalibunder â€” Lumero | Putar & Menang!</title>
     <meta name="description" content="Putar roulette GRATIS dan menangkan hadiah eksklusif dari Lumero Kalibunder. 100% pasti menang!">
     <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -646,7 +646,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             overflow-x: hidden;
         }
 
-        /* ── Animated BG ── */
+        /* â”€â”€ Animated BG â”€â”€ */
         .bg-wrap {
             position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
             background: radial-gradient(ellipse at 15% 10%, rgba(196,18,48,0.25) 0%, transparent 50%),
@@ -668,10 +668,10 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .orb-2 { width: 400px; height: 400px; bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(255,199,44,0.2) 0%, transparent 70%); animation-delay: -3s; }
         @keyframes pulseGlow { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.2); opacity: 1; } }
 
-        /* ── Layout ── */
+        /* â”€â”€ Layout â”€â”€ */
         .wrapper { width: min(820px, 100%); margin: 0 auto; padding: 0 20px; position: relative; z-index: 10; }
 
-        /* ── Navbar ── */
+        /* â”€â”€ Navbar â”€â”€ */
         .navbar {
             display: flex; justify-content: space-between; align-items: center;
             padding: 18px 20px; position: sticky; top: 0; z-index: 100;
@@ -695,7 +695,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
         .btn-nav:hover { background: rgba(255,255,255,0.18); }
 
-        /* ── Urgency Banner ── */
+        /* â”€â”€ Urgency Banner â”€â”€ */
         .urgency-banner {
             background: linear-gradient(90deg, var(--red-dark) 0%, var(--red) 50%, var(--red-dark) 100%);
             background-size: 200% 100%;
@@ -707,7 +707,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .urgency-banner span { animation: textBlink 1.5s step-end infinite; }
         @keyframes textBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-        /* ── Live Counter ── */
+        /* â”€â”€ Live Counter â”€â”€ */
         .live-counter {
             display: flex; align-items: center; justify-content: center; gap: 24px;
             padding: 16px 20px; background: rgba(255,255,255,0.04);
@@ -718,7 +718,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .counter-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; }
         .counter-sep { width: 1px; height: 36px; background: rgba(255,255,255,0.1); }
 
-        /* ── Hero Section ── */
+        /* â”€â”€ Hero Section â”€â”€ */
         .hero-section { padding: 36px 0 20px; text-align: center; }
         .hero-label {
             display: inline-flex; align-items: center; gap: 6px;
@@ -745,7 +745,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
         .hero-sub b { color: rgba(255,255,255,0.85); }
 
-        /* ── Guarantee Badges ── */
+        /* â”€â”€ Guarantee Badges â”€â”€ */
         .guarantee-row {
             display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
             margin-bottom: 32px;
@@ -757,7 +757,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             color: rgba(255,255,255,0.8);
         }
 
-        /* ── Slot Machine Card ── */
+        /* â”€â”€ Slot Machine Card â”€â”€ */
         .slot-card {
             background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
             border: 1px solid rgba(255,255,255,0.1);
@@ -821,7 +821,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .slot-item img { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
         .slot-item span { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.85); line-height: 1.2; }
 
-        /* ── CTA Button ── */
+        /* â”€â”€ CTA Button â”€â”€ */
         .btn-spin {
             display: flex; align-items: center; justify-content: center; gap: 10px;
             width: 100%; padding: 18px 24px;
@@ -852,7 +852,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             margin-top: 12px;
         }
 
-        /* ── Result Modal (inline, not popup) ── */
+        /* â”€â”€ Result Modal (inline, not popup) â”€â”€ */
         #result-modal {
             display: none; margin-top: 20px; padding: 24px;
             background: linear-gradient(145deg, rgba(255,199,44,0.1) 0%, rgba(196,18,48,0.08) 100%);
@@ -879,7 +879,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         @keyframes claimPulse { 0%,100% { box-shadow: 0 8px 30px rgba(255,199,44,0.4); } 50% { box-shadow: 0 8px 50px rgba(255,199,44,0.7); } }
         .claim-warning { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 10px; font-weight: 600; }
 
-        /* ── Social Proof Ticker ── */
+        /* â”€â”€ Social Proof Ticker â”€â”€ */
         .ticker-wrap {
             overflow: hidden; padding: 14px 0;
             border-top: 1px solid rgba(255,255,255,0.06);
@@ -894,7 +894,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .ticker-track .win { color: var(--gold); font-weight: 800; }
         @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* ── Section ── */
+        /* â”€â”€ Section â”€â”€ */
         .section { margin-bottom: 48px; }
         .section-head { text-align: center; margin-bottom: 24px; }
         .section-tag {
@@ -904,7 +904,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .section-title { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 8px; }
         .section-sub { font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 500; line-height: 1.6; }
 
-        /* ── Prize Grid ── */
+        /* â”€â”€ Prize Grid â”€â”€ */
         .prize-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .prize-card {
             background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
@@ -923,7 +923,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .prize-marquee { position: absolute; top: 10px; right: 10px; font-size: 16px; animation: prizeFloat 2s ease-in-out infinite alternate; }
         @keyframes prizeFloat { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-4px) rotate(8deg); } }
 
-        /* ── How It Works ── */
+        /* â”€â”€ How It Works â”€â”€ */
         .steps { display: flex; flex-direction: column; gap: 16px; }
         .step {
             display: flex; align-items: flex-start; gap: 16px;
@@ -939,7 +939,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .step-text h4 { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 4px; }
         .step-text p { font-size: 13px; color: rgba(255,255,255,0.45); font-weight: 500; line-height: 1.5; }
 
-        /* ── Location Card ── */
+        /* â”€â”€ Location Card â”€â”€ */
         .location-card {
             background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 24px; overflow: hidden;
@@ -965,7 +965,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
         .map-placeholder iframe { width: 100%; height: 100%; border: 0; }
 
-        /* ── Bottom CTA ── */
+        /* â”€â”€ Bottom CTA â”€â”€ */
         .bottom-cta {
             text-align: center; padding: 40px 0 60px;
         }
@@ -982,11 +982,11 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
         .btn-cta-big:hover { transform: translateY(-2px); box-shadow: 0 20px 50px rgba(196,18,48,0.6); }
 
-        /* ── Misc ── */
+        /* â”€â”€ Misc â”€â”€ */
         @keyframes slideDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
-        /* ── Mobile fixes ── */
+        /* â”€â”€ Mobile fixes â”€â”€ */
         @media (max-width: 400px) {
             .live-counter { gap: 12px; }
             .guarantee-row .g-badge { font-size: 11px; padding: 7px 10px; }
@@ -1003,7 +1003,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
 <!-- Urgency Banner -->
 <div class="urgency-banner">
-    🔴 <span>LIVE</span> &nbsp;·&nbsp; GRAND OPENING KALIBUNDER &nbsp;·&nbsp; Event Terbatas — Hadiah Habis, Kesempatan Hangus!
+    ðŸ”´ <span>LIVE</span> &nbsp;Â·&nbsp; GRAND OPENING KALIBUNDER &nbsp;Â·&nbsp; Event Terbatas â€” Hadiah Habis, Kesempatan Hangus!
 </div>
 
 <!-- Navbar -->
@@ -1039,7 +1039,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 <div class="wrapper">
     <!-- Hero Section -->
     <header class="hero-section">
-        <div class="hero-label">✦ Grand Opening Eksklusif</div>
+        <div class="hero-label">âœ¦ Grand Opening Eksklusif</div>
         <h1 class="hero-title">
             Putar. Menang.<br>
             <span class="accent">Langsung Klaim.</span>
@@ -1050,15 +1050,15 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
         <!-- Guarantee Badges -->
         <div class="guarantee-row">
-            <div class="g-badge">✅ 100% Pasti Menang</div>
-            <div class="g-badge">🔒 Tanpa Syarat Tersembunyi</div>
-            <div class="g-badge">⚡ Klaim Instan</div>
+            <div class="g-badge">âœ… 100% Pasti Menang</div>
+            <div class="g-badge">ðŸ”’ Tanpa Syarat Tersembunyi</div>
+            <div class="g-badge">âš¡ Klaim Instan</div>
         </div>
     </header>
 
     <!-- Slot Machine Card -->
     <div class="slot-card">
-        <div class="slot-card-title">🎰 Roulette Kejutan — Putar Sekarang</div>
+        <div class="slot-card-title">ðŸŽ° Roulette Kejutan â€” Putar Sekarang</div>
 
         <div class="slot-viewport">
             <div class="slot-target-line"></div>
@@ -1067,15 +1067,15 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
         <div id="action-area">
             <button id="btn-spin" onclick="spinRoulette()" class="btn-spin">
-                <span class="spin-icon">🎰</span>
-                Putar Roulette — GRATIS!
+                <span class="spin-icon">ðŸŽ°</span>
+                Putar Roulette â€” GRATIS!
             </button>
-            <p class="hint-text">🔒 Tanpa login · Tanpa syarat · Tanpa biaya tersembunyi</p>
+            <p class="hint-text">ðŸ”’ Tanpa login Â· Tanpa syarat Â· Tanpa biaya tersembunyi</p>
         </div>
 
         <!-- Result Modal (inline) -->
         <div id="result-modal">
-            <div class="result-congrats">🎉🎊🎉</div>
+            <div class="result-congrats">ðŸŽ‰ðŸŽŠðŸŽ‰</div>
             <div class="result-title">Selamat! Anda Menang!</div>
             <div class="result-prize-name" id="prize-name">Hadiah</div>
             <p class="result-sub">
@@ -1083,54 +1083,54 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
                 <br>Jangan biarkan orang lain mengklaimnya!
             </p>
             <a id="claim-btn" href="<?= url('/member/login.php') ?>?source=event_kalibunder" class="btn-claim">
-                🔐 Amankan Hadiah Ke WhatsApp Saya
+                ðŸ” Amankan Hadiah Ke WhatsApp Saya
             </a>
-            <p class="claim-warning">*Masukkan nomor WA · Tiket digital dikirim otomatis · Klaim di Outlet Kalibunder</p>
+            <p class="claim-warning">*Masukkan nomor WA Â· Tiket digital dikirim otomatis Â· Klaim di Outlet Kalibunder</p>
         </div>
     </div>
 
     <!-- Social Proof Ticker -->
     <div class="ticker-wrap">
         <div class="ticker-track">
-            <span>🎉 <span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
-            <span>🔥 <span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
-            <span>⚡ <span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
-            <span>🏆 <span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
-            <span>🎉 <span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
-            <span>🔥 <span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
-            <span>⚡ <span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
-            <span>🏆 <span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
+            <span>ðŸŽ‰ <span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
+            <span>ðŸ”¥ <span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
+            <span>âš¡ <span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
+            <span>ðŸ† <span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
+            <span>ðŸŽ‰ <span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
+            <span>ðŸ”¥ <span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
+            <span>âš¡ <span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
+            <span>ðŸ† <span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
         </div>
     </div>
 
     <!-- Prize Showcase -->
     <section class="section">
         <div class="section-head">
-            <div class="section-tag">✦ Koleksi Hadiah</div>
+            <div class="section-tag">âœ¦ Koleksi Hadiah</div>
             <h2 class="section-title">Ada Apa Di Dalam Roulette?</h2>
             <p class="section-sub">Ini bukan undian kosong. Semua hadiah nyata, bisa langsung diambil di outlet kami.</p>
         </div>
         <div class="prize-grid">
             <div class="prize-card">
-                <div class="prize-marquee">🔥</div>
+                <div class="prize-marquee">ðŸ”¥</div>
                 <img src="../public/assets/images/pos-products/original.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Paket Ayam">
                 <h4>Paket Ayam 1 Ekor</h4>
                 <div class="prize-badge">Stok Terbatas</div>
             </div>
             <div class="prize-card">
-                <div class="prize-marquee">📱</div>
+                <div class="prize-marquee">ðŸ“±</div>
                 <img src="../public/assets/images/pos-products/icon-192.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Handphone">
                 <h4>Handphone</h4>
                 <div class="prize-badge">Grand Prize</div>
             </div>
             <div class="prize-card">
-                <div class="prize-marquee">✨</div>
+                <div class="prize-marquee">âœ¨</div>
                 <img src="../public/assets/images/pos-products/matcha.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Es Krim">
                 <h4>Es Krim Lumero</h4>
                 <div class="prize-badge">Paling Banyak</div>
             </div>
             <div class="prize-card">
-                <div class="prize-marquee">💼</div>
+                <div class="prize-marquee">ðŸ’¼</div>
                 <img src="../public/assets/images/pos-products/kopi.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Tumbler">
                 <h4>Tumbler Eksklusif</h4>
                 <div class="prize-badge">Edisi Terbatas</div>
@@ -1141,14 +1141,14 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <!-- How It Works -->
     <section class="section">
         <div class="section-head">
-            <div class="section-tag">✦ Cara Klaim</div>
+            <div class="section-tag">âœ¦ Cara Klaim</div>
             <h2 class="section-title">Semudah 3 Langkah</h2>
         </div>
         <div class="steps">
             <div class="step">
                 <div class="step-num">1</div>
                 <div class="step-text">
-                    <h4>Putar Roulette — GRATIS</h4>
+                    <h4>Putar Roulette â€” GRATIS</h4>
                     <p>Klik tombol merah di atas. Tidak perlu daftar, tidak perlu bayar. Semua putaran dijamin mendapatkan hadiah nyata.</p>
                 </div>
             </div>
@@ -1156,7 +1156,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
                 <div class="step-num">2</div>
                 <div class="step-text">
                     <h4>Amankan Ke WhatsApp</h4>
-                    <p>Setelah melihat hadiah Anda, masukkan nomor WA untuk mengunci tiket digital. Ini adalah "kunci brankas" hadiah Anda — jangan tunda!</p>
+                    <p>Setelah melihat hadiah Anda, masukkan nomor WA untuk mengunci tiket digital. Ini adalah "kunci brankas" hadiah Anda â€” jangan tunda!</p>
                 </div>
             </div>
             <div class="step">
@@ -1172,19 +1172,19 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <!-- Location Card -->
     <section class="section">
         <div class="section-head">
-            <div class="section-tag">✦ Lokasi Klaim</div>
+            <div class="section-tag">âœ¦ Lokasi Klaim</div>
             <h2 class="section-title">Lumero Outlet Kalibunder</h2>
         </div>
         <div class="location-card">
             <div class="location-header">
                 <div class="event-countdown">
-                    🔴 Event Terbatas · Jangan Sampai Kehabisan
+                    ðŸ”´ Event Terbatas Â· Jangan Sampai Kehabisan
                 </div>
                 <h3>Lumero Outlet Kalibunder</h3>
                 <p>Tukarkan tiket digital Anda langsung di kasir kami sebelum hangus. Stok hadiah terbatas!</p>
             </div>
             <div class="map-placeholder">
-                <span style="color:rgba(255,255,255,0.25); font-size:14px; font-weight:700;">📍 Peta Google Maps Kalibunder</span>
+                <span style="color:rgba(255,255,255,0.25); font-size:14px; font-weight:700;">ðŸ“ Peta Google Maps Kalibunder</span>
             </div>
         </div>
     </section>
@@ -1194,7 +1194,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         <h2>Masih Ragu? Stok Hadiah Makin Menipis!</h2>
         <p>Sudah <b style="color:#fff;">247 orang</b> memutar hari ini. Semakin lama menunggu, semakin besar kemungkinan hadiah terbaik habis.</p>
         <a href="#action-area" class="btn-cta-big" onclick="document.getElementById('btn-spin').click(); return false;">
-            ⚡ Putar Sekarang — GRATIS
+            âš¡ Putar Sekarang â€” GRATIS
         </a>
     </div>
 </div>
@@ -1265,7 +1265,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     function spinRoulette() {
         if (state !== 'idle') return;
         btnSpin.disabled = true;
-        btnSpin.innerHTML = '<span style="font-size:18px;">⏳</span> Mengundi Hadiah Anda...';
+        btnSpin.innerHTML = '<span style="font-size:18px;">â³</span> Mengundi Hadiah Anda...';
         fetch('', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -1283,13 +1283,13 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             } else {
                 alert('Gagal memutar: ' + (data.error || 'Server error'));
                 btnSpin.disabled = false;
-                btnSpin.innerHTML = '<span class="spin-icon">🎰</span> Putar Roulette — GRATIS!';
+                btnSpin.innerHTML = '<span class="spin-icon">ðŸŽ°</span> Putar Roulette â€” GRATIS!';
             }
         })
         .catch(() => {
             alert('Koneksi gagal. Coba lagi.');
             btnSpin.disabled = false;
-            btnSpin.innerHTML = '<span class="spin-icon">🎰</span> Putar Roulette — GRATIS!';
+            btnSpin.innerHTML = '<span class="spin-icon">ðŸŽ°</span> Putar Roulette â€” GRATIS!';
         });
     }
 
@@ -1304,7 +1304,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         }
     }, 4000);
 
-    // Countdown timer (visual — resets each day)
+    // Countdown timer (visual â€” resets each day)
     function updateTimer() {
         const now = new Date();
         const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 0);
@@ -1316,353 +1316,6 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     }
     updateTimer();
     setInterval(updateTimer, 1000);
-</script>
-
-</body>
-</html>
-
-    <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png?v=2">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --red: #c41230;
-            --red-dark: #6e0015;
-            --gold: #ffc72c;
-            --cream: #fffcf5;
-            --ink: #0f172a;
-            --muted: #64748b;
-        }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            background-color: var(--cream);
-            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-            color: var(--ink);
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            padding-bottom: 60px;
-        }
-
-        .stripe-bg {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -1; pointer-events: none;
-            background: linear-gradient(180deg, #fffcf5 0%, #ffffff 100%);
-        }
-        .blob {
-            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.45;
-            animation: floatBlob 12s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        }
-        .blob-1 { top: -10%; left: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, var(--gold) 0%, transparent 70%); }
-        .blob-2 { top: 20%; right: -20%; width: 70vw; height: 70vw; background: radial-gradient(circle, var(--red) 0%, transparent 70%); animation-delay: -5s; }
-
-        @keyframes floatBlob {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(5vw, 5vh) scale(1.15); }
-        }
-
-        .wrapper { width: min(800px, 100%); margin: 0 auto; padding: 0 24px; position: relative; }
-
-        /* Navbar */
-        .navbar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 24px; position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
-        }
-        .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 18px; color: var(--ink); }
-        .nav-logo img { width: 32px; height: 32px; border-radius: 8px; }
-        .btn-nav {
-            border: 1.5px solid rgba(15,23,42,0.15); padding: 10px 20px; border-radius: 99px;
-            text-decoration: none; color: var(--ink); font-weight: 700; font-size: 13px;
-            background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);
-            transition: all 0.2s;
-        }
-        .btn-nav:hover { background: var(--ink); color: #fff; }
-
-        /* Hero */
-        .hero-section { padding-top: 100px; text-align: center; }
-        .hero-card {
-            background: #fff; border-radius: 36px; padding: 40px 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
-            margin-bottom: 40px; position: relative; overflow: hidden;
-        }
-        .hero-title { font-size: clamp(28px, 6vw, 36px); font-weight: 900; color: var(--ink); margin-bottom: 12px; letter-spacing: -0.03em; line-height: 1.2; }
-        .hero-title span { color: var(--red); }
-        .hero-subtitle { color: var(--muted); font-size: 15px; margin-bottom: 32px; font-weight: 500; line-height: 1.6; max-width: 400px; margin-left: auto; margin-right: auto; }
-
-        /* Slot Machine */
-        .slot-viewport {
-            position: relative; width: 100%; max-width: 440px; height: 130px;
-            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-            border: 1px solid rgba(0,0,0,0.06); border-radius: 24px;
-            margin: 0 auto 32px; overflow: hidden; display: flex; align-items: center;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.02);
-        }
-        .slot-viewport::before, .slot-viewport::after {
-            content: ''; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none;
-        }
-        .slot-viewport::before { left: 0; background: linear-gradient(90deg, #fff 0%, transparent 100%); }
-        .slot-viewport::after { right: 0; background: linear-gradient(-90deg, #fff 0%, transparent 100%); }
-        
-        .slot-target-line {
-            position: absolute; left: 50%; top: 0; bottom: 0; width: 3px;
-            background: var(--red); transform: translateX(-50%); z-index: 3;
-            border-radius: 99px; box-shadow: 0 0 12px rgba(196,18,48,0.5);
-        }
-        .slot-target-line::before, .slot-target-line::after {
-            content: ''; position: absolute; left: 50%; transform: translateX(-50%);
-            width: 12px; height: 12px; background: var(--red); clip-path: polygon(50% 100%, 0 0, 100% 0);
-        }
-        .slot-target-line::before { top: 0; }
-        .slot-target-line::after { bottom: 0; transform: translateX(-50%) rotate(180deg); }
-
-        .slot-track {
-            display: flex; gap: 16px; padding-left: 50%; will-change: transform; align-items: center;
-        }
-        .slot-item {
-            width: 96px; height: 96px; background: #fff; border: 1px solid rgba(0,0,0,0.08);
-            border-radius: 16px; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; gap: 8px; flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 8px; text-align: center;
-        }
-        .slot-item img { width: 44px; height: 44px; object-fit: contain; }
-        .slot-item span { font-size: 11px; font-weight: 800; color: var(--ink); line-height: 1.2; }
-
-        .btn-primary {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 100%; max-width: 440px; padding: 18px 24px;
-            background: linear-gradient(135deg, var(--red) 0%, #e01535 100%);
-            color: #fff; font-size: 16px; font-weight: 800; border: none; border-radius: 18px;
-            cursor: pointer; text-decoration: none; box-shadow: 0 12px 30px rgba(196,18,48,0.3);
-            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(196,18,48,0.4); }
-        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-
-        @keyframes slideDown { from { opacity:0; transform:translateY(-15px); } to { opacity:1; transform:translateY(0); } }
-
-        /* Marquee Ticker */
-        .marquee-container {
-            width: 100%; overflow: hidden; background: #fff; border: 1px solid rgba(0,0,0,0.06);
-            border-radius: 99px; padding: 12px 24px; margin-bottom: 40px; white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; align-items: center;
-        }
-        .marquee-content { display: inline-flex; gap: 32px; animation: marquee 20s linear infinite; font-size: 13px; font-weight: 600; color: var(--muted); }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-
-        /* Gallery */
-        .section-title { font-size: 20px; font-weight: 900; color: var(--ink); margin-bottom: 8px; text-align: center; }
-        .section-subtitle { font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 24px; font-weight: 500; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 48px; }
-        .gallery-item {
-            background: #fff; border-radius: 20px; overflow: hidden; padding: 20px;
-            text-align: center; border: 1px solid rgba(0,0,0,0.04);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-        }
-        .gallery-item img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 12px; transition: transform 0.3s; }
-        .gallery-item:hover img { transform: scale(1.1); }
-        .gallery-item h4 { font-size: 14px; font-weight: 800; color: var(--ink); }
-
-        /* Map */
-        .map-card {
-            background: #fff; border-radius: 24px; padding: 24px; text-align: center;
-            border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 8px 24px rgba(0,0,0,0.03);
-        }
-        .countdown { display: inline-block; background: rgba(196,18,48,0.1); color: var(--red); padding: 8px 16px; border-radius: 99px; font-weight: 800; font-size: 14px; margin-bottom: 16px; }
-    </style>
-</head>
-<body>
-
-<div class="stripe-bg">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-</div>
-
-<nav class="navbar">
-    <div class="nav-logo">
-        <img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero"> Lumero
-    </div>
-    <a href="<?= url('/member/login.php') ?>?source=organic" class="btn-nav">Masuk / Cek Tiket</a>
-</nav>
-
-<div class="wrapper">
-    <header class="hero-section">
-        <div class="hero-card">
-            <h1 class="hero-title">Raih Kejutan <span>Spesial!</span> ✨</h1>
-            <p class="hero-subtitle">Pesananmu telah dikonversi. Undi roulette sekarang untuk mengamankan hadiah kejutanmu!</p>
-            
-            <div class="slot-viewport">
-                <div class="slot-target-line"></div>
-                <div class="slot-track" id="slot-track">
-                    <!-- JS populated -->
-                </div>
-            </div>
-
-            <div id="action-area">
-                <button id="btn-spin" onclick="spinRoulette()" class="btn-primary">
-                    ⚡ Putar Roulette Sekarang
-                </button>
-            </div>
-            
-            <div id="result-modal" style="display:none; margin-top:24px; animation:slideDown 0.5s ease-out; padding-top:24px; border-top:1px solid rgba(0,0,0,0.05);">
-                <h3 style="font-size:22px; font-weight:900; color:var(--ink); margin-bottom:8px;">SELAMAT! 🎉</h3>
-                <p style="font-size:15px; color:var(--muted); margin-bottom:20px; line-height:1.6;">1 <b id="prize-name" style="color:var(--red);">Hadiah</b> resmi menjadi milik Anda. Ke WhatsApp mana tiket ini dititipkan?</p>
-                <a id="claim-btn" href="<?= url('/member/login.php') ?>?source=event_kalibunder" class="btn-primary" style="margin:0 auto;">
-                    Amankan Tiket Ke WhatsApp
-                </a>
-                <p style="font-size:12px; color:var(--muted); margin-top:16px;">*Kunci brankas akan dikirim. Klaim di Outlet Kalibunder.</p>
-            </div>
-        </div>
-    </header>
-
-    <!-- Social Proof -->
-    <div class="marquee-container">
-        <div class="marquee-content">
-            <span>🎉 0812-xxxx-9912 baru saja mengamankan Paket Ayam!</span>
-            <span>🔥 0857-xxxx-2234 mendapat Tumbler Eksklusif!</span>
-            <span>✨ 0896-xxxx-1122 meraih Es Krim Lumero!</span>
-            <span>🎉 0812-xxxx-9912 baru saja mengamankan Paket Ayam!</span>
-            <span>🔥 0857-xxxx-2234 mendapat Tumbler Eksklusif!</span>
-        </div>
-    </div>
-
-    <!-- Gallery -->
-    <h2 class="section-title">Kelezatan Menanti Anda</h2>
-    <p class="section-subtitle">Rasa premium yang menanti Anda di outlet terbaru kami. Buktikan sendiri.</p>
-    <div class="gallery-grid">
-        <div class="gallery-item">
-            <img src="../public/assets/images/pos-products/sayap.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'">
-            <h4>Paket Ayam Spesial</h4>
-        </div>
-        <div class="gallery-item">
-            <img src="../public/assets/images/pos-products/saus.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'">
-            <h4>Ayam + Saos Favorit</h4>
-        </div>
-        <div class="gallery-item">
-            <img src="../public/assets/images/pos-products/matcha.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'">
-            <h4>Lumero Soft Serve</h4>
-        </div>
-        <div class="gallery-item">
-            <img src="../public/assets/images/pos-products/kentang-dcelup.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'">
-            <h4>Kentang Krispy</h4>
-        </div>
-    </div>
-
-    <!-- Location -->
-    <div class="map-card">
-        <div class="countdown">⏳ Event Berakhir Dalam: 3 Hari Lagi</div>
-        <h3 style="font-size:18px; font-weight:800; color:var(--ink); margin-bottom:8px;">Lumero Outlet Kalibunder</h3>
-        <p style="font-size:14px; color:var(--muted); margin-bottom:16px;">Tukarkan tiket digital Anda langsung di kasir kami sebelum hangus.</p>
-        <div style="background:#f1f5f9; height:150px; border-radius:16px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:600;">
-            [ Peta Google Maps Kalibunder ]
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script>
-    const track = document.getElementById('slot-track');
-    const btnSpin = document.getElementById('btn-spin');
-    const CARD_WIDTH = 96 + 16; // width + gap
-    
-    // Dummy icons for visual representation on slot machine
-    const itemIcons = {
-        'Es Krim Lumero': '../public/assets/images/pos-products/matcha.png',
-        'Paket Ayam 1 Ekor': '../public/assets/images/pos-products/original.png',
-        'Paket Ayam + Saos Favorit': '../public/assets/images/pos-products/sayap.png',
-        'Tumbler Eksklusif': '../public/assets/images/pos-products/kopi.png',
-        'Handphone': '../public/assets/images/pos-products/icon-192.png'
-    };
-    const defaultIcon = '../public/assets/images/pos-products/product-dummy.svg';
-
-    let baseItems = Object.keys(itemIcons);
-    const TARGET_INDEX = 40; // Stop at 40th item
-    
-    let state = 'idle';
-    let currentX = 0;
-    let velocity = 0.5;
-    let targetX = 0;
-    const LOOP_RESET_X = baseItems.length * CARD_WIDTH;
-
-    function buildTrack(wonPrizeName = null) {
-        let html = '';
-        for (let i = 0; i < 60; i++) {
-            let itemName = baseItems[i % baseItems.length];
-            if (i === TARGET_INDEX && wonPrizeName) itemName = wonPrizeName;
-            
-            let icon = itemIcons[itemName] || defaultIcon;
-            html += `<div class="slot-item"><img src="${icon}" onerror="this.src='${defaultIcon}'"><span>${itemName}</span></div>`;
-        }
-        track.innerHTML = html;
-    }
-    
-    // Initial build
-    buildTrack();
-
-    function updatePhysics() {
-        if (state === 'done') return;
-        currentX += velocity;
-        
-        if (state === 'idle') {
-            if (currentX >= LOOP_RESET_X) currentX -= LOOP_RESET_X;
-        } else if (state === 'spin') {
-            if (velocity < 40) velocity += 1.5;
-            const decel = 0.3;
-            const distToStop = (velocity * velocity) / (2 * decel);
-            if ((targetX - currentX) <= distToStop) state = 'decel';
-        } else if (state === 'decel') {
-            const distToTarget = Math.max(0, targetX - currentX);
-            let idealVelocity = Math.sqrt(2 * 0.3 * distToTarget);
-            if (idealVelocity < 0.5) idealVelocity = 0.5;
-            velocity = idealVelocity;
-            
-            if (distToTarget <= 0.5) {
-                velocity = 0; currentX = targetX; state = 'done';
-                setTimeout(() => {
-                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#c41230', '#ffc72c', '#ffffff'] });
-                    document.getElementById('action-area').style.display = 'none';
-                    document.getElementById('result-modal').style.display = 'block';
-                }, 300);
-            }
-        }
-        
-        track.style.transform = `translate3d(-${currentX}px, 0, 0)`;
-        requestAnimationFrame(updatePhysics);
-    }
-    requestAnimationFrame(updatePhysics);
-
-    function spinRoulette() {
-        if (state !== 'idle') return;
-        
-        btnSpin.disabled = true;
-        btnSpin.innerHTML = '⚡ Mengundi...';
-        
-        fetch('', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'action=spin_wheel'
-        })
-        .then(r => r.json())
-        .then(data => {
-            if(data.success) {
-                document.getElementById('prize-name').innerText = data.prize.name;
-                buildTrack(data.prize.name); // Rebuild with winner at TARGET_INDEX
-                
-                state = 'spin';
-                const randomOffset = Math.floor(Math.random() * 20) - 10;
-                targetX = (TARGET_INDEX * CARD_WIDTH) + (CARD_WIDTH / 2) + randomOffset;
-            } else {
-                alert("Gagal memutar: " + (data.error || 'Server error'));
-                btnSpin.disabled = false; btnSpin.innerHTML = '⚡ Putar Roulette Sekarang';
-            }
-        })
-        .catch(e => {
-            alert("Koneksi gagal.");
-            btnSpin.disabled = false; btnSpin.innerHTML = '⚡ Putar Roulette Sekarang';
-        });
-    }
 </script>
 
 </body>
