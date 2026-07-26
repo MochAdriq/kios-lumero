@@ -613,11 +613,10 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     window.startTickerSpin = function() {
         btnSpin.disabled = true;
         btnSpin.innerHTML = '⚡ Mengundi...';
-        
-        // Target index 28, center it
-        const viewportWidth = document.querySelector('.ticker-viewport').offsetWidth;
-        const centerOffset = (viewportWidth / 2) - (96 / 2); // 96 is card width
-        const targetX = (28 * CARD_WIDTH) - centerOffset;
+        // Karena .ticker-track memiliki padding-left: 50%, posisi awal card 0 sudah di tengah layar.
+        // Kita hanya perlu menggeser sebanyak (index * CARD_WIDTH) + (Setengah Lebar Card)
+        const randomOffset = Math.floor(Math.random() * 24) - 12; // +/- 12px agar jatuhnya natural
+        const targetX = (28 * CARD_WIDTH) + (96 / 2) + randomOffset;
         
         track.style.transform = `translate3d(-${targetX}px, 0, 0)`;
         
