@@ -290,6 +290,47 @@ function loyalty_ensure_tables(PDO $pdo): void {
         loyalty_try_add_key($pdo,'expenses','KEY idx_expense_auto_key (auto_key)');
         loyalty_try_add_key($pdo,'expenses','KEY idx_expense_source_ref (source_ref)');
     } catch (Throwable $e) {}
+
+    // Gamification Event Tables
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS event_prizes (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            event_id VARCHAR(50) NOT NULL,
+            name VARCHAR(100) NOT NULL,
+            chance_percentage DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+            stock INT(11) NOT NULL DEFAULT 0,
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            is_default_fallback TINYINT(1) NOT NULL DEFAULT 0,
+            PRIMARY KEY(id),
+            KEY idx_event_prizes_event (event_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        $pdo->exec("CREATE TABLE IF NOT EXISTS reward_claims (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            user_id INT(11) NOT NULL,
+            prize_id INT(11) NOT NULL,
+            qr_code VARCHAR(100) NOT NULL,
+            expired_at DATETIME NOT NULL,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY(id),
+            KEY idx_reward_claims_user (user_id),
+            KEY idx_reward_claims_prize (prize_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        if (loyalty_table_exists($pdo, 'event_prizes')) {
+            $st = $pdo->prepare("SELECT COUNT(*) FROM event_prizes WHERE event_id = 'kalibunder_go'");
+            $st->execute();
+            if ((int)$st->fetchColumn() === 0) {
+                $pdo->exec("INSERT INTO event_prizes (event_id, name, chance_percentage, stock, is_default_fallback) VALUES 
+                    ('kalibunder_go', 'Es Krim Lumero', 40.00, 1000, 1),
+                    ('kalibunder_go', 'Tumbler Eksklusif', 30.00, 100, 0),
+                    ('kalibunder_go', 'Paket Ayam + Saos Favorit', 25.00, 50, 0),
+                    ('kalibunder_go', 'Paket Ayam 1 Ekor', 4.90, 10, 0),
+                    ('kalibunder_go', 'Handphone', 0.10, 1, 0)
+                ");
+            }
+        }
+    } catch (Throwable $e) {}
 }
 
 function loyalty_settings(PDO $pdo): array {
