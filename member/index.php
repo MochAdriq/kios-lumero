@@ -618,7 +618,709 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>Grand Opening Kalibunder - Lumero POS</title>
+    <title>Grand Opening Kalibunder — Lumero | Putar & Menang!</title>
+    <meta name="description" content="Putar roulette GRATIS dan menangkan hadiah eksklusif dari Lumero Kalibunder. 100% pasti menang!">
+    <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #c41230;
+            --red-dark: #7a001b;
+            --gold: #ffc72c;
+            --gold-dark: #e6a800;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --surface: #fff;
+            --cream: #fffcf5;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100svh;
+            overflow-x: hidden;
+        }
+
+        /* ── Animated BG ── */
+        .bg-wrap {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+            background: radial-gradient(ellipse at 15% 10%, rgba(196,18,48,0.25) 0%, transparent 50%),
+                        radial-gradient(ellipse at 85% 80%, rgba(255,199,44,0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(10,10,20,1) 0%, #0a0a0f 100%);
+        }
+        .bg-grid {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+        }
+        .pulse-orb {
+            position: absolute; border-radius: 50%; pointer-events: none;
+            animation: pulseGlow 6s ease-in-out infinite alternate;
+        }
+        .orb-1 { width: 500px; height: 500px; top: -200px; left: -150px; background: radial-gradient(circle, rgba(196,18,48,0.3) 0%, transparent 70%); animation-delay: 0s; }
+        .orb-2 { width: 400px; height: 400px; bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(255,199,44,0.2) 0%, transparent 70%); animation-delay: -3s; }
+        @keyframes pulseGlow { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.2); opacity: 1; } }
+
+        /* ── Layout ── */
+        .wrapper { width: min(820px, 100%); margin: 0 auto; padding: 0 20px; position: relative; z-index: 10; }
+
+        /* ── Navbar ── */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 20px; position: sticky; top: 0; z-index: 100;
+            background: rgba(10,10,20,0.7); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 17px; color: #fff; }
+        .nav-logo img { width: 30px; height: 30px; border-radius: 8px; }
+        .nav-badge {
+            background: linear-gradient(135deg, var(--red) 0%, #ff3d5a 100%);
+            color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px;
+            border-radius: 99px; letter-spacing: 0.04em; text-transform: uppercase;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+        @keyframes badgePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(196,18,48,0.5); } 50% { box-shadow: 0 0 0 8px rgba(196,18,48,0); } }
+        .btn-nav {
+            border: 1px solid rgba(255,255,255,0.2); padding: 9px 18px; border-radius: 99px;
+            text-decoration: none; color: #fff; font-weight: 700; font-size: 12px;
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+        .btn-nav:hover { background: rgba(255,255,255,0.18); }
+
+        /* ── Urgency Banner ── */
+        .urgency-banner {
+            background: linear-gradient(90deg, var(--red-dark) 0%, var(--red) 50%, var(--red-dark) 100%);
+            background-size: 200% 100%;
+            animation: shimmerBg 3s linear infinite;
+            text-align: center; padding: 10px 20px;
+            font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
+        }
+        @keyframes shimmerBg { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
+        .urgency-banner span { animation: textBlink 1.5s step-end infinite; }
+        @keyframes textBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        /* ── Live Counter ── */
+        .live-counter {
+            display: flex; align-items: center; justify-content: center; gap: 24px;
+            padding: 16px 20px; background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .counter-item { text-align: center; }
+        .counter-number { font-size: 22px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+        .counter-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; }
+        .counter-sep { width: 1px; height: 36px; background: rgba(255,255,255,0.1); }
+
+        /* ── Hero Section ── */
+        .hero-section { padding: 36px 0 20px; text-align: center; }
+        .hero-label {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,199,44,0.12); border: 1px solid rgba(255,199,44,0.25);
+            color: var(--gold); font-size: 12px; font-weight: 800; padding: 6px 14px;
+            border-radius: 99px; margin-bottom: 20px; letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .hero-title {
+            font-size: clamp(30px, 7vw, 52px); font-weight: 900; line-height: 1.1;
+            letter-spacing: -0.03em; margin-bottom: 16px;
+        }
+        .hero-title .accent { 
+            background: linear-gradient(135deg, var(--gold) 0%, #ff9500 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero-title .accent-red {
+            background: linear-gradient(135deg, #ff6b6b 0%, var(--red) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero-sub {
+            font-size: 15px; color: rgba(255,255,255,0.55); font-weight: 500;
+            line-height: 1.7; max-width: 380px; margin: 0 auto 32px;
+        }
+        .hero-sub b { color: rgba(255,255,255,0.85); }
+
+        /* ── Guarantee Badges ── */
+        .guarantee-row {
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+        .g-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 14px; border-radius: 99px; font-size: 12px; font-weight: 700;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* ── Slot Machine Card ── */
+        .slot-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 28px; padding: 28px 20px 24px;
+            margin-bottom: 20px; position: relative; overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+        .slot-card::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(196,18,48,0.08) 0%, rgba(255,199,44,0.05) 100%);
+            pointer-events: none;
+        }
+        .slot-card-title {
+            font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.4);
+            text-transform: uppercase; letter-spacing: 0.1em; text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .slot-viewport {
+            position: relative; width: 100%; height: 120px;
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; margin: 0 auto 24px; overflow: hidden;
+            display: flex; align-items: center;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.3);
+        }
+        .slot-viewport::before, .slot-viewport::after {
+            content: ''; position: absolute; top: 0; bottom: 0; width: 80px; z-index: 2; pointer-events: none;
+        }
+        .slot-viewport::before { left: 0; background: linear-gradient(90deg, rgba(10,10,15,0.95) 0%, transparent 100%); }
+        .slot-viewport::after  { right: 0; background: linear-gradient(-90deg, rgba(10,10,15,0.95) 0%, transparent 100%); }
+
+        .slot-target-line {
+            position: absolute; left: 50%; top: 10px; bottom: 10px; width: 2px;
+            background: linear-gradient(180deg, var(--gold) 0%, var(--red) 100%);
+            transform: translateX(-50%); z-index: 3;
+            box-shadow: 0 0 16px var(--gold), 0 0 6px var(--red);
+        }
+        .slot-target-line::before, .slot-target-line::after {
+            content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+            width: 10px; height: 10px; background: var(--gold);
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+        }
+        .slot-target-line::before { top: -2px; }
+        .slot-target-line::after  { bottom: -2px; transform: translateX(-50%) rotate(180deg); }
+
+        .slot-track {
+            display: flex; gap: 12px; padding-left: 50%; will-change: transform; align-items: center;
+        }
+        .slot-item {
+            width: 88px; height: 88px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 6px; flex-shrink: 0; padding: 8px; text-align: center;
+            transition: border-color 0.3s;
+        }
+        .slot-item.winner {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255,199,44,0.3), inset 0 0 20px rgba(255,199,44,0.05);
+        }
+        .slot-item img { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
+        .slot-item span { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.85); line-height: 1.2; }
+
+        /* ── CTA Button ── */
+        .btn-spin {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 18px 24px;
+            background: linear-gradient(135deg, var(--red) 0%, #ff2244 50%, var(--red) 100%);
+            background-size: 200% 100%;
+            color: #fff; font-size: 17px; font-weight: 900; border: none; border-radius: 18px;
+            cursor: pointer; letter-spacing: -0.01em;
+            box-shadow: 0 12px 40px rgba(196,18,48,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            animation: ctaPulse 2.5s ease-in-out infinite;
+            position: relative; overflow: hidden;
+        }
+        .btn-spin::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.4s;
+        }
+        .btn-spin:hover::before { left: 100%; }
+        .btn-spin:hover { transform: translateY(-2px); box-shadow: 0 20px 50px rgba(196,18,48,0.6), 0 0 0 1px rgba(255,255,255,0.15) inset; }
+        .btn-spin:disabled { opacity: 0.6; cursor: not-allowed; transform: none; animation: none; }
+        @keyframes ctaPulse { 0%,100% { box-shadow: 0 12px 40px rgba(196,18,48,0.5); } 50% { box-shadow: 0 12px 60px rgba(196,18,48,0.7); } }
+
+        .btn-spin .spin-icon { font-size: 22px; animation: spinIcon 3s linear infinite; }
+        @keyframes spinIcon { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .hint-text {
+            text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); font-weight: 600;
+            margin-top: 12px;
+        }
+
+        /* ── Result Modal (inline, not popup) ── */
+        #result-modal {
+            display: none; margin-top: 20px; padding: 24px;
+            background: linear-gradient(145deg, rgba(255,199,44,0.1) 0%, rgba(196,18,48,0.08) 100%);
+            border: 1px solid rgba(255,199,44,0.25); border-radius: 20px;
+            text-align: center; animation: popIn 0.5s cubic-bezier(0.16,1,0.3,1);
+        }
+        @keyframes popIn { from { opacity:0; transform:scale(0.9) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .result-congrats { font-size: 32px; margin-bottom: 4px; }
+        .result-title { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+        .result-prize-name { font-size: 26px; font-weight: 900; color: var(--gold); margin-bottom: 8px; letter-spacing: -0.02em; }
+        .result-sub { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 600; margin-bottom: 20px; line-height: 1.6; }
+
+        .btn-claim {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 16px 24px;
+            background: linear-gradient(135deg, var(--gold) 0%, #ffb700 100%);
+            color: var(--ink); font-size: 16px; font-weight: 900; border: none; border-radius: 16px;
+            cursor: pointer; text-decoration: none;
+            box-shadow: 0 8px 30px rgba(255,199,44,0.4);
+            transition: all 0.3s; letter-spacing: -0.01em;
+            animation: claimPulse 1.5s ease-in-out infinite;
+        }
+        .btn-claim:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,199,44,0.6); }
+        @keyframes claimPulse { 0%,100% { box-shadow: 0 8px 30px rgba(255,199,44,0.4); } 50% { box-shadow: 0 8px 50px rgba(255,199,44,0.7); } }
+        .claim-warning { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 10px; font-weight: 600; }
+
+        /* ── Social Proof Ticker ── */
+        .ticker-wrap {
+            overflow: hidden; padding: 14px 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 40px; background: rgba(0,0,0,0.2);
+        }
+        .ticker-track {
+            display: inline-flex; gap: 48px; white-space: nowrap;
+            animation: ticker 25s linear infinite;
+            font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+        }
+        .ticker-track .win { color: var(--gold); font-weight: 800; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* ── Section ── */
+        .section { margin-bottom: 48px; }
+        .section-head { text-align: center; margin-bottom: 24px; }
+        .section-tag {
+            display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
+        }
+        .section-title { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+        .section-sub { font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 500; line-height: 1.6; }
+
+        /* ── Prize Grid ── */
+        .prize-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .prize-card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; padding: 20px 16px; text-align: center;
+            transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .prize-card:hover { border-color: rgba(255,199,44,0.3); background: rgba(255,199,44,0.05); transform: translateY(-2px); }
+        .prize-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 70%, rgba(255,199,44,0.03) 100%); }
+        .prize-card img { width: 72px; height: 72px; object-fit: contain; margin-bottom: 12px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); transition: transform 0.3s; }
+        .prize-card:hover img { transform: scale(1.1) rotate(-3deg); }
+        .prize-card h4 { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .prize-card .prize-badge {
+            font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px;
+            background: rgba(255,199,44,0.15); color: var(--gold); letter-spacing: 0.04em;
+        }
+        .prize-marquee { position: absolute; top: 10px; right: 10px; font-size: 16px; animation: prizeFloat 2s ease-in-out infinite alternate; }
+        @keyframes prizeFloat { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-4px) rotate(8deg); } }
+
+        /* ── How It Works ── */
+        .steps { display: flex; flex-direction: column; gap: 16px; }
+        .step {
+            display: flex; align-items: flex-start; gap: 16px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px; padding: 18px;
+        }
+        .step-num {
+            width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 900;
+            background: linear-gradient(135deg, var(--red-dark) 0%, var(--red) 100%);
+        }
+        .step-text h4 { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .step-text p { font-size: 13px; color: rgba(255,255,255,0.45); font-weight: 500; line-height: 1.5; }
+
+        /* ── Location Card ── */
+        .location-card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px; overflow: hidden;
+        }
+        .location-header {
+            padding: 24px 20px 16px;
+            background: linear-gradient(135deg, rgba(196,18,48,0.15) 0%, rgba(255,199,44,0.08) 100%);
+        }
+        .event-countdown {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(196,18,48,0.2); border: 1px solid rgba(196,18,48,0.3);
+            color: #ff6b6b; font-size: 12px; font-weight: 800;
+            padding: 6px 12px; border-radius: 99px; margin-bottom: 12px;
+            animation: countdownBlink 2s step-end infinite;
+        }
+        @keyframes countdownBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .location-header h3 { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+        .location-header p { font-size: 14px; color: rgba(255,255,255,0.45); font-weight: 500; }
+        .map-placeholder {
+            height: 160px; background: rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .map-placeholder iframe { width: 100%; height: 100%; border: 0; }
+
+        /* ── Bottom CTA ── */
+        .bottom-cta {
+            text-align: center; padding: 40px 0 60px;
+        }
+        .bottom-cta h2 { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+        .bottom-cta p { font-size: 14px; color: rgba(255,255,255,0.4); margin-bottom: 24px; font-weight: 500; line-height: 1.6; }
+
+        .btn-cta-big {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 18px 40px; border-radius: 18px;
+            background: linear-gradient(135deg, var(--red) 0%, #ff2244 100%);
+            color: #fff; font-size: 16px; font-weight: 900; text-decoration: none;
+            box-shadow: 0 12px 40px rgba(196,18,48,0.4);
+            transition: all 0.3s;
+        }
+        .btn-cta-big:hover { transform: translateY(-2px); box-shadow: 0 20px 50px rgba(196,18,48,0.6); }
+
+        /* ── Misc ── */
+        @keyframes slideDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+        /* ── Mobile fixes ── */
+        @media (max-width: 400px) {
+            .live-counter { gap: 12px; }
+            .guarantee-row .g-badge { font-size: 11px; padding: 7px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-wrap">
+    <div class="bg-grid"></div>
+    <div class="pulse-orb orb-1"></div>
+    <div class="pulse-orb orb-2"></div>
+</div>
+
+<!-- Urgency Banner -->
+<div class="urgency-banner">
+    🔴 <span>LIVE</span> &nbsp;·&nbsp; GRAND OPENING KALIBUNDER &nbsp;·&nbsp; Event Terbatas — Hadiah Habis, Kesempatan Hangus!
+</div>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="nav-logo">
+        <img src="../public/assets/images/pos-products/icon-192.png" alt="Lumero">
+        Lumero
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <div class="nav-badge">100% Menang</div>
+        <a href="<?= url('/member/login.php') ?>?source=organic" class="btn-nav">Cek Tiket</a>
+    </div>
+</nav>
+
+<!-- Live Counter -->
+<div class="live-counter">
+    <div class="counter-item">
+        <div class="counter-number" id="counter-spins">247</div>
+        <div class="counter-label">Putaran Hari Ini</div>
+    </div>
+    <div class="counter-sep"></div>
+    <div class="counter-item">
+        <div class="counter-number" id="counter-left">53</div>
+        <div class="counter-label">Sisa Putaran</div>
+    </div>
+    <div class="counter-sep"></div>
+    <div class="counter-item">
+        <div class="counter-number" id="counter-timer">02:47:09</div>
+        <div class="counter-label">Waktu Tersisa Hari Ini</div>
+    </div>
+</div>
+
+<div class="wrapper">
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <div class="hero-label">✦ Grand Opening Eksklusif</div>
+        <h1 class="hero-title">
+            Putar. Menang.<br>
+            <span class="accent">Langsung Klaim.</span>
+        </h1>
+        <p class="hero-sub">
+            Setiap putaran <b>dijamin menang.</b> Hadiah langsung diamankan ke nomor WhatsApp Anda dalam hitungan detik.
+        </p>
+
+        <!-- Guarantee Badges -->
+        <div class="guarantee-row">
+            <div class="g-badge">✅ 100% Pasti Menang</div>
+            <div class="g-badge">🔒 Tanpa Syarat Tersembunyi</div>
+            <div class="g-badge">⚡ Klaim Instan</div>
+        </div>
+    </header>
+
+    <!-- Slot Machine Card -->
+    <div class="slot-card">
+        <div class="slot-card-title">🎰 Roulette Kejutan — Putar Sekarang</div>
+
+        <div class="slot-viewport">
+            <div class="slot-target-line"></div>
+            <div class="slot-track" id="slot-track"><!-- JS populated --></div>
+        </div>
+
+        <div id="action-area">
+            <button id="btn-spin" onclick="spinRoulette()" class="btn-spin">
+                <span class="spin-icon">🎰</span>
+                Putar Roulette — GRATIS!
+            </button>
+            <p class="hint-text">🔒 Tanpa login · Tanpa syarat · Tanpa biaya tersembunyi</p>
+        </div>
+
+        <!-- Result Modal (inline) -->
+        <div id="result-modal">
+            <div class="result-congrats">🎉🎊🎉</div>
+            <div class="result-title">Selamat! Anda Menang!</div>
+            <div class="result-prize-name" id="prize-name">Hadiah</div>
+            <p class="result-sub">
+                Tiket hadiah ini <b style="color:rgba(255,255,255,0.8);">akan hangus dalam 48 jam</b> jika tidak diamankan ke nomor WhatsApp Anda sekarang.
+                <br>Jangan biarkan orang lain mengklaimnya!
+            </p>
+            <a id="claim-btn" href="<?= url('/member/login.php') ?>?source=event_kalibunder" class="btn-claim">
+                🔐 Amankan Hadiah Ke WhatsApp Saya
+            </a>
+            <p class="claim-warning">*Masukkan nomor WA · Tiket digital dikirim otomatis · Klaim di Outlet Kalibunder</p>
+        </div>
+    </div>
+
+    <!-- Social Proof Ticker -->
+    <div class="ticker-wrap">
+        <div class="ticker-track">
+            <span>🎉 <span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
+            <span>🔥 <span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
+            <span>⚡ <span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
+            <span>🏆 <span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
+            <span>🎉 <span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
+            <span>🔥 <span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
+            <span>⚡ <span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
+            <span>🏆 <span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
+        </div>
+    </div>
+
+    <!-- Prize Showcase -->
+    <section class="section">
+        <div class="section-head">
+            <div class="section-tag">✦ Koleksi Hadiah</div>
+            <h2 class="section-title">Ada Apa Di Dalam Roulette?</h2>
+            <p class="section-sub">Ini bukan undian kosong. Semua hadiah nyata, bisa langsung diambil di outlet kami.</p>
+        </div>
+        <div class="prize-grid">
+            <div class="prize-card">
+                <div class="prize-marquee">🔥</div>
+                <img src="../public/assets/images/pos-products/original.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Paket Ayam">
+                <h4>Paket Ayam 1 Ekor</h4>
+                <div class="prize-badge">Stok Terbatas</div>
+            </div>
+            <div class="prize-card">
+                <div class="prize-marquee">📱</div>
+                <img src="../public/assets/images/pos-products/icon-192.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Handphone">
+                <h4>Handphone</h4>
+                <div class="prize-badge">Grand Prize</div>
+            </div>
+            <div class="prize-card">
+                <div class="prize-marquee">✨</div>
+                <img src="../public/assets/images/pos-products/matcha.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Es Krim">
+                <h4>Es Krim Lumero</h4>
+                <div class="prize-badge">Paling Banyak</div>
+            </div>
+            <div class="prize-card">
+                <div class="prize-marquee">💼</div>
+                <img src="../public/assets/images/pos-products/kopi.png" onerror="this.src='../public/assets/images/pos-products/product-dummy.svg'" alt="Tumbler">
+                <h4>Tumbler Eksklusif</h4>
+                <div class="prize-badge">Edisi Terbatas</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section">
+        <div class="section-head">
+            <div class="section-tag">✦ Cara Klaim</div>
+            <h2 class="section-title">Semudah 3 Langkah</h2>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-text">
+                    <h4>Putar Roulette — GRATIS</h4>
+                    <p>Klik tombol merah di atas. Tidak perlu daftar, tidak perlu bayar. Semua putaran dijamin mendapatkan hadiah nyata.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-text">
+                    <h4>Amankan Ke WhatsApp</h4>
+                    <p>Setelah melihat hadiah Anda, masukkan nomor WA untuk mengunci tiket digital. Ini adalah "kunci brankas" hadiah Anda — jangan tunda!</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-text">
+                    <h4>Klaim di Outlet Kalibunder</h4>
+                    <p>Tunjukkan tiket digital dari WA ke kasir Lumero Kalibunder. Hadiah langsung diserahkan di tempat!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location Card -->
+    <section class="section">
+        <div class="section-head">
+            <div class="section-tag">✦ Lokasi Klaim</div>
+            <h2 class="section-title">Lumero Outlet Kalibunder</h2>
+        </div>
+        <div class="location-card">
+            <div class="location-header">
+                <div class="event-countdown">
+                    🔴 Event Terbatas · Jangan Sampai Kehabisan
+                </div>
+                <h3>Lumero Outlet Kalibunder</h3>
+                <p>Tukarkan tiket digital Anda langsung di kasir kami sebelum hangus. Stok hadiah terbatas!</p>
+            </div>
+            <div class="map-placeholder">
+                <span style="color:rgba(255,255,255,0.25); font-size:14px; font-weight:700;">📍 Peta Google Maps Kalibunder</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom CTA -->
+    <div class="bottom-cta">
+        <h2>Masih Ragu? Stok Hadiah Makin Menipis!</h2>
+        <p>Sudah <b style="color:#fff;">247 orang</b> memutar hari ini. Semakin lama menunggu, semakin besar kemungkinan hadiah terbaik habis.</p>
+        <a href="#action-area" class="btn-cta-big" onclick="document.getElementById('btn-spin').click(); return false;">
+            ⚡ Putar Sekarang — GRATIS
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script>
+    const track = document.getElementById('slot-track');
+    const btnSpin = document.getElementById('btn-spin');
+    const CARD_W = 88 + 12;
+
+    const itemIcons = {
+        'Es Krim Lumero':          '../public/assets/images/pos-products/matcha.png',
+        'Paket Ayam 1 Ekor':       '../public/assets/images/pos-products/original.png',
+        'Paket Ayam + Saos Favorit':'../public/assets/images/pos-products/sayap.png',
+        'Tumbler Eksklusif':       '../public/assets/images/pos-products/kopi.png',
+        'Handphone':               '../public/assets/images/pos-products/icon-192.png'
+    };
+    const fallback = '../public/assets/images/pos-products/product-dummy.svg';
+    const baseItems = Object.keys(itemIcons);
+    const TARGET_IDX = 40;
+
+    let state = 'idle', currentX = 0, velocity = 0.5, targetX = 0;
+    const LOOP_X = baseItems.length * CARD_W;
+
+    function buildTrack(winner = null) {
+        let h = '';
+        for (let i = 0; i < 60; i++) {
+            let name = baseItems[i % baseItems.length];
+            if (i === TARGET_IDX && winner) name = winner;
+            let icon = itemIcons[name] || fallback;
+            h += `<div class="slot-item" id="si-${i}"><img src="${icon}" onerror="this.src='${fallback}'"><span>${name}</span></div>`;
+        }
+        track.innerHTML = h;
+    }
+    buildTrack();
+
+    function raf() {
+        if (state === 'done') return;
+        currentX += velocity;
+        if (state === 'idle') {
+            if (currentX >= LOOP_X) currentX -= LOOP_X;
+        } else if (state === 'spin') {
+            if (velocity < 45) velocity += 2;
+            const d = 0.35, dist = velocity * velocity / (2 * d);
+            if ((targetX - currentX) <= dist) state = 'decel';
+        } else if (state === 'decel') {
+            const dist = Math.max(0, targetX - currentX);
+            let v = Math.sqrt(2 * 0.35 * dist);
+            if (v < 0.4) v = 0.4;
+            velocity = v;
+            if (dist <= 0.4) {
+                velocity = 0; currentX = targetX; state = 'done';
+                const winEl = document.getElementById(`si-${TARGET_IDX}`);
+                if (winEl) winEl.classList.add('winner');
+                setTimeout(() => {
+                    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#c41230','#ffc72c','#ffffff','#ff6b6b'] });
+                    document.getElementById('action-area').style.display = 'none';
+                    document.getElementById('result-modal').style.display = 'block';
+                    document.getElementById('result-modal').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 200);
+            }
+        }
+        track.style.transform = `translate3d(-${currentX}px, 0, 0)`;
+        requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    function spinRoulette() {
+        if (state !== 'idle') return;
+        btnSpin.disabled = true;
+        btnSpin.innerHTML = '<span style="font-size:18px;">⏳</span> Mengundi Hadiah Anda...';
+        fetch('', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=spin_wheel'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const prizeName = data.prize.name;
+                document.getElementById('prize-name').innerText = prizeName;
+                document.getElementById('claim-btn').href = `<?= url('/member/login.php') ?>?source=event_kalibunder&prize=${encodeURIComponent(prizeName)}`;
+                buildTrack(prizeName);
+                state = 'spin';
+                targetX = (TARGET_IDX * CARD_W) + (CARD_W / 2) + (Math.floor(Math.random() * 10) - 5);
+            } else {
+                alert('Gagal memutar: ' + (data.error || 'Server error'));
+                btnSpin.disabled = false;
+                btnSpin.innerHTML = '<span class="spin-icon">🎰</span> Putar Roulette — GRATIS!';
+            }
+        })
+        .catch(() => {
+            alert('Koneksi gagal. Coba lagi.');
+            btnSpin.disabled = false;
+            btnSpin.innerHTML = '<span class="spin-icon">🎰</span> Putar Roulette — GRATIS!';
+        });
+    }
+
+    // Live counter simulation
+    let spins = 247, left = 53;
+    setInterval(() => {
+        if (Math.random() < 0.3) {
+            spins++;
+            if (left > 0) left--;
+            document.getElementById('counter-spins').textContent = spins;
+            document.getElementById('counter-left').textContent  = left;
+        }
+    }, 4000);
+
+    // Countdown timer (visual — resets each day)
+    function updateTimer() {
+        const now = new Date();
+        const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 0);
+        const diff = Math.max(0, endOfDay - now);
+        const h = String(Math.floor(diff / 3600000)).padStart(2,'0');
+        const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
+        const s = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
+        document.getElementById('counter-timer').textContent = `${h}:${m}:${s}`;
+    }
+    updateTimer();
+    setInterval(updateTimer, 1000);
+</script>
+
+</body>
+</html>
+
     <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

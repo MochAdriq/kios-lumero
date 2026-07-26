@@ -122,9 +122,13 @@ if(mem_current_id()>0){
     $rewardProducts=loyalty_get_reward_products($pdo);
     $redemptions=function_exists('loyalty_member_reward_redemptions') ? loyalty_member_reward_redemptions($pdo,(int)$member['id'],40) : [];
     
-    $st = $pdo->prepare("SELECT * FROM reward_claims WHERE user_id = ? AND status = 'PENDING' ORDER BY id DESC LIMIT 1");
-    $st->execute([(int)$member['id']]);
-    $pendingGrandOpeningClaim = $st->fetch(PDO::FETCH_ASSOC);
+    try {
+        $st = $pdo->prepare("SELECT * FROM reward_claims WHERE user_id = ? AND status = 'PENDING' ORDER BY id DESC LIMIT 1");
+        $st->execute([(int)$member['id']]);
+        $pendingGrandOpeningClaim = $st->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        $pendingGrandOpeningClaim = null;
+    }
   }
 }
 $pendingPhone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $pendingMode=(string)($_SESSION['member_login_mode'] ?? '');
