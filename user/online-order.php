@@ -1014,7 +1014,7 @@ simInitTheme();
         <small>Pesan Cepat • Tanpa Antre • Ambil di Outlet</small>
       </div>
     </div>
-    <div class="fo-header-actions">
+    <div class="fo-header-actions" style="flex-wrap: wrap;">
       <div class="fo-audio-toggles">
         <a href="dashboard.php" class="fo-audio-toggle" style="text-decoration:none; font-weight:800; border-color:var(--dp-glass-border);">&larr; Dashboard</a>
         <button class="fo-audio-toggle" id="toggleTheme" type="button" aria-pressed="false" onclick="simToggleTheme()">
