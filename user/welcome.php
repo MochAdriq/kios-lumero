@@ -23,7 +23,7 @@ if (isset($_GET['idle'])) {
     // You can also clear cart here if needed, e.g., unset($_SESSION['cart']);
 }
 
-$freeOrderVideo = 'public/assets/video/self-order-cover.mp4';
+$freeOrderVideo = 'public/assets/video/lumero-promo.mp4';
 $freeOrderPoster = 'public/assets/images/pos-products/lumero-pasekon.png';
 $freeOrderVoiceBase = '../public/assets/audio/';
 ?>
