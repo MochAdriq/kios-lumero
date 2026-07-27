@@ -187,9 +187,9 @@ class ProductModel extends Model
         if (!$inTrans) $this->db->beginTransaction();
         try {
             $outletId = $this->outletId();
-            // Soft delete
+            // Strictly soft delete only the variant, as requested by user
             $this->db->prepare("UPDATE product_variants SET is_active=0, updated_at=? WHERE id=? AND outlet_id=?")->execute([now(), $vid, $outletId]);
-            $this->db->prepare("UPDATE products SET is_active=0, updated_at=? WHERE id=? AND outlet_id=?")->execute([now(), $pid, $outletId]);
+            
             if (!$inTrans) $this->db->commit();
         } catch(Throwable $e){
             if (!$inTrans) $this->db->rollBack();
