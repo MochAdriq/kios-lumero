@@ -117,7 +117,10 @@ if(mem_current_id()>0){
   if(!$member){ unset($_SESSION['member_id']); }
   else{
     $st=$pdo->prepare("SELECT * FROM member_point_logs WHERE member_id=? ORDER BY id DESC LIMIT 80"); $st->execute([(int)$member['id']]); $logs=$st->fetchAll(PDO::FETCH_ASSOC);
-    $st=$pdo->prepare("SELECT o.order_number AS order_no, o.grand_total AS total, COALESCE(p.payment_method,'-') AS payment_method, COALESCE(o.loyalty_points_earned,0) AS loyalty_points_earned, COALESCE(o.loyalty_points_redeemed,0) AS loyalty_points_redeemed, o.created_at FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE (o.member_id=? OR o.customer_id=?) AND o.payment_status='paid' ORDER BY o.id DESC LIMIT 60"); $st->execute([(int)$member['id'], (int)$member['id']]); $orders=$st->fetchAll(PDO::FETCH_ASSOC);
+    $st=$pdo->prepare("SELECT o.order_number AS order_no, o.grand_total AS total, COALESCE(p.payment_method,'-') AS payment_method, COALESCE(o.loyalty_points_earned,0) AS loyalty_points_earned, COALESCE(o.loyalty_points_redeemed,0) AS loyalty_points_redeemed, o.created_at, 'paid' AS status FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE (o.member_id=? OR o.customer_id=?) AND o.payment_status='paid' ORDER BY o.id DESC LIMIT 60"); $st->execute([(int)$member['id'], (int)$member['id']]); $orders=$st->fetchAll(PDO::FETCH_ASSOC);
+    $st=$pdo->prepare("SELECT pre_order_no AS order_no, total, payment_method, 0 AS loyalty_points_earned, loyalty_points_redeemed, created_at, 'pending' AS status FROM free_orders WHERE member_id=? AND order_status IN ('new', 'processing', 'pending') ORDER BY id DESC LIMIT 20"); $st->execute([(int)$member['id']]); $pendingOrders=$st->fetchAll(PDO::FETCH_ASSOC);
+    $orders = array_merge($pendingOrders, $orders);
+    usort($orders, function($a, $b) { return strtotime($b['created_at']) - strtotime($a['created_at']); });
     $st=$pdo->prepare("SELECT rc.*, o.order_number AS order_no FROM receipt_claims rc LEFT JOIN orders o ON o.id=rc.transaction_id WHERE rc.claimed_by_member_id=? ORDER BY rc.id DESC LIMIT 60"); $st->execute([(int)$member['id']]); $claims=$st->fetchAll(PDO::FETCH_ASSOC);
     $rewardProducts=loyalty_get_reward_products($pdo);
     $redemptions=function_exists('loyalty_member_reward_redemptions') ? loyalty_member_reward_redemptions($pdo,(int)$member['id'],40) : [];

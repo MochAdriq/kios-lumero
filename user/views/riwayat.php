@@ -19,6 +19,9 @@
             <div class="activity-title"><?=mem_e($o['order_no'])?></div>
             <div class="activity-desc">
               <span class="badge" style="font-size:10px; padding:3px 8px;"><?=mem_e(strtoupper($o['payment_method']))?></span>
+              <?php if (($o['status'] ?? '') === 'pending'): ?>
+                 <span class="badge" style="font-size:10px; padding:3px 8px; margin-left:4px; background:var(--dp-yellow); color:#fff;">MENUNGGU KASIR</span>
+              <?php endif; ?>
             </div>
             <div class="activity-date"><?=mem_e(date('d M Y, H:i', strtotime($o['created_at'])))?></div>
           </div>
