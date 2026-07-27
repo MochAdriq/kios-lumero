@@ -583,7 +583,7 @@ function loyalty_apply_order_after_insert(PDO $pdo, int $orderId, ?array $member
 
 function loyalty_member_base_url(): string {
     if (defined('LOYALTY_MEMBER_BASE_URL')) return rtrim((string)LOYALTY_MEMBER_BASE_URL,'/').'/';
-    return 'https://lokapedia.id/lumero/member/';
+    return 'https://lokapedia.id/lumero/user/';
 }
 function loyalty_member_claim_url(string $claimCode=''): string {
     $base = loyalty_member_base_url();

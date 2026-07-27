@@ -287,7 +287,7 @@ $outletCoords = delivery_outlet_coords($pdo) ?? ['lat' => -6.9175, 'lng' => 106.
   <?php endif; ?>
 
   <div class="actions">
-    <a href="../member/online-order.php" class="btn-action btn-primary">🛒 Buat Pesanan Baru</a>
+    <a href="../user/online-order.php" class="btn-action btn-primary">🛒 Buat Pesanan Baru</a>
     <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', fo_normalize_phone($order['customer_phone'] ?? '081234567890')) ?>" target="_blank" class="btn-action">💬 Hubungi Outlet</a>
   </div>
 </div>

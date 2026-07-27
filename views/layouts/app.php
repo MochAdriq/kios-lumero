@@ -86,7 +86,7 @@ $menuGroups += [
         ['label' => 'Katalog Hadiah Poin',   'icon' => 'ti ti-gift',             'url' => '/loyalty/rewards',     'roles' => $ADMIN],
         ['label' => 'Pengaturan Hadiah Undian', 'icon' => 'ti ti-settings',      'url' => '/loyalty/eventSettings', 'roles' => $ADMIN],
         ['label' => 'Validasi Penukaran',    'icon' => 'ti ti-checkup-list',     'url' => '/loyalty/redemptions', 'roles' => $ALL],
-        ['label' => 'Buka Portal Member',    'icon' => 'ti ti-external-link',    'url' => '/member/index.php', 'root' => true, 'roles' => $ALL],
+        ['label' => 'Buka Portal Member',    'icon' => 'ti ti-external-link',    'url' => '/user/index.php', 'root' => true, 'roles' => $ALL],
         ['label' => 'Validasi Hadiah Undian', 'icon' => 'ti ti-ticket',          'url' => '/loyalty/eventClaims', 'roles' => $ALL],
     ],
     'Keuangan & Laporan' => [

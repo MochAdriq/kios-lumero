@@ -2855,7 +2855,7 @@ function _mqrisStartPolling(midtransOrderId, localOrderNo){
       return;
     }
     try{
-      const res  = await fetch('../member/check-qris-status.php?order_id=' + encodeURIComponent(midtransOrderId), {
+      const res  = await fetch('../user/check-qris-status.php?order_id=' + encodeURIComponent(midtransOrderId), {
         headers: {'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest'},
         credentials: 'same-origin', cache: 'no-store'
       });

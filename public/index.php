@@ -107,10 +107,10 @@ if (class_exists('LoyaltyController')) {
     $router->post('/loyalty/eventSettings/deletePrize', [LoyaltyController::class, 'deleteEventPrize']);
 }
 $memberHandler = function() {
-    require __DIR__ . '/../member/index.php';
+    require __DIR__ . '/../user/index.php';
 };
 $router->get('/member', $memberHandler);
-$router->get('/member/index.php', $memberHandler);
+$router->get('/user/index.php', $memberHandler);
 
 if (class_exists('POSController')) {
     $router->get('/pos', [POSController::class,'index']);
