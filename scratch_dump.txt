@@ -1,0 +1,42 @@
+FILES:
+Array
+(
+    [qris_image] => Array
+        (
+            [name] => qris-outlet.webp
+            [full_path] => qris-outlet.webp
+            [type] => image/webp
+            [tmp_name] => /tmp/phpLSO6UW
+            [error] => 0
+            [size] => 82704
+        )
+
+)
+
+POST:
+Array
+(
+    [_csrf] => e12b11ef6eea8bc8b9641abafa82aefe12ac455778579df209cf07dc119bb883
+    [outlet_name] => D'Celup Pasekon Sukalarang
+    [outlet_address] => Pasekon, Sukalarang, Sukabumi
+    [outlet_phone] => 
+    [settings] => Array
+        (
+            [qris_payment_method] => manual
+            [service_charge_percent] => 0
+            [printer_enabled] => true
+        )
+
+    [gateway] => Array
+        (
+            [midtrans] => Array
+                (
+                    [client_id] => 
+                    [client_secret] => 
+                    [merchant_id] => 
+                    [mode] => sandbox
+                )
+
+        )
+
+)
