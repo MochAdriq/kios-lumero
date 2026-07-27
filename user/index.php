@@ -1109,14 +1109,21 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
     <div class="ticker-wrap">
         <div class="ticker-track">
-            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
-            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
-            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
-            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
-            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0812-xxxx-9912</span> baru saja mengamankan <span class="win">Paket Ayam 1 Ekor!</span></span>
-            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0857-xxxx-2234</span> memenangkan <span class="win">Tumbler Eksklusif!</span></span>
-            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0896-xxxx-1122</span> dapat <span class="win">Es Krim Lumero!</span></span>
-            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">0821-xxxx-4451</span> berhasil klaim <span class="win">Paket Ayam + Saos!</span></span>
+            <?php
+            $prefixes = ['0812', '0857', '0896', '0821', '0813', '0852', '0895', '0853'];
+            $actions = ['baru saja mengamankan', 'memenangkan', 'dapat', 'berhasil klaim', 'sukses memenangkan'];
+            $prizesList = array_keys($prizeIconsMap);
+            if (empty($prizesList)) $prizesList = ['Mystery Box'];
+            
+            for ($i = 0; $i < 10; $i++) {
+                $prefix = $prefixes[array_rand($prefixes)];
+                $suffix = str_pad(mt_rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+                $phone = "{$prefix}-xxxx-{$suffix}";
+                $action = $actions[array_rand($actions)];
+                $prize = $prizesList[array_rand($prizesList)];
+                echo '<span><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" style="vertical-align:middle;margin-right:4px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="win">' . htmlspecialchars($phone) . '</span> ' . htmlspecialchars($action) . ' <span class="win">' . htmlspecialchars($prize) . '!</span></span>';
+            }
+            ?>
         </div>
     </div>
 
