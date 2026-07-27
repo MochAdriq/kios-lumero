@@ -137,7 +137,37 @@ if (!empty($activeOutletsList)) {
 </div>
 
 <script>
-const outlets = <?= json_encode($activeOutletsList, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+const outletsData = <?= json_encode($activeOutletsList, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+
+// 1. Ubah nama D'Celup jadi Lumero
+let outlets = outletsData.map(o => {
+    if (o.name) o.name = o.name.replace(/D'Celup/gi, 'Lumero');
+    return o;
+});
+
+// 2. Tambah dummy cabang (Cisaat & Cibadak)
+outlets.push({
+    id: 'dummy_cisaat',
+    name: 'Lumero Cisaat',
+    address: 'Jl. Raya Cisaat, Sukabumi',
+    latitude: '-6.9171',
+    longitude: '106.8996',
+    is_open: true,
+    open_time: '10:00',
+    close_time: '21:00',
+    is_dummy: true
+});
+outlets.push({
+    id: 'dummy_cibadak',
+    name: 'Lumero Cibadak',
+    address: 'Jl. Raya Cibadak, Sukabumi',
+    latitude: '-6.8860',
+    longitude: '106.7865',
+    is_open: true,
+    open_time: '10:00',
+    close_time: '21:00',
+    is_dummy: true
+});
 
 function haversineDistanceKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -220,13 +250,28 @@ function renderBranchCards(userLat, userLng) {
             badgeHtml = `<div class="badge-dist" style="background:rgba(239,68,68,0.25); border-color:#F87171; color:#FECACA;">🚫 SEDANG TUTUP (${distText})</div>`;
         }
         
-        const borderStyle = isClosest ? 'border: 2px solid #FF2D55; box-shadow: 0 16px 42px rgba(255,45,85,0.3);' : (!o.is_open ? 'opacity:0.85; border-color:rgba(239,68,68,0.3);' : '');
+        const isKalibunder = o.name.toLowerCase().includes('kalibunder');
+        const isOnlineAllowed = isKalibunder;
+        
+        let borderStyle = isClosest ? 'border: 2px solid #FF2D55; box-shadow: 0 16px 42px rgba(255,45,85,0.3);' : '';
+        if (!o.is_open) {
+            borderStyle = 'opacity:0.85; border-color:rgba(239,68,68,0.3);';
+        }
+        
         const btnText = o.is_open ? 'Pilih Cabang Ini &rarr;' : `Tutup (${o.open_time || '10:00'}-${o.close_time || '21:00'})`;
-        const btnStyle = !o.is_open ? 'background:rgba(255,255,255,0.1); color:#D1D5DB; border-color:rgba(255,255,255,0.2); box-shadow:none;' : '';
+        
+        let btnStyle = '';
+        if (!o.is_open) {
+            btnStyle = 'background:rgba(255,255,255,0.1); color:#D1D5DB; border-color:rgba(255,255,255,0.2); box-shadow:none;';
+        } else if (!isOnlineAllowed) {
+            // Disabled style for branches not allowed to take online orders
+            btnStyle = 'background:rgba(255,255,255,0.05); color:#9CA3AF; border-color:rgba(255,255,255,0.15); box-shadow:none;';
+        }
+        
         const safeName = (o.name || 'Cabang ini').replace(/'/g, "\\'");
 
         html += `
-        <div class="branch-card" style="${borderStyle}" onclick="selectBranchItem(${o.id}, ${o.is_open ? 'true' : 'false'}, '${safeName}', '${o.open_time || '10:00'}', '${o.close_time || '21:00'}')">
+        <div class="branch-card" style="${borderStyle}" onclick="selectBranchItem('${o.id}', ${o.is_open ? 'true' : 'false'}, '${safeName}', '${o.open_time || '10:00'}', '${o.close_time || '21:00'}', ${isOnlineAllowed ? 'true' : 'false'})">
             <div>${badgeHtml}</div>
             <div class="branch-name">${o.name || 'Cabang Lumero'}</div>
             <div class="branch-address">${o.address || 'Alamat cabang belum dicantumkan'}</div>
@@ -240,12 +285,16 @@ function renderBranchCards(userLat, userLng) {
     container.innerHTML = html;
 }
 
-function selectBranchItem(outletId, isOpen, outletName, openTime, closeTime) {
+function selectBranchItem(outletId, isOpen, outletName, openTime, closeTime, isOnlineAllowed) {
     if (!isOpen) {
         alert(`Maaf, ${outletName} saat ini sedang tutup (Jam operasional: ${openTime} - ${closeTime} WIB).\n\nSilakan pilih cabang lain yang sedang buka atau kembali saat jam operasional berlangsung.`);
         return;
     }
-    window.location.href = 'online-order.php?outlet_id=' + Number(outletId);
+    if (!isOnlineAllowed) {
+        alert(`Mohon maaf, toko ini tidak menyediakan online order. Silakan pilih cabang Kalibunder.`);
+        return;
+    }
+    window.location.href = 'online-order.php?outlet_id=' + outletId;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
