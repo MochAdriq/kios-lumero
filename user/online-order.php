@@ -79,7 +79,7 @@ $bankName='BCA';
 $bankAccountName='Sri Kusma Dewi';
 $bankAccountNo='0382731393';
 
-$freeOrderVideo='public/assets/video/self-order-cover.mp4';
+$freeOrderVideo='public/assets/video/lumero-promo.mp4';
 $freeOrderPoster='public/assets/images/pos-products/lumero-pasekon.png';
 $freeOrderVoiceBase='../public/assets/audio/';
 
