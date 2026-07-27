@@ -145,29 +145,30 @@ let outlets = outletsData.map(o => {
     return o;
 });
 
-// 2. Tambah dummy cabang (Cisaat & Cibadak)
-outlets.push({
-    id: 'dummy_cisaat',
-    name: 'Lumero Cisaat',
-    address: 'Jl. Raya Cisaat, Sukabumi',
-    latitude: '-6.9171',
-    longitude: '106.8996',
-    is_open: true,
-    open_time: '10:00',
-    close_time: '21:00',
-    is_dummy: true
+// 2. Tambah 10 dummy cabang Sukabumi
+const dummies = [
+    { id: 'dummy_cisaat', name: 'Lumero Cisaat', address: 'Jl. Raya Cisaat, Kab. Sukabumi', lat: '-6.9171', lng: '106.8996' },
+    { id: 'dummy_cibadak', name: 'Lumero Cibadak', address: 'Jl. Raya Cibadak, Kab. Sukabumi', lat: '-6.8860', lng: '106.7865' },
+    { id: 'dummy_sukaraja', name: 'Lumero Sukaraja', address: 'Jl. Raya Sukaraja, Kab. Sukabumi', lat: '-6.9175', lng: '106.9697' },
+    { id: 'dummy_cikole', name: 'Lumero Cikole', address: 'Kec. Cikole, Kota Sukabumi', lat: '-6.9150', lng: '106.9270' },
+    { id: 'dummy_baros', name: 'Lumero Baros', address: 'Kec. Baros, Kota Sukabumi', lat: '-6.9530', lng: '106.9280' },
+    { id: 'dummy_gunungpuyuh', name: 'Lumero Gunung Puyuh', address: 'Kec. Gunung Puyuh, Kota Sukabumi', lat: '-6.9065', lng: '106.9180' },
+    { id: 'dummy_citamiang', name: 'Lumero Citamiang', address: 'Kec. Citamiang, Kota Sukabumi', lat: '-6.9310', lng: '106.9250' },
+    { id: 'dummy_lembursitu', name: 'Lumero Lembursitu', address: 'Kec. Lembursitu, Kota Sukabumi', lat: '-6.9580', lng: '106.9080' },
+    { id: 'dummy_warudoyong', name: 'Lumero Warudoyong', address: 'Kec. Warudoyong, Kota Sukabumi', lat: '-6.9270', lng: '106.9110' },
+    { id: 'dummy_cikembar', name: 'Lumero Cikembar', address: 'Kec. Cikembar, Kab. Sukabumi', lat: '-6.9650', lng: '106.7720' }
+];
+dummies.forEach(d => {
+    outlets.push({
+        id: d.id, name: d.name, address: d.address, latitude: d.lat, longitude: d.lng,
+        is_open: true, open_time: '10:00', close_time: '21:00', is_dummy: true
+    });
 });
-outlets.push({
-    id: 'dummy_cibadak',
-    name: 'Lumero Cibadak',
-    address: 'Jl. Raya Cibadak, Sukabumi',
-    latitude: '-6.8860',
-    longitude: '106.7865',
-    is_open: true,
-    open_time: '10:00',
-    close_time: '21:00',
-    is_dummy: true
-});
+
+let currentPage = 1;
+const pageSize = 5;
+let lastUserLat = null;
+let lastUserLng = null;
 
 function haversineDistanceKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -216,6 +217,15 @@ function detectBranchGPS() {
 }
 
 function renderBranchCards(userLat, userLng) {
+    if (userLat !== undefined && userLng !== undefined) {
+        lastUserLat = userLat;
+        lastUserLng = userLng;
+        currentPage = 1; // Reset to page 1 on new GPS detect
+    } else {
+        userLat = lastUserLat;
+        userLng = lastUserLng;
+    }
+    
     const container = document.getElementById('branchCardsContainer');
     if (!container) return;
 
@@ -241,7 +251,9 @@ function renderBranchCards(userLat, userLng) {
     }
 
     let html = '';
-    outlets.forEach((o, index) => {
+    const paginatedOutlets = outlets.slice(0, currentPage * pageSize);
+    
+    paginatedOutlets.forEach((o, index) => {
         const distText = o.distance !== null ? `${o.distance.toFixed(1)} km dari Anda` : `Cabang Lumero`;
         const isClosest = (userLat !== null && index === 0 && o.distance !== null && o.is_open);
         
@@ -250,8 +262,10 @@ function renderBranchCards(userLat, userLng) {
             badgeHtml = `<div class="badge-dist" style="background:rgba(239,68,68,0.25); border-color:#F87171; color:#FECACA;">🚫 SEDANG TUTUP (${distText})</div>`;
         }
         
-        const isKalibunder = o.name.toLowerCase().includes('kalibunder');
-        const isOnlineAllowed = isKalibunder;
+        const nameLower = o.name.toLowerCase();
+        const isKalibunder = nameLower.includes('kalibunder');
+        const isPasekon = nameLower.includes('pasekon');
+        const isOnlineAllowed = isKalibunder || isPasekon;
         
         let borderStyle = isClosest ? 'border: 2px solid #FF2D55; box-shadow: 0 16px 42px rgba(255,45,85,0.3);' : '';
         if (!o.is_open) {
@@ -282,7 +296,18 @@ function renderBranchCards(userLat, userLng) {
         </div>`;
     });
 
+    if (currentPage * pageSize < outlets.length) {
+        html += `<div style="text-align:center; margin-top:16px;">
+            <button type="button" onclick="loadMoreBranches()" style="background:rgba(255,255,255,0.08); color:#E5E7EB; border:1px solid rgba(255,255,255,0.2); padding:12px 24px; border-radius:99px; font-weight:700; cursor:pointer; font-size:14px; transition:all 0.2s;">Muat Lebih Banyak &darr;</button>
+        </div>`;
+    }
+
     container.innerHTML = html;
+}
+
+function loadMoreBranches() {
+    currentPage++;
+    renderBranchCards();
 }
 
 function selectBranchItem(outletId, isOpen, outletName, openTime, closeTime, isOnlineAllowed) {
@@ -291,7 +316,7 @@ function selectBranchItem(outletId, isOpen, outletName, openTime, closeTime, isO
         return;
     }
     if (!isOnlineAllowed) {
-        alert(`Mohon maaf, toko ini tidak menyediakan online order. Silakan pilih cabang Kalibunder.`);
+        alert(`Mohon maaf, toko ini tidak menyediakan online order. Silakan pilih cabang Kalibunder atau Pasekon.`);
         return;
     }
     window.location.href = 'online-order.php?outlet_id=' + outletId;
