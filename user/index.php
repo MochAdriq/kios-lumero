@@ -1196,7 +1196,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
     const itemIcons = <?= json_encode($prizeIconsMap ?? new stdClass()) ?>;
     const fallback = '../public/assets/images/pos-products/product-dummy.svg';
-    const baseItems = Object.keys(itemIcons).length > 0 ? Object.keys(itemIcons) : ['Mystery Box'];
+    let baseItems = Object.keys(itemIcons).length > 0 ? Object.keys(itemIcons) : ['Mystery Box'];
+    // Shuffle for random visual sequence
+    for (let i = baseItems.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [baseItems[i], baseItems[j]] = [baseItems[j], baseItems[i]];
+    }
     const TARGET_IDX = 40;
 
     const baseLoop = baseItems.length * CARD_W;
