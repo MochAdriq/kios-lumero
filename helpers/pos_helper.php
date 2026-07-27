@@ -47,7 +47,7 @@ if (!function_exists('sim_pos_product_image')) {
         if (strpos($text, 'keju') !== false) return sim_pos_img_asset('sauces/keju.png');
         if (sim_contains_any($text, ['mentai', 'mayo'])) return sim_pos_img_asset('sauces/mayo.png');
         if (sim_contains_any($text, ['saus', 'celup'])) return sim_pos_img_asset('celup-saus.png');
-        if (sim_contains_any($text, ['ayam', 'crispy', 'original'])) return sim_pos_img_asset('original.png');
+        if (sim_contains_any($text, ['ayam', 'crips', 'crispy', 'original'])) return sim_pos_img_asset('chicken-crips.png');
         return sim_pos_img_asset('product-dummy.svg');
     }
 }
@@ -88,7 +88,7 @@ if (!function_exists('sim_pos_prepare_data')) {
         }
         $posAssets = [
             'dummy' => sim_pos_img_asset('product-dummy.svg'),
-            'original' => sim_pos_img_asset('original.png'),
+            'original' => sim_pos_img_asset('chicken-crips.png'),
             'dada' => sim_pos_img_asset('dada.png'),
             'paha_atas' => sim_pos_img_asset('paha-atas.png'),
             'paha_bawah' => sim_pos_img_asset('paha-bawah.png'),

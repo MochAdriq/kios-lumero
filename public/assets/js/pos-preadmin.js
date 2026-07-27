@@ -35,7 +35,7 @@
     { key: 'paha_atas', label: 'Paha Atas', img: assets.paha_atas, match: ['paha atas', 'atas'] },
     { key: 'paha_bawah', label: 'Paha Bawah', img: assets.paha_bawah, match: ['paha bawah', 'bawah'] },
     { key: 'sayap', label: 'Sayap', img: assets.sayap, match: ['sayap', 'wing'] },
-    { key: 'crispy', label: 'Chicken Crispy', img: assets.original, match: ['chicken crips', 'chicken crisp', 'ayam crispy', 'crispy', 'original'] }
+    { key: 'crispy', label: 'Chicken Crips', img: assets.original, match: ['chicken crips', 'chicken crisp', 'ayam crispy', 'crispy', 'original'] }
   ];
   const sauceDefs = [
     { key: 'keju', label: 'Keju', img: assets.keju, match: ['keju', 'cheese'] },
@@ -58,7 +58,7 @@
     let rice = null;
     if (has(t, ['tanpa nasi', 'no rice'])) rice = 0;
     else if (has(t, ['plus nasi', '+ nasi', 'pakai nasi', 'nasi'])) rice = 1;
-    item.meta = { text: t, part: part?.key || 'crispy', partLabel: part?.label || 'Chicken Crispy', style, sauce: sauce?.key || null, sauceLabel: sauce?.label || '', rice };
+    item.meta = { text: t, part: part?.key || 'crispy', partLabel: part?.label || 'Chicken Crips', style, sauce: sauce?.key || null, sauceLabel: sauce?.label || '', rice };
     return item.meta;
   }
   categories.forEach(c => c.items.forEach(meta));
