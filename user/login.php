@@ -69,7 +69,7 @@ if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(
 if(isset($_GET['ulang'])){ mem_clear_login_step(); header('Location: login.php'); exit; }
 
 if (isset($_GET['redirect']) && $_GET['redirect'] === 'online_order') {
-    $_SESSION['redirect_after_login'] = 'welcome.php';
+    $_SESSION['redirect_after_login'] = 'online-order.php';
 }
 
 if (mem_current_id() > 0) {

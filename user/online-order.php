@@ -13,7 +13,8 @@ fo_ensure_tables($pdo);
 loyalty_ensure_tables($pdo);
 $memberOnline = null;
 if(!empty($_SESSION['member_id'])) $memberOnline = loyalty_member_by_id($pdo,(int)$_SESSION['member_id']);
-if(!$memberOnline){ header('Location: login.php'); exit; }
+$isLoggedIn = !empty($memberOnline);
+
 
 if(empty($_SESSION['welcome_passed']) || (!isset($_GET['outlet_id']) && !isset($_SESSION['lumero_selected_outlet_id']) && !isset($_GET['lookup_phone']))) {
     header('Location: welcome.php'); exit;
@@ -951,7 +952,9 @@ button,input,select,textarea{font:inherit}
   }
   </style>
 <script>
+window.IS_LOGGED_IN = <?= isset($isLoggedIn) && $isLoggedIn ? 'true' : 'false' ?>;
 function simInitTheme(){
+
     let tm = localStorage.getItem('sim_theme') || 'light';
     document.documentElement.setAttribute('data-theme', tm);
     document.addEventListener('DOMContentLoaded', function(){
@@ -2015,6 +2018,11 @@ function openCheckout(skipPickupConfirm=false){
     }
     return;
   }
+  if(window.IS_LOGGED_IN !== true) {
+      try { localStorage.setItem('lumero_guest_cart', JSON.stringify(cart)); } catch(e){}
+      window.location.href = 'login.php?redirect=online_order';
+      return;
+  }
   if(!skipPickupConfirm){ showPickupConfirm(); return; }
   syncCustomerFields('top');
   document.getElementById('checkoutDrawer').classList.add('show');
@@ -2954,6 +2962,13 @@ updateAudioToggleButtons();
 buildPickupOptions();
 initCustomerMemory();
 initChickenCards();
+try {
+  let guestCart = localStorage.getItem('lumero_guest_cart');
+  if(guestCart && guestCart !== '[]') {
+      window.cart = JSON.parse(guestCart);
+      localStorage.removeItem('lumero_guest_cart');
+  }
+} catch(e) {}
 renderCart();
 
 // Idle timeout: 120 seconds (2 minutes) of no interaction -> redirect to welcome
