@@ -41,16 +41,25 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         if ($row['status'] === 'PENDING') {
             return ' 🚨 Maaf, Anda belum menukarkan kupon sebelumnya! Yuk, selesaikan dulu penukaran hadiah Anda di Outlet Lumero Kalibunder sebelum berburu kupon baru.';
-        } elseif ($row['status'] === 'CLAIMED') {
-            return ' 🚨 Sistem mendeteksi Anda sudah pernah mengambil hadiah Grand Opening ini. Terima kasih partisipasinya dan berikan kesempatan bagi yang lain ya! 😉';
+        } elseif (in_array($row['status'], ['CLAIMED', 'AUTO_CLAIMED'], true)) {
+            return ' 🚨 Sistem mendeteksi Anda sudah pernah mendapatkan hadiah undian ini. Terima kasih partisipasinya dan berikan kesempatan bagi yang lain ya! 😉';
         } else {
-            return ' 🚨 Kupon Anda sebelumnya sudah hangus karena lewat batas 7 hari. Sayang sekali, kesempatan undian ini hanya berlaku satu kali untuk setiap akun.';
+            return ' 🚨 Kesempatan undian ini hanya berlaku satu kali untuk setiap akun.';
         }
     }
-    $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
-    $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
-
-    return ' Kupon Grand Opening berhasil diklaim: ' . mem_e($prize['name']) . '!';
+    
+    if (($prize['prize_type'] ?? 'product') === 'points') {
+        $pts = (int)($prize['points_amount'] ?? 0);
+        if ($pts > 0) {
+            loyalty_add_points($pdo, $memberId, $pts, 'event_win', 'Memenangkan undian: ' . $prize['name']);
+        }
+        $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, status, expired_at) VALUES (?, ?, 'AUTO', 'AUTO_CLAIMED', NOW())")->execute([$memberId, (int)$prize['id']]);
+        return ' Selamat! Saldo Anda otomatis bertambah ' . $pts . ' Poin dari undian!';
+    } else {
+        $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
+        $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
+        return ' Kupon hadiah berhasil diklaim: ' . mem_e($prize['name']) . '!';
+    }
 }
 list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; if($flashErr!=='') $err=$flashErr;
 if (isset($_GET['source']) && $_GET['source'] === 'event_kalibunder' && !empty($_SESSION['pending_event_reward']) && empty($msg)) {
@@ -98,7 +107,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $m=loyalty_find_member_by_phone($pdo,$phone);
       if(!$m || empty($m['pin_hash']) || !password_verify($pin,$m['pin_hash'])){ loyalty_activity($pdo,(int)($m['id'] ?? 0),$phone,'member_login_failed','PIN salah'); throw new Exception('PIN salah. Silakan coba lagi.'); }
       if(($m['status'] ?? 'active')!=='active') throw new Exception('Member sedang nonaktif. Hubungi kasir/admin.');
-      $_SESSION['member_id']=(int)$m['id']; $autoMsg=mem_auto_claim_pending($pdo,(int)$m['id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$m['id']); mem_clear_login_step(); loyalty_activity($pdo,(int)$m['id'],$phone,'member_login','Login berhasil halaman member'); mem_flash('Berhasil masuk. Selamat datang.'.$autoMsg.$evtMsg); header('Location: ' . ($evtMsg !== '' ? 'reward-claim.php' : 'dashboard.php')); exit;
+      $_SESSION['member_id']=(int)$m['id']; $autoMsg=mem_auto_claim_pending($pdo,(int)$m['id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$m['id']); mem_clear_login_step(); loyalty_activity($pdo,(int)$m['id'],$phone,'member_login','Login berhasil halaman member'); mem_flash('Berhasil masuk. Selamat datang.'.$autoMsg.$evtMsg); header('Location: ' . ((strpos($evtMsg, 'otomatis bertambah') !== false) ? 'dashboard.php?page=riwayat' : ($evtMsg !== '' ? 'reward-claim.php' : 'dashboard.php'))); exit;
     }elseif($action==='create_pin'){
       $phone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $mode=(string)($_SESSION['member_login_mode'] ?? 'register'); $pin=trim((string)($_POST['pin'] ?? '')); $pin2=trim((string)($_POST['pin_confirm'] ?? ''));
       if(strlen($phone)<9) throw new Exception('Sesi nomor HP tidak ditemukan. Masukkan nomor HP kembali.');
@@ -106,7 +115,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $m=loyalty_find_member_by_phone($pdo,$phone);
       if($m){ if(!empty($m['pin_hash']) && $mode==='register') throw new Exception('Nomor ini sudah memiliki PIN. Silakan masuk dengan PIN.'); $pdo->prepare("UPDATE members SET pin_hash=?, updated_at=NOW() WHERE id=?")->execute([password_hash($pin,PASSWORD_DEFAULT),(int)$m['id']]); $_SESSION['member_id']=(int)$m['id']; loyalty_activity($pdo,(int)$m['id'],$phone,'member_pin_setup','Membuat PIN dari halaman member'); }
       else{ $m=loyalty_create_member($pdo,$phone,'',$pin,null); $_SESSION['member_id']=(int)$m['id']; loyalty_activity($pdo,(int)$m['id'],$phone,'member_register','Registrasi nomor dan PIN dari halaman member'); }
-      $autoMsg=mem_auto_claim_pending($pdo,(int)$_SESSION['member_id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$_SESSION['member_id']); mem_clear_login_step(); mem_flash('PIN berhasil disimpan. Silakan lengkapi data opsional untuk bonus point.'.$autoMsg.$evtMsg); header('Location: ' . ($evtMsg !== '' ? 'reward-claim.php' : 'dashboard.php')); exit;
+      $autoMsg=mem_auto_claim_pending($pdo,(int)$_SESSION['member_id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$_SESSION['member_id']); mem_clear_login_step(); mem_flash('PIN berhasil disimpan. Silakan lengkapi data opsional untuk bonus point.'.$autoMsg.$evtMsg); header('Location: ' . ((strpos($evtMsg, 'otomatis bertambah') !== false) ? 'dashboard.php?page=riwayat' : ($evtMsg !== '' ? 'reward-claim.php' : 'dashboard.php'))); exit;
     }
   }catch(Throwable $e){ $err=$e->getMessage(); }
 }

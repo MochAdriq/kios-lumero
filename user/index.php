@@ -1263,6 +1263,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
                 const prizeName = data.prize.name;
                 document.getElementById('prize-name').innerText = prizeName;
                 document.getElementById('claim-btn').href = `<?= url('/user/login.php') ?>?source=event_kalibunder&prize=${encodeURIComponent(prizeName)}`;
+                
+                if (data.prize.prize_type === 'points') {
+                    document.querySelector('.result-sub').innerText = 'Poin ini akan otomatis ditambahkan ke saldo Anda.';
+                    document.getElementById('claim-btn').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> KLAIM POIN OTOMATIS SEKARANG';
+                }
+                
                 buildTrack(prizeName);
                 state = 'spin';
                 targetX = (TARGET_IDX * CARD_W) + (CARD_W / 2) + (Math.floor(Math.random() * 10) - 5);

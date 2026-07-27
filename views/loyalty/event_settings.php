@@ -180,6 +180,18 @@
                         <input type="text" name="name" id="prize_name" class="form-control rounded-3" required placeholder="Contoh: Tiket Umroh">
                     </div>
                     <div class="mb-3">
+                        <label class="form-label fw-bold">Tipe Hadiah</label>
+                        <select name="prize_type" id="prize_type" class="form-select rounded-3" onchange="togglePointsAmount()">
+                            <option value="product">Produk Fisik / Voucher</option>
+                            <option value="points">Poin Langsung</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="points_amount_container" style="display:none;">
+                        <label class="form-label fw-bold">Jumlah Poin</label>
+                        <input type="number" name="points_amount" id="points_amount" class="form-control rounded-3" min="0" value="0">
+                        <div class="form-text">Berapa poin yang langsung diberikan jika member menang hadiah ini?</div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label fw-bold">Stok Fisik</label>
                         <input type="number" name="stock" id="prize_stock" class="form-control rounded-3" required min="0" value="0">
                         <div class="form-text">Jika 0, otomatis tidak akan pernah menang, tapi tetap dipajang di roda.</div>
@@ -209,13 +221,21 @@
 </div>
 
 <script>
+    function togglePointsAmount() {
+        const type = document.getElementById('prize_type').value;
+        document.getElementById('points_amount_container').style.display = type === 'points' ? 'block' : 'none';
+    }
+
     function editPrize(p) {
         document.getElementById('modalTitle').innerText = 'Edit Hadiah';
         document.getElementById('prize_id').value = p.id;
         document.getElementById('prize_name').value = p.name;
+        document.getElementById('prize_type').value = p.prize_type || 'product';
+        document.getElementById('points_amount').value = p.points_amount || 0;
         document.getElementById('prize_stock').value = p.stock;
         document.getElementById('prize_fallback').checked = (p.is_default_fallback == 1);
         document.getElementById('prize_active').checked = (p.is_active == 1);
+        togglePointsAmount();
         new bootstrap.Modal(document.getElementById('modalAddPrize')).show();
     }
 

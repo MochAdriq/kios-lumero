@@ -281,6 +281,8 @@ class LoyaltyController extends Controller
         $id = (int)($_POST['id'] ?? 0);
         $name = trim($_POST['name'] ?? '');
         $stock = (int)($_POST['stock'] ?? 0);
+        $prizeType = ($_POST['prize_type'] ?? '') === 'points' ? 'points' : 'product';
+        $pointsAmount = (int)($_POST['points_amount'] ?? 0);
         $isFallback = isset($_POST['is_default_fallback']) && $_POST['is_default_fallback'] ? 1 : 0;
         $isActive = isset($_POST['is_active']) && $_POST['is_active'] ? 1 : 0;
         
@@ -311,11 +313,11 @@ class LoyaltyController extends Controller
 
             if ($id > 0) {
                 if ($imageUrl !== null) {
-                    $stmt = $pdo->prepare("UPDATE event_prizes SET name=?, stock=?, is_default_fallback=?, is_active=?, image_url=? WHERE id=?");
-                    $stmt->execute([$name, $stock, $isFallback, $isActive, $imageUrl, $id]);
+                    $stmt = $pdo->prepare("UPDATE event_prizes SET name=?, stock=?, is_default_fallback=?, is_active=?, image_url=?, prize_type=?, points_amount=? WHERE id=?");
+                    $stmt->execute([$name, $stock, $isFallback, $isActive, $imageUrl, $prizeType, $pointsAmount, $id]);
                 } else {
-                    $stmt = $pdo->prepare("UPDATE event_prizes SET name=?, stock=?, is_default_fallback=?, is_active=? WHERE id=?");
-                    $stmt->execute([$name, $stock, $isFallback, $isActive, $id]);
+                    $stmt = $pdo->prepare("UPDATE event_prizes SET name=?, stock=?, is_default_fallback=?, is_active=?, prize_type=?, points_amount=? WHERE id=?");
+                    $stmt->execute([$name, $stock, $isFallback, $isActive, $prizeType, $pointsAmount, $id]);
                 }
                 
                 // If inactive, reset chance_percentage to 0
@@ -325,8 +327,8 @@ class LoyaltyController extends Controller
                 
                 $_SESSION['flash_success'] = 'Hadiah berhasil diperbarui.';
             } else {
-                $stmt = $pdo->prepare("INSERT INTO event_prizes (event_id, name, chance_percentage, stock, is_default_fallback, is_active, image_url) VALUES ('kalibunder_go', ?, 0, ?, ?, ?, ?)");
-                $stmt->execute([$name, $stock, $isFallback, $isActive, $imageUrl]);
+                $stmt = $pdo->prepare("INSERT INTO event_prizes (event_id, name, chance_percentage, stock, is_default_fallback, is_active, image_url, prize_type, points_amount) VALUES ('kalibunder_go', ?, 0, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$name, $stock, $isFallback, $isActive, $imageUrl, $prizeType, $pointsAmount]);
                 $_SESSION['flash_success'] = 'Hadiah baru berhasil ditambahkan.';
             }
         } catch (Throwable $e) {

@@ -28,10 +28,12 @@ class RouletteHelper {
             
             if ($weight > 0) {
                 $validPrizes[] = [
-                    'id'     => $prize['id'],
-                    'name'   => $prize['name'],
-                    'weight' => $weight,
-                    'stock'  => $prize['stock']
+                    'id'            => $prize['id'],
+                    'name'          => $prize['name'],
+                    'weight'        => $weight,
+                    'stock'         => $prize['stock'],
+                    'prize_type'    => $prize['prize_type'] ?? 'product',
+                    'points_amount' => $prize['points_amount'] ?? 0
                 ];
                 $totalWeight += $weight;
             }
@@ -61,14 +63,15 @@ class RouletteHelper {
      * Retrieves the default guaranteed reward (unlimited promo stock).
      */
     private static function getFallbackPrize(PDO $pdo, string $eventId) {
-        $stmt = $pdo->prepare("SELECT id, name FROM event_prizes WHERE event_id = ? AND is_default_fallback = 1 LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, name, prize_type, points_amount FROM event_prizes WHERE event_id = ? AND is_default_fallback = 1 LIMIT 1");
         $stmt->execute([$eventId]);
         $fallback = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$fallback) {
             // Ultimate hardcoded fallback if database is misconfigured
-            return ['id' => 0, 'name' => 'Voucher Diskon Lumero'];
+            return ['id' => 0, 'name' => 'Voucher Diskon Lumero', 'prize_type' => 'product', 'points_amount' => 0];
         }
+        
         return $fallback;
     }
 }

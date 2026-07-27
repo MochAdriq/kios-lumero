@@ -271,6 +271,8 @@ function loyalty_ensure_tables(PDO $pdo): void {
     // event_prizes expansion
     if (loyalty_table_exists($pdo, 'event_prizes')) {
         loyalty_add_col($pdo, 'event_prizes', 'image_url', "image_url VARCHAR(255) DEFAULT NULL AFTER name");
+        loyalty_add_col($pdo, 'event_prizes', 'prize_type', "prize_type VARCHAR(20) NOT NULL DEFAULT 'product' AFTER image_url");
+        loyalty_add_col($pdo, 'event_prizes', 'points_amount', "points_amount INT(11) NOT NULL DEFAULT 0 AFTER prize_type");
     }
 
     // Tabel pengeluaran otomatis untuk mencatat beban penukaran point.
@@ -302,6 +304,9 @@ function loyalty_ensure_tables(PDO $pdo): void {
             id INT(11) NOT NULL AUTO_INCREMENT,
             event_id VARCHAR(50) NOT NULL,
             name VARCHAR(100) NOT NULL,
+            image_url VARCHAR(255) DEFAULT NULL,
+            prize_type VARCHAR(20) NOT NULL DEFAULT 'product',
+            points_amount INT(11) NOT NULL DEFAULT 0,
             chance_percentage DECIMAL(5,2) NOT NULL DEFAULT 0.00,
             stock INT(11) NOT NULL DEFAULT 0,
             is_active TINYINT(1) NOT NULL DEFAULT 1,
