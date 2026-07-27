@@ -68,8 +68,18 @@ if (isset($_GET['source']) && $_GET['source'] === 'event_kalibunder' && !empty($
 if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(); header('Location: index.php'); exit; }
 if(isset($_GET['ulang'])){ mem_clear_login_step(); header('Location: login.php'); exit; }
 
+if (isset($_GET['redirect']) && $_GET['redirect'] === 'online_order') {
+    $_SESSION['redirect_after_login'] = 'welcome.php';
+}
+
 if (mem_current_id() > 0) {
-    header('Location: dashboard.php');
+    if (!empty($_SESSION['redirect_after_login'])) {
+        $red = $_SESSION['redirect_after_login'];
+        unset($_SESSION['redirect_after_login']);
+        header('Location: ' . $red);
+    } else {
+        header('Location: dashboard.php');
+    }
     exit;
 }
 
@@ -107,7 +117,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $m=loyalty_find_member_by_phone($pdo,$phone);
       if(!$m || empty($m['pin_hash']) || !password_verify($pin,$m['pin_hash'])){ loyalty_activity($pdo,(int)($m['id'] ?? 0),$phone,'member_login_failed','PIN salah'); throw new Exception('PIN salah. Silakan coba lagi.'); }
       if(($m['status'] ?? 'active')!=='active') throw new Exception('Member sedang nonaktif. Hubungi kasir/admin.');
-      $_SESSION['member_id']=(int)$m['id']; $autoMsg=mem_auto_claim_pending($pdo,(int)$m['id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$m['id']); mem_clear_login_step(); loyalty_activity($pdo,(int)$m['id'],$phone,'member_login','Login berhasil halaman member'); mem_flash('Berhasil masuk. Selamat datang.'.$autoMsg.$evtMsg); header('Location: ' . ((strpos($evtMsg, 'otomatis bertambah') !== false) ? 'dashboard.php?page=riwayat' : ($evtMsg !== '' ? 'reward-claim.php' : 'dashboard.php'))); exit;
+      $_SESSION['member_id']=(int)$m['id']; $autoMsg=mem_auto_claim_pending($pdo,(int)$m['id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$m['id']); mem_clear_login_step(); loyalty_activity($pdo,(int)$m['id'],$phone,'member_login','Login berhasil halaman member'); mem_flash('Berhasil masuk. Selamat datang.'.$autoMsg.$evtMsg); $dest = 'dashboard.php'; if(strpos($evtMsg, 'otomatis bertambah') !== false) $dest = 'dashboard.php?page=riwayat'; elseif($evtMsg !== '') $dest = 'reward-claim.php'; elseif(!empty($_SESSION['redirect_after_login'])) { $dest = $_SESSION['redirect_after_login']; unset($_SESSION['redirect_after_login']); } header('Location: ' . $dest); exit;
     }elseif($action==='create_pin'){
       $phone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $mode=(string)($_SESSION['member_login_mode'] ?? 'register'); $pin=trim((string)($_POST['pin'] ?? '')); $pin2=trim((string)($_POST['pin_confirm'] ?? ''));
       if(strlen($phone)<9) throw new Exception('Sesi nomor HP tidak ditemukan. Masukkan nomor HP kembali.');
@@ -115,7 +125,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $m=loyalty_find_member_by_phone($pdo,$phone);
       if($m){ if(!empty($m['pin_hash']) && $mode==='register') throw new Exception('Nomor ini sudah memiliki PIN. Silakan masuk dengan PIN.'); $pdo->prepare("UPDATE members SET pin_hash=?, updated_at=NOW() WHERE id=?")->execute([password_hash($pin,PASSWORD_DEFAULT),(int)$m['id']]); $_SESSION['member_id']=(int)$m['id']; loyalty_activity($pdo,(int)$m['id'],$phone,'member_pin_setup','Membuat PIN dari halaman member'); }
       else{ $m=loyalty_create_member($pdo,$phone,'',$pin,null); $_SESSION['member_id']=(int)$m['id']; loyalty_activity($pdo,(int)$m['id'],$phone,'member_register','Registrasi nomor dan PIN dari halaman member'); }
-      $autoMsg=mem_auto_claim_pending($pdo,(int)$_SESSION['member_id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$_SESSION['member_id']); mem_clear_login_step(); mem_flash('PIN berhasil disimpan. Silakan lengkapi data opsional untuk bonus point.'.$autoMsg.$evtMsg); header('Location: ' . ((strpos($evtMsg, 'otomatis bertambah') !== false) ? 'dashboard.php?page=riwayat' : ($evtMsg !== '' ? 'reward-claim.php' : 'dashboard.php'))); exit;
+      $autoMsg=mem_auto_claim_pending($pdo,(int)$_SESSION['member_id']); $evtMsg=mem_process_pending_event_reward($pdo,(int)$_SESSION['member_id']); mem_clear_login_step(); mem_flash('PIN berhasil disimpan. Silakan lengkapi data opsional untuk bonus point.'.$autoMsg.$evtMsg); $dest = 'dashboard.php'; if(strpos($evtMsg, 'otomatis bertambah') !== false) $dest = 'dashboard.php?page=riwayat'; elseif($evtMsg !== '') $dest = 'reward-claim.php'; elseif(!empty($_SESSION['redirect_after_login'])) { $dest = $_SESSION['redirect_after_login']; unset($_SESSION['redirect_after_login']); } header('Location: ' . $dest); exit;
     }
   }catch(Throwable $e){ $err=$e->getMessage(); }
 }
