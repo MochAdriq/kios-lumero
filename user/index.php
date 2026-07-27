@@ -10,7 +10,12 @@ loyalty_ensure_tables($pdo);
 $stmtPrizes = $pdo->query("SELECT name, image_url FROM event_prizes WHERE event_id = 'kalibunder_go' AND is_active = 1 ORDER BY id ASC");
 $prizeIconsMap = [];
 while ($row = $stmtPrizes->fetch()) {
-    $imgUrl = !empty($row['image_url']) ? loyalty_resolve_image_url($row['image_url']) : loyalty_resolve_image_url('images/pos-products/product-dummy.svg');
+    if (stripos($row['name'], 'poin') !== false) {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#ffc72c" stroke="#ffc72c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+        $imgUrl = 'data:image/svg+xml;base64,' . base64_encode($svg);
+    } else {
+        $imgUrl = !empty($row['image_url']) ? loyalty_resolve_image_url($row['image_url']) : loyalty_resolve_image_url('images/pos-products/product-dummy.svg');
+    }
     $prizeIconsMap[$row['name']] = $imgUrl;
 }
 
@@ -1145,7 +1150,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
                     $badgeText = "Stok Terbatas";
                 }
 
-                $imgUrl = !empty($rp['image_url']) ? htmlspecialchars(loyalty_resolve_image_url($rp['image_url'])) : '../public/assets/images/pos-products/product-dummy.svg';
+                if (stripos($rp['name'], 'poin') !== false) {
+                    $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#ffc72c" stroke="#ffc72c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+                    $imgUrl = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                } else {
+                    $imgUrl = !empty($rp['image_url']) ? htmlspecialchars(loyalty_resolve_image_url($rp['image_url'])) : '../public/assets/images/pos-products/product-dummy.svg';
+                }
                 $randSvg = $svgIcons[array_rand($svgIcons)];
             ?>
             <div class="prize-card">
@@ -1202,7 +1212,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         const j = Math.floor(Math.random() * (i + 1));
         [baseItems[i], baseItems[j]] = [baseItems[j], baseItems[i]];
     }
-    const TARGET_IDX = 40;
+    const TARGET_IDX = 90;
 
     const baseLoop = baseItems.length * CARD_W;
     const cycle = Math.ceil(1500 / baseLoop);
@@ -1212,7 +1222,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
 
     function buildTrack(winner = null) {
         let h = '';
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 120; i++) {
             let name = baseItems[i % baseItems.length];
             if (i === TARGET_IDX && winner) name = winner;
             let icon = itemIcons[name] || fallback;
