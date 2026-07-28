@@ -1,6 +1,6 @@
 <!-- ═══ PROFIL / DASHBOARD ═══ -->
 
-<?php if (isset($pendingGrandOpeningClaim) && $pendingGrandOpeningClaim): ?>
+<?php if (!empty($pendingGrandOpeningClaim)): ?>
 <div style="background: linear-gradient(135deg, #c41230 0%, #ffc72c 100%); border-radius: 24px; padding: 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; color: #fff; box-shadow: 0 10px 30px rgba(196,18,48,0.3);">
     <div>
         <h3 style="margin:0 0 8px; font-size:20px; font-weight:800;">🎉 Anda Punya Kupon Grand Opening!</h3>

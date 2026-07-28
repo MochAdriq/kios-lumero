@@ -54,7 +54,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'spin_
         // Log spin
         $pdo->prepare("INSERT INTO event_spin_logs (ip_address, prize_id) VALUES (?, ?)")->execute([$ip, $prize['id']]);
 
-        $_SESSION['pending_event_reward'] = $prize;
+        $memberId = (int)($_SESSION['member_id'] ?? 0);
+        if ($memberId > 0) {
+            // User is already logged in, claim immediately
+            if (($prize['prize_type'] ?? 'product') === 'points') {
+                $pts = (int)($prize['points_amount'] ?? 0);
+                if ($pts > 0) {
+                    loyalty_add_points($pdo, $memberId, $pts, 'event_win', 'Memenangkan undian: ' . $prize['name']);
+                }
+                $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, status, expired_at) VALUES (?, ?, 'AUTO', 'AUTO_CLAIMED', NOW())")->execute([$memberId, (int)$prize['id']]);
+            } else {
+                $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
+                $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
+            }
+        } else {
+            $_SESSION['pending_event_reward'] = $prize;
+        }
+
         echo json_encode(['success' => true, 'prize' => $prize]);
     } catch (Throwable $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
