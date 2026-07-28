@@ -1,13 +1,4 @@
 <?php
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../core/Database.php';
-
-$host = app_env('PROD_DB_HOST');
-$db   = app_env('PROD_DB_DATABASE');
-$user = app_env('PROD_DB_USERNAME');
-$pass = app_env('PROD_DB_PASSWORD');
-
-$pdo = new PDO("mysql:host={$host};dbname={$db};charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-
-$units = $pdo->query("SELECT * FROM units")->fetchAll(PDO::FETCH_ASSOC);
-print_r($units);
+$pdo = new PDO('mysql:host=srv1864.hstgr.io;dbname=u643003184_kios_lumero;charset=utf8mb4', 'u643003184_kios_lumero', 'Lawmotion1!@#'); 
+$stmt = $pdo->query("SELECT id, name, symbol FROM units"); 
+print_r($stmt->fetchAll(PDO::FETCH_ASSOC));

@@ -1,32 +1,17 @@
 <?php
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../core/Database.php';
-
-$host = app_env('PROD_DB_HOST');
-$db   = app_env('PROD_DB_DATABASE');
-$user = app_env('PROD_DB_USERNAME');
-$pass = app_env('PROD_DB_PASSWORD');
-
-$pdo = new PDO("mysql:host={$host};dbname={$db};charset=utf8mb4", $user, $pass, [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-]);
-
-$SOURCE_OUTLET = 5;
-$TARGET_OUTLET = 7;
-
-echo "=== outlet_raw_materials structure ===\n";
-$cols = $pdo->query("SHOW COLUMNS FROM outlet_raw_materials")->fetchAll(PDO::FETCH_ASSOC);
-foreach ($cols as $c) echo "  {$c['Field']} | {$c['Type']}\n";
-
-$rows = $pdo->query("SELECT COUNT(*) FROM outlet_raw_materials WHERE outlet_id = {$SOURCE_OUTLET}")->fetchColumn();
-echo "\nTotal raw materials at outlet {$SOURCE_OUTLET}: {$rows}\n";
-
-$rows = $pdo->query("SELECT COUNT(*) FROM outlet_raw_materials WHERE outlet_id = {$TARGET_OUTLET}")->fetchColumn();
-echo "Total raw materials at outlet {$TARGET_OUTLET}: {$rows}\n";
-
-// Also we should check if there are recipes that refer to specific variant ids because we cloned the variants!
-// Wait! If we cloned the variants (created new product_variant_id), the recipes are still tied to the old product_variant_id!
-echo "\n=== RECIPES ===\n";
-$stmt = $pdo->query("SELECT product_variant_id, COUNT(*) as cnt FROM recipes GROUP BY product_variant_id LIMIT 5");
-print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
-
+try {
+    $dsn = 'mysql:host=srv1864.hstgr.io;port=3306;dbname=u643003184_kios_lumero;charset=utf8mb4';
+    $pdo = new PDO($dsn, 'u643003184_kios_lumero', 'Lawmotion1!@#', [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+    
+    $stmt = $pdo->query("SELECT id, name FROM raw_materials ORDER BY name ASC");
+    $materials = $stmt->fetchAll();
+    
+    echo "Raw Materials:\n";
+    foreach ($materials as $m) {
+        echo "- {$m['name']} (ID: {$m['id']})\n";
+    }
+} catch (Exception $e) {}

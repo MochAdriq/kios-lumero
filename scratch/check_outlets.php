@@ -1,8 +1,9 @@
 <?php
-$pdoOld = new PDO('mysql:host=127.0.0.1;dbname=dcelup_test_dump;charset=utf8mb4', 'root', '');
-$outlets = $pdoOld->query("SELECT outlet_id, COUNT(*) FROM orders GROUP BY outlet_id")->fetchAll(PDO::FETCH_ASSOC);
-echo "Orders by Outlet in Dump:\n";
-print_r($outlets);
+$pdo = new PDO('mysql:host=srv1864.hstgr.io;dbname=u643003184_kios_lumero;charset=utf8mb4', 'u643003184_kios_lumero', 'Lawmotion1!@#'); 
 
-$orders18 = $pdoOld->query("SELECT * FROM orders WHERE DATE(created_at) = '2026-05-18'")->fetchAll(PDO::FETCH_ASSOC);
-echo "Total rows on 18 May: " . count($orders18) . "\n";
+$st = $pdo->query("SELECT p.outlet_id, count(pv.id) FROM product_variants pv JOIN products p ON p.id = pv.product_id GROUP BY p.outlet_id");
+print_r($st->fetchAll(PDO::FETCH_ASSOC));
+
+$st2 = $pdo->query("SELECT pv.id, pv.variant_name, p.name FROM product_variants pv JOIN products p ON p.id = pv.product_id LEFT JOIN recipes r ON r.product_variant_id = pv.id WHERE r.id IS NULL");
+echo "Varian tanpa resep:\n";
+print_r($st2->fetchAll(PDO::FETCH_ASSOC));
