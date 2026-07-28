@@ -18,6 +18,20 @@ if (!function_exists('sim_pos_category_image')) {
         return sim_pos_img_asset('product-dummy.svg');
     }
 }
+if (!function_exists('sim_pos_category_icon')) {
+    function sim_pos_category_icon(array $cat): string {
+        $n = strtolower($cat['name'] ?? '');
+        if (sim_contains_any($n, ['ayam', 'chicken', 'crispy'])) return 'ti-meat';
+        if (sim_contains_any($n, ['kentang', 'potato'])) return 'ti-french-fries';
+        if (sim_contains_any($n, ['matcha', 'minuman', 'drink'])) return 'ti-cup';
+        if (sim_contains_any($n, ['kopi', 'coffee'])) return 'ti-coffee';
+        if (sim_contains_any($n, ['es krim', 'ice cream', 'icecream'])) return 'ti-ice-cream';
+        if (sim_contains_any($n, ['saus', 'sauce', 'celup'])) return 'ti-droplet';
+        if (sim_contains_any($n, ['nasi', 'rice'])) return 'ti-bowl';
+        if (sim_contains_any($n, ['burger', 'kebab'])) return 'ti-sausage';
+        return 'ti-category';
+    }
+}
 if (!function_exists('sim_pos_product_image')) {
     function sim_pos_product_image(array $item, array $cat): string {
         if (!empty($item['image'])) {
@@ -83,6 +97,7 @@ if (!function_exists('sim_pos_prepare_data')) {
                 'name' => (string)$cat['name'],
                 'slug' => (string)($cat['slug'] ?? ''),
                 'image' => sim_pos_category_image($cat),
+                'icon' => sim_pos_category_icon($cat),
                 'items' => $items,
             ];
         }

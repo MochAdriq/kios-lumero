@@ -475,7 +475,8 @@ body.k2-body .sim-horizontal-cats .sim-pos-tabs li>a {
   flex-shrink: 0;
 }
 
-body.k2-body .sim-horizontal-cats .sim-pos-tabs li>a img {
+body.k2-body .sim-horizontal-cats .sim-pos-tabs li>a img,
+body.k2-body .sim-horizontal-cats .sim-pos-tabs li>a svg {
   width: 20px !important;
   height: 20px !important;
   object-fit: contain !important;

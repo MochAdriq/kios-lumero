@@ -58,7 +58,7 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                                 <ul class="sim-pos-tabs" id="categoryList" role="tablist">
                                     <?php foreach ($preparedCategories as $idx => $cat): ?>
                                     <li id="cat-<?= (int)$cat['id'] ?>" class="<?= $idx===0 ? 'active' : '' ?>" data-cat="<?= (int)$cat['id'] ?>">
-                                        <a href="javascript:void(0);"><img src="<?= htmlspecialchars($cat['image']) ?>" alt="<?= htmlspecialchars($cat['name']) ?>"></a>
+                                        <a href="javascript:void(0);" class="text-secondary"><?= sim_icon($cat['icon'] ?? 'ti-category') ?></a>
                                         <h6><a href="javascript:void(0);"><?= htmlspecialchars($cat['name']) ?></a></h6>
                                     </li>
                                     <?php endforeach; ?>
