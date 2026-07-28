@@ -153,9 +153,8 @@ if ($claim['status'] === 'PENDING' && strtotime($claim['expired_at']) < time()) 
         }, 1000);
         <?php endif; ?>
 
-        <?php $adminUrl = url('/loyalty/eventClaims?code=' . rawurlencode($claim['qr_code'])); ?>
         new QRCode(document.getElementById("qrcode"), {
-            text: "<?= addslashes($adminUrl) ?>",
+            text: "<?= addslashes($claim['qr_code']) ?>",
             width: 200,
             height: 200,
             colorDark : "#0f0e0d",
