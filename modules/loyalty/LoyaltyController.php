@@ -114,26 +114,78 @@ class LoyaltyController extends Controller
         loyalty_ensure_tables($pdo);
 
         $q = trim($_GET['q'] ?? '');
-        $sql = "SELECT r.*, m.name AS member_name, m.phone AS member_phone, p.name AS reward_name 
-                FROM point_reward_redemptions r
-                LEFT JOIN members m ON m.id = r.member_id
-                LEFT JOIN point_reward_products p ON p.id = r.reward_product_id";
         
-        $params = [];
+        $limit = 10;
+        
+        // --- 1. Reward Redemptions (Poin) Pagination ---
+        $page_reward = max(1, (int)($_GET['page_reward'] ?? 1));
+        $offset_reward = ($page_reward - 1) * $limit;
+        
+        $sql_reward_count = "SELECT COUNT(*) FROM point_reward_redemptions r
+                             LEFT JOIN members m ON m.id = r.member_id
+                             LEFT JOIN point_reward_products p ON p.id = r.reward_product_id";
+        $params_reward = [];
         if ($q !== '') {
-            $sql .= " WHERE r.redemption_code LIKE ? OR m.name LIKE ?";
-            $params[] = "%$q%";
-            $params[] = "%$q%";
+            $sql_reward_count .= " WHERE r.redemption_code LIKE ? OR m.name LIKE ?";
+            $params_reward[] = "%$q%";
+            $params_reward[] = "%$q%";
         }
+        $stmt_reward_count = $pdo->prepare($sql_reward_count);
+        $stmt_reward_count->execute($params_reward);
+        $total_rewards = $stmt_reward_count->fetchColumn();
+        $total_pages_reward = ceil($total_rewards / $limit);
+
+        $sql_reward = "SELECT r.*, m.name AS member_name, m.phone AS member_phone, p.name AS reward_name 
+                       FROM point_reward_redemptions r
+                       LEFT JOIN members m ON m.id = r.member_id
+                       LEFT JOIN point_reward_products p ON p.id = r.reward_product_id";
+        if ($q !== '') {
+            $sql_reward .= " WHERE r.redemption_code LIKE ? OR m.name LIKE ?";
+        }
+        $sql_reward .= " ORDER BY r.id DESC LIMIT $limit OFFSET $offset_reward";
+        $stmt_reward = $pdo->prepare($sql_reward);
+        $stmt_reward->execute($params_reward);
+        $redemptions = $stmt_reward->fetchAll();
+
+        // --- 2. Event Claims (Undian) Pagination ---
+        $page_event = max(1, (int)($_GET['page_event'] ?? 1));
+        $offset_event = ($page_event - 1) * $limit;
         
-        $sql .= " ORDER BY r.id DESC LIMIT 100";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $redemptions = $stmt->fetchAll();
+        $sql_event_count = "SELECT COUNT(*) FROM reward_claims rc
+                            JOIN members m ON m.id = rc.user_id
+                            JOIN event_prizes ep ON ep.id = rc.prize_id";
+        $params_event = [];
+        if ($q !== '') {
+            $sql_event_count .= " WHERE rc.qr_code LIKE ? OR m.name LIKE ?";
+            $params_event[] = "%$q%";
+            $params_event[] = "%$q%";
+        }
+        $stmt_event_count = $pdo->prepare($sql_event_count);
+        $stmt_event_count->execute($params_event);
+        $total_events = $stmt_event_count->fetchColumn();
+        $total_pages_event = ceil($total_events / $limit);
+
+        $sql_event = "SELECT rc.*, m.name as member_name, m.phone as member_phone, ep.name as prize_name
+                      FROM reward_claims rc
+                      JOIN members m ON m.id = rc.user_id
+                      JOIN event_prizes ep ON ep.id = rc.prize_id";
+        if ($q !== '') {
+            $sql_event .= " WHERE rc.qr_code LIKE ? OR m.name LIKE ?";
+        }
+        $sql_event .= " ORDER BY rc.id DESC LIMIT $limit OFFSET $offset_event";
+        $stmt_event = $pdo->prepare($sql_event);
+        $stmt_event->execute($params_event);
+        $recentClaims = $stmt_event->fetchAll();
 
         $this->view('loyalty/redemptions', [
-            'pageTitle' => 'Validasi Penukaran Poin',
-            'redemptions' => $redemptions
+            'pageTitle' => 'Validasi Hadiah (Poin & Undian)',
+            'redemptions' => $redemptions,
+            'recentClaims' => $recentClaims,
+            'page_reward' => $page_reward,
+            'total_pages_reward' => $total_pages_reward,
+            'page_event' => $page_event,
+            'total_pages_event' => $total_pages_event,
+            'q' => $q
         ]);
     }
 
@@ -203,7 +255,7 @@ class LoyaltyController extends Controller
     {
         Auth::requireLogin();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . url('/loyalty/eventClaims'));
+            header('Location: ' . url('/loyalty/redemptions'));
             exit;
         }
 
@@ -252,7 +304,7 @@ class LoyaltyController extends Controller
             $_SESSION['flash_error'] = $e->getMessage();
         }
 
-        header('Location: ' . url('/loyalty/eventClaims'));
+        header('Location: ' . url('/loyalty/redemptions'));
         exit;
     }
 

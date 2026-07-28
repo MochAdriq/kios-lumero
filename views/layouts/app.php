@@ -84,9 +84,8 @@ $menuGroups += [
     'Loyalty & Member Poin' => [
         ['label' => 'Data Member & Saldo',      'icon' => 'ti ti-award',            'url' => '/loyalty/members',        'roles' => $ALL],
         ['label' => 'Katalog Reward (Poin)',    'icon' => 'ti ti-gift',             'url' => '/loyalty/rewards',        'roles' => $ADMIN],
-        ['label' => 'Validasi Reward (Poin)',   'icon' => 'ti ti-checkup-list',     'url' => '/loyalty/redemptions',    'roles' => $ALL],
         ['label' => 'Setting Undian (Event)',   'icon' => 'ti ti-settings',         'url' => '/loyalty/eventSettings',  'roles' => $ADMIN],
-        ['label' => 'Validasi Undian (Event)',  'icon' => 'ti ti-ticket',           'url' => '/loyalty/eventClaims',    'roles' => $ALL],
+        ['label' => 'Validasi Hadiah & Klaim',  'icon' => 'ti ti-checkup-list',     'url' => '/loyalty/redemptions',    'roles' => $ALL],
         ['label' => 'Akses Web Member',         'icon' => 'ti ti-external-link',    'url' => '/user/index.php', 'root' => true, 'roles' => $ALL],
     ],
     'Keuangan & Laporan' => [
