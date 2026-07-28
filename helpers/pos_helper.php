@@ -86,6 +86,9 @@ if (!function_exists('sim_pos_prepare_data')) {
                 'items' => $items,
             ];
         }
+        $oid = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+        $isKlb = ($oid == 5 || $oid == 8);
+
         $posAssets = [
             'dummy' => sim_pos_img_asset('product-dummy.svg'),
             'original' => sim_pos_img_asset('chicken-crips.png'),
@@ -99,13 +102,13 @@ if (!function_exists('sim_pos_prepare_data')) {
             'kentang' => sim_pos_img_asset('kentang-kriwil.png'),
             'matcha' => sim_pos_img_asset('matcha.png'),
             'kopi' => sim_pos_img_asset('kopi.png'),
-            'keju' => sim_pos_img_asset('sauces/keju.png'),
-            'sadis' => sim_pos_img_asset('sauces/pedas.png'),
-            'teriyaki' => sim_pos_img_asset('sauces/teriyaki.png'),
-            'bbq' => sim_pos_img_asset('sauces/bbq.png'),
-            'lada_hitam' => sim_pos_img_asset('sauces/blackpepper.png'),
-            'garlic' => sim_pos_img_asset('sauces/default.png'),
-            'mentai' => sim_pos_img_asset('sauces/mayo.png'),
+            'keju' => sim_pos_img_asset($isKlb ? 'sauces/keju klb.png' : 'sauces/keju.png'),
+            'sadis' => sim_pos_img_asset($isKlb ? 'sauces/pedas klb.png' : 'sauces/pedas.png'),
+            'teriyaki' => sim_pos_img_asset($isKlb ? 'sauces/teriyaki klb.png' : 'sauces/teriyaki.png'),
+            'bbq' => sim_pos_img_asset($isKlb ? 'sauces/bbq klb.png' : 'sauces/bbq.png'),
+            'lada_hitam' => sim_pos_img_asset($isKlb ? 'sauces/black pepper klb.png' : 'sauces/blackpepper.png'),
+            'garlic' => sim_pos_img_asset($isKlb ? 'sauces/default (2).png' : 'sauces/default.png'),
+            'mentai' => sim_pos_img_asset($isKlb ? 'sauces/default (2).png' : 'sauces/mayo.png'),
         ];
         return [
             'categories' => $preparedCategories,
