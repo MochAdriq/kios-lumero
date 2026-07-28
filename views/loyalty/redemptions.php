@@ -14,10 +14,17 @@
 
 <div class="row mb-3">
     <div class="col-md-4">
-        <form action="<?= url('/loyalty/redemptions') ?>" method="GET" class="d-flex gap-2">
-            <input type="text" name="q" class="form-control rounded-pill" placeholder="Cari Kode Redeem..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+        <form id="claim-form" action="<?= url('/loyalty/redemptions') ?>" method="GET" class="d-flex gap-2 align-items-center">
+            <button type="button" id="btn-scan" class="btn btn-primary rounded-circle shadow" style="width: 48px; height: 48px; padding: 0; flex-shrink: 0;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </button>
+            <input type="text" id="qr_code_input" name="q" class="form-control rounded-pill" placeholder="Cari Kode Redeem..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
             <button type="submit" class="btn btn-primary rounded-pill px-4">Cari</button>
         </form>
+        <div id="qr-reader" style="width:100%; display:none; margin-top: 20px; border-radius: 12px; overflow: hidden; border: 2px solid var(--bs-primary);"></div>
     </div>
 </div>
 
@@ -74,3 +81,52 @@
         </div>
     </div>
 </div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const btnScan = document.getElementById('btn-scan');
+    const readerDiv = document.getElementById('qr-reader');
+    const inputCode = document.getElementById('qr_code_input');
+    const form = document.getElementById('claim-form');
+    let html5QrcodeScanner = null;
+
+    const scanIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const closeIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+    if (btnScan) {
+        btnScan.addEventListener('click', function() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+                html5QrcodeScanner = null;
+                readerDiv.style.display = 'none';
+                btnScan.innerHTML = scanIcon;
+                btnScan.classList.replace('btn-danger', 'btn-primary');
+            } else {
+                readerDiv.style.display = 'block';
+                html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+                btnScan.innerHTML = closeIcon;
+                btnScan.classList.replace('btn-primary', 'btn-danger');
+            }
+        });
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+        readerDiv.style.display = 'none';
+        btnScan.innerHTML = scanIcon;
+        btnScan.classList.replace('btn-danger', 'btn-primary');
+        
+        inputCode.value = decodedText;
+        form.submit();
+    }
+
+    function onScanFailure(error) {
+        // ignore errors
+    }
+});
+</script>
+
+<?php include __DIR__ . '/../../../views/layouts/footer.php'; ?>
