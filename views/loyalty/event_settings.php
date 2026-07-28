@@ -21,8 +21,11 @@
     <div class="alert alert-danger border-0 shadow-sm rounded-4"><i class="ti ti-alert-triangle me-2"></i><?= $_SESSION['flash_error']; unset($_SESSION['flash_error']); ?></div>
 <?php endif; ?>
 
-<!-- Bagian 1: Manajemen Persentase Kemenangan (Strict 100%) -->
-<div class="card border-0 shadow-sm rounded-4 mb-4">
+<div class="row">
+    <!-- Kolom Kiri: Distribusi Peluang -->
+    <div class="col-lg-5 mb-4">
+        <!-- Bagian 1: Manajemen Persentase Kemenangan (Strict 100%) -->
+        <div class="card border-0 shadow-sm rounded-4 h-100">
     <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
         <h5 class="fw-bold mb-0">Distribusi Peluang Menang (Persentase)</h5>
         <small class="text-muted">Atur persentase peluang menang untuk setiap hadiah. Total HARUS 100%.</small>
@@ -86,11 +89,14 @@
             </div>
         </form>
     </div>
-</div>
+        </div>
+    </div>
 
-<!-- Bagian 2: Manajemen Data Hadiah -->
-<div class="card border-0 shadow-sm rounded-4">
-    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+    <!-- Kolom Kanan: Daftar Hadiah -->
+    <div class="col-lg-7 mb-4">
+        <!-- Bagian 2: Manajemen Data Hadiah -->
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
         <h5 class="fw-bold mb-0">Daftar Hadiah</h5>
     </div>
     <div class="card-body p-0 mt-3">
@@ -159,6 +165,8 @@
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
         </div>
     </div>
 </div>
