@@ -14,18 +14,18 @@
   const isChickenCat = cat => cat && has(cat.name + ' ' + cat.slug, ['ayam', 'chicken']) && has(cat.name + ' ' + cat.slug, ['crispy', 'crips']);
   const isIceCreamCat = cat => cat && has(cat.name + ' ' + cat.slug, ['es krim', 'ice cream', 'icecream']);
   const iceBaseDefs = [
-    { key: 'vanilla', label: 'Vanilla', img: assets.dummy, match: ['vanilla'] },
-    { key: 'coklat', label: 'Coklat', img: assets.dummy, match: ['coklat', 'chocolate'] },
-    { key: 'strawberry', label: 'Strawberry', img: assets.dummy, match: ['strawberry'] }
+    { key: 'vanilla', label: 'Vanilla', img: assets.svg_vanilla, match: ['vanilla'] },
+    { key: 'coklat', label: 'Coklat', img: assets.svg_coklat, match: ['coklat', 'chocolate'] },
+    { key: 'strawberry', label: 'Strawberry', img: assets.svg_strawberry, match: ['strawberry'] }
   ];
   const icePackDefs = [
-    { key: 'cup', label: 'Cup 14 oz', img: assets.dummy, match: ['cup 14 oz', 'cup'] },
-    { key: 'cone', label: 'Cone Lumero', img: assets.dummy, match: ['lumero', 'cone'] }
+    { key: 'cup', label: 'Cup 14 oz', img: assets.ice_cup, match: ['cup 14 oz', 'cup'] },
+    { key: 'cone', label: 'Cone Lumero', img: assets.ice_cone, match: ['lumero', 'cone'] }
   ];
   const iceToppingDefs = [
-    { key: 'coklat', label: 'Topping Coklat', img: assets.dummy, match: ['topping coklat'] },
-    { key: 'strawberry', label: 'Topping Strawberry', img: assets.dummy, match: ['topping strawberry'] },
-    { key: 'matcha', label: 'Topping Matcha', img: assets.dummy, match: ['topping matcha'] }
+    { key: 'coklat', label: 'Topping Coklat', img: assets.svg_top_coklat, match: ['topping coklat'] },
+    { key: 'strawberry', label: 'Topping Strawberry', img: assets.svg_top_strawberry, match: ['topping strawberry'] },
+    { key: 'matcha', label: 'Topping Matcha', img: assets.svg_top_matcha, match: ['topping matcha'] }
   ];
   const iconBase = (() => new URL('../tabler-sprite.svg', document.currentScript?.src || window.location.href).href)();
   const mapIconName = (name) => {

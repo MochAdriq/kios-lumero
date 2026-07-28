@@ -22,7 +22,7 @@ if (!function_exists('sim_pos_category_icon')) {
     function sim_pos_category_icon(array $cat): string {
         $n = strtolower($cat['name'] ?? '');
         if (sim_contains_any($n, ['ayam', 'chicken', 'crispy'])) return 'ti-meat';
-        if (sim_contains_any($n, ['kentang', 'potato'])) return 'ti-french-fries';
+        if (sim_contains_any($n, ['kentang', 'potato'])) return 'ti-baguette';
         if (sim_contains_any($n, ['matcha', 'minuman', 'drink'])) return 'ti-cup';
         if (sim_contains_any($n, ['kopi', 'coffee'])) return 'ti-coffee';
         if (sim_contains_any($n, ['es krim', 'ice cream', 'icecream'])) return 'ti-ice-cream';
@@ -124,6 +124,14 @@ if (!function_exists('sim_pos_prepare_data')) {
             'lada_hitam' => sim_pos_img_asset($isKlb ? 'sauces/black pepper klb.png' : 'sauces/blackpepper.png'),
             'garlic' => sim_pos_img_asset($isKlb ? 'sauces/default (2).png' : 'sauces/default.png'),
             'mentai' => sim_pos_img_asset($isKlb ? 'sauces/default (2).png' : 'sauces/mayo.png'),
+            'ice_cone' => sim_pos_img_asset('eskrim-cone.png'),
+            'ice_cup' => sim_pos_img_asset('eskrim-cup.png'),
+            'svg_vanilla' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#fcf4d9" d="M12 2c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26C5.58 15.68 6 17.5 6 17.5c0 1.38 1.12 2.5 2.5 2.5h7c1.38 0 2.5-1.12 2.5-2.5 0 0 .42-1.82.76-3.24C19.54 13.03 20 11.57 20 10c0-4.42-3.58-8-8-8z"/></svg>'),
+            'svg_coklat' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#5d4037" d="M12 2c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26C5.58 15.68 6 17.5 6 17.5c0 1.38 1.12 2.5 2.5 2.5h7c1.38 0 2.5-1.12 2.5-2.5 0 0 .42-1.82.76-3.24C19.54 13.03 20 11.57 20 10c0-4.42-3.58-8-8-8z"/></svg>'),
+            'svg_strawberry' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#f48fb1" d="M12 2c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26C5.58 15.68 6 17.5 6 17.5c0 1.38 1.12 2.5 2.5 2.5h7c1.38 0 2.5-1.12 2.5-2.5 0 0 .42-1.82.76-3.24C19.54 13.03 20 11.57 20 10c0-4.42-3.58-8-8-8z"/></svg>'),
+            'svg_top_coklat' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#5d4037" d="M12 2c-3.1 0-5 2-5 5v5c0 1 2 1 2 2s-2 2-2 3c0 2 2 3 5 3s5-1 5-3c0-1-2-2-2-3s2-1 2-2V7c0-3-1.9-5-5-5z"/></svg>'),
+            'svg_top_strawberry' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#f48fb1" d="M12 2c-3.1 0-5 2-5 5v5c0 1 2 1 2 2s-2 2-2 3c0 2 2 3 5 3s5-1 5-3c0-1-2-2-2-3s2-1 2-2V7c0-3-1.9-5-5-5z"/></svg>'),
+            'svg_top_matcha' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#81c784" d="M12 2c-3.1 0-5 2-5 5v5c0 1 2 1 2 2s-2 2-2 3c0 2 2 3 5 3s5-1 5-3c0-1-2-2-2-3s2-1 2-2V7c0-3-1.9-5-5-5z"/></svg>'),
         ];
         return [
             'categories' => $preparedCategories,
