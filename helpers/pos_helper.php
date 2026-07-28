@@ -96,7 +96,7 @@ if (!function_exists('sim_pos_prepare_data')) {
             'paha_atas' => sim_pos_img_asset('paha-atas.png'),
             'paha_bawah' => sim_pos_img_asset('paha-bawah.png'),
             'sayap' => sim_pos_img_asset('sayap.png'),
-            'sauce' => sim_pos_img_asset('celup-saus.png'),
+            'sauce' => sim_pos_img_asset($isKlb ? 'sauces/default (2).png' : 'celup-saus.png'),
             'rice_yes' => sim_pos_img_asset('nasi.png'),
             'rice_no' => sim_pos_img_asset('tanpa-nasi.png'),
             'kentang' => sim_pos_img_asset('kentang-kriwil.png'),
