@@ -282,6 +282,11 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             from { transform: translateY(24px); opacity: 0; }
             to   { transform: translateY(0); opacity: 1; }
         }
+        @keyframes pulseText {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
         .helper-text {
             font-size: 12px; color: var(--muted); margin-top: 14px; font-weight: 500;
@@ -1116,6 +1121,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             <div class="result-title">Selamat! Anda Menang!</div>
             <div class="result-prize-name" id="prize-name">Hadiah</div>
             <p class="result-sub">Ambil dan tukarkan kupon hadiah sebelum 7 hari.</p>
+            <div style="font-size: 0.85rem; font-weight: 800; color: #ffeb3b; text-align: center; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; animation: pulseText 1.5s infinite;">👇 Klik Tombol Di Bawah Ini 👇</div>
             <a id="claim-btn" href="<?= url('/user/login.php') ?>?source=event_kalibunder" class="btn-claim">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
                 AMBIL HADIAH ANDA SEKARANG
