@@ -139,7 +139,7 @@ class ProductController extends Controller
             ]);
 
             // Get product_id from variant
-            $variantRow = (new Model())->one("SELECT product_id FROM product_variants WHERE id = ? LIMIT 1", [$variantId]);
+            $variantRow = $prodModel->one("SELECT product_id FROM product_variants WHERE id = ? LIMIT 1", [$variantId]);
             $productId = $variantRow ? (int)$variantRow['product_id'] : 0;
 
             // Handle image upload if file provided
@@ -153,24 +153,24 @@ class ProductController extends Controller
                     $filename = 'product_' . $productId . '_' . time() . '.' . $ext;
                     if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
                         $imgPath = 'uploads/products/' . $filename;
-                        (new Model())->execSql("UPDATE products SET image = ? WHERE id = ?", [$imgPath, $productId]);
-                        (new Model())->execSql("UPDATE product_variants SET image = ? WHERE id = ?", [$imgPath, $variantId]);
+                        $prodModel->execSql("UPDATE products SET image = ? WHERE id = ?", [$imgPath, $productId]);
+                        $prodModel->execSql("UPDATE product_variants SET image = ? WHERE id = ?", [$imgPath, $variantId]);
                     }
                 }
             }
 
             // Get recipe ID created by createVariant
-            $recipeRow = (new Model())->one("SELECT id FROM recipes WHERE product_variant_id = ? LIMIT 1", [$variantId]);
+            $recipeRow = $prodModel->one("SELECT id FROM recipes WHERE product_variant_id = ? LIMIT 1", [$variantId]);
             $recipeId = $recipeRow ? (int)$recipeRow['id'] : 0;
 
             if (isset($_POST['is_quick_hpp']) && $_POST['is_quick_hpp'] == '1') {
                 $newHpp = max(0, (float)($_POST['manual_hpp'] ?? 0));
-                (new Model())->execSql("UPDATE product_variants SET hpp = ?, updated_at = NOW() WHERE id = ?", [$newHpp, $variantId]);
+                $prodModel->execSql("UPDATE product_variants SET hpp = ?, updated_at = NOW() WHERE id = ?", [$newHpp, $variantId]);
                 
                 if ($productId > 0) {
                     $margin = $sellPrice - $newHpp;
                     $mp = ($sellPrice > 0) ? ($margin / $sellPrice * 100) : 0;
-                    (new Model())->execSql("UPDATE products SET base_hpp = ?, margin_amount = ?, margin_percent = ?, updated_at = NOW() WHERE id = ?", [$newHpp, $margin, $mp, $productId]);
+                    $prodModel->execSql("UPDATE products SET base_hpp = ?, margin_amount = ?, margin_percent = ?, updated_at = NOW() WHERE id = ?", [$newHpp, $margin, $mp, $productId]);
                 }
             } else if ($recipeId > 0 && !empty($_POST['comp_item_id'])) {
                 $recipeModel = new RecipeModel();
@@ -192,7 +192,7 @@ class ProductController extends Controller
                 if ($productId > 0) {
                     $margin = $sellPrice - $newHpp;
                     $mp = ($sellPrice > 0) ? ($margin / $sellPrice * 100) : 0;
-                    (new Model())->execSql("UPDATE products SET base_hpp = ?, margin_amount = ?, margin_percent = ?, updated_at = NOW() WHERE id = ?", [$newHpp, $margin, $mp, $productId]);
+                    $prodModel->execSql("UPDATE products SET base_hpp = ?, margin_amount = ?, margin_percent = ?, updated_at = NOW() WHERE id = ?", [$newHpp, $margin, $mp, $productId]);
                 }
             }
 
