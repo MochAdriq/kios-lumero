@@ -163,7 +163,16 @@ class ProductController extends Controller
             $recipeRow = (new Model())->one("SELECT id FROM recipes WHERE product_variant_id = ? LIMIT 1", [$variantId]);
             $recipeId = $recipeRow ? (int)$recipeRow['id'] : 0;
 
-            if ($recipeId > 0 && !empty($_POST['comp_item_id'])) {
+            if (isset($_POST['is_quick_hpp']) && $_POST['is_quick_hpp'] == '1') {
+                $newHpp = max(0, (float)($_POST['manual_hpp'] ?? 0));
+                (new Model())->execSql("UPDATE product_variants SET hpp = ?, updated_at = NOW() WHERE id = ?", [$newHpp, $variantId]);
+                
+                if ($productId > 0) {
+                    $margin = $sellPrice - $newHpp;
+                    $mp = ($sellPrice > 0) ? ($margin / $sellPrice * 100) : 0;
+                    (new Model())->execSql("UPDATE products SET base_hpp = ?, margin_amount = ?, margin_percent = ?, updated_at = NOW() WHERE id = ?", [$newHpp, $margin, $mp, $productId]);
+                }
+            } else if ($recipeId > 0 && !empty($_POST['comp_item_id'])) {
                 $recipeModel = new RecipeModel();
                 foreach ($_POST['comp_item_id'] as $idx => $compIdStr) {
                     $compId = (int)$compIdStr;

@@ -114,6 +114,21 @@
             </span>
         </div>
 
+        <div class="form-check form-switch mb-4">
+            <input class="form-check-input fs-4" type="checkbox" role="switch" id="isQuickHpp" name="is_quick_hpp" value="1" onchange="toggleQuickHpp()">
+            <label class="form-check-label fw-bold text-dark ms-2 mt-1" for="isQuickHpp" style="cursor:pointer">Gunakan Input HPP Cepat (Tanpa Resep Bahan Baku)</label>
+        </div>
+
+        <div id="quickHppSection" style="display:none;" class="mb-4 bg-primary-subtle p-4 rounded-4 border-0 shadow-sm">
+            <label class="form-label fw-bold text-primary-emphasis">Nominal HPP Manual (Rp)</label>
+            <div class="input-group input-group-lg">
+                <span class="input-group-text bg-white fw-bold border-0 text-muted">Rp</span>
+                <input type="number" name="manual_hpp" id="manual_hpp_input" class="form-control fw-bold text-dark fs-4 border-0" min="0" value="0" oninput="calculateTotalHpp()">
+            </div>
+            <small class="text-muted d-block mt-2">Sistem <b>TIDAK AKAN</b> memotong stok gudang karena resep kosong. Hanya untuk pencatatan Laba Rugi.</small>
+        </div>
+
+        <div id="recipeSection">
         <div class="alert alert-light border shadow-sm small mb-4">
             <?= sim_icon('ti-info-circle', 'text-primary me-2 fs-5') ?>
             <strong>Racikan Resep:</strong> Tentukan komponen bahan baku mentah atau sub-resep (bahan setengah jadi) yang dibutuhkan per 1 porsi menu ini. Sistem akan otomatis menjumlahkan estimasi Harga Pokok Produksi (HPP) berdasarkan harga rata-rata bahan di gudang saat ini.
@@ -149,6 +164,7 @@
                 <?= sim_icon('ti-plus', 'me-1') ?> Tambah Komponen Bahan
             </button>
         </div>
+        </div> <!-- end recipeSection -->
     </div>
 
     <!-- SECTION 3: HARGA JUAL & ANALISIS MARGIN PROFIT -->
@@ -265,6 +281,24 @@ document.addEventListener('DOMContentLoaded', () => {
     addCompRow();
 });
 
+function toggleQuickHpp() {
+    const isChecked = document.getElementById('isQuickHpp').checked;
+    const recipeSec = document.getElementById('recipeSection');
+    const quickSec = document.getElementById('quickHppSection');
+    const compInputs = document.querySelectorAll('#compTableBody select, #compTableBody input');
+    
+    if (isChecked) {
+        recipeSec.style.display = 'none';
+        quickSec.style.display = 'block';
+        compInputs.forEach(el => el.disabled = true);
+    } else {
+        recipeSec.style.display = 'block';
+        quickSec.style.display = 'none';
+        compInputs.forEach(el => el.disabled = false);
+    }
+    calculateTotalHpp();
+}
+
 function addCompRow() {
     const tbody = document.getElementById('compTableBody');
     const tr = document.createElement('tr');
@@ -367,16 +401,24 @@ function calculateRowCost(el) {
 }
 
 function calculateTotalHpp() {
-    const costCells = document.querySelectorAll('.comp-row-cost');
+    const isQuick = document.getElementById('isQuickHpp')?.checked;
     let sum = 0;
-    costCells.forEach(cell => {
-        sum += parseFloat(cell.dataset.cost || 0);
-    });
+    
+    if (isQuick) {
+        sum = parseFloat(document.getElementById('manual_hpp_input')?.value || 0);
+    } else {
+        const costCells = document.querySelectorAll('.comp-row-cost');
+        costCells.forEach(cell => {
+            sum += parseFloat(cell.dataset.cost || 0);
+        });
+    }
     
     totalHppValue = sum;
     const displayEl = document.getElementById('totalHppDisplay');
-    if (displayEl) {
+    if (displayEl && !isQuick) {
         displayEl.textContent = 'Rp ' + Math.round(sum).toLocaleString('id-ID');
+    } else if (displayEl && isQuick) {
+        displayEl.textContent = 'Rp ' + Math.round(sum).toLocaleString('id-ID') + ' (Manual)';
     }
     calculateMargin();
 }
