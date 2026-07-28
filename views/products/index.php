@@ -49,7 +49,8 @@
                             <th>Kategori</th>
                             <th class="text-end">HPP</th>
                             <th class="text-end">Harga Jual</th>
-                            <th class="text-center">Margin</th>
+                            <th class="text-center">Margin (%)</th>
+                            <th class="text-end">Margin (Rp)</th>
                             <th class="text-end pe-4">Aksi</th>
                         </tr>
                     </thead>
@@ -82,6 +83,9 @@
                                 <span class="badge bg-<?= $marginClass ?>">
                                     <?= number_format($marginPercent, 1) ?>%
                                 </span>
+                            </td>
+                            <td class="text-end">
+                                <span class="text-success fw-medium"><?= rupiah($it['selling_price'] - $it['hpp']) ?></span>
                             </td>
                             <td class="text-end pe-4">
                                 <button type="button" class="btn btn-sm btn-light border shadow-sm rounded-circle me-1 btn-edit-product" 
