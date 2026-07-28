@@ -1151,8 +1151,18 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         </div>
         <div class="prize-grid">
             <?php
-            $randomPrizesStmt = $pdo->query("SELECT * FROM event_prizes WHERE event_id = 'kalibunder_go' AND is_active = 1 ORDER BY RAND() LIMIT 4");
-            $randomPrizes = $randomPrizesStmt->fetchAll(PDO::FETCH_ASSOC);
+            $topPrizesStmt = $pdo->query("SELECT * FROM event_prizes WHERE event_id = 'kalibunder_go' AND is_active = 1 AND (name LIKE '%Tablet%' OR name LIKE '%Handphone%') LIMIT 2");
+            $topPrizes = $topPrizesStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $topIds = array_column($topPrizes, 'id');
+            $placeholders = empty($topIds) ? '0' : implode(',', array_fill(0, count($topIds), '?'));
+            $limit = 4 - count($topPrizes);
+            
+            $randomPrizesStmt = $pdo->prepare("SELECT * FROM event_prizes WHERE event_id = 'kalibunder_go' AND is_active = 1 AND id NOT IN ($placeholders) ORDER BY RAND() LIMIT $limit");
+            $randomPrizesStmt->execute(empty($topIds) ? [] : $topIds);
+            $otherPrizes = $randomPrizesStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $randomPrizes = array_merge($topPrizes, $otherPrizes);
             
             $svgIcons = [
                 '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>',
@@ -1261,15 +1271,15 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         if (state === 'idle') {
             if (currentX >= safeStart + baseLoop) currentX -= baseLoop;
         } else if (state === 'spin') {
-            if (velocity < 45) velocity += 2;
-            const d = 0.35, dist = velocity * velocity / (2 * d);
+            if (velocity < 15) velocity += 0.5;
+            const d = 0.1, dist = velocity * velocity / (2 * d);
             if ((targetX - currentX) <= dist) state = 'decel';
         } else if (state === 'decel') {
             const dist = Math.max(0, targetX - currentX);
-            let v = Math.sqrt(2 * 0.35 * dist);
-            if (v < 0.4) v = 0.4;
+            let v = Math.sqrt(2 * 0.1 * dist);
+            if (v < 0.3) v = 0.3;
             velocity = v;
-            if (dist <= 0.4) {
+            if (dist <= 0.3) {
                 velocity = 0; currentX = targetX; state = 'done';
                 const winEl = document.getElementById(`si-${TARGET_IDX}`);
                 if (winEl) winEl.classList.add('winner');
