@@ -11,14 +11,26 @@ if ($memberId <= 0) {
     exit;
 }
 
-$stmt = $pdo->prepare("
-    SELECT c.*, p.name as prize_name 
-    FROM reward_claims c 
-    JOIN event_prizes p ON c.prize_id = p.id 
-    WHERE c.user_id = ? 
-    ORDER BY c.created_at DESC LIMIT 1
-");
-$stmt->execute([$memberId]);
+$claimId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($claimId > 0) {
+    $stmt = $pdo->prepare("
+        SELECT c.*, p.name as prize_name 
+        FROM reward_claims c 
+        JOIN event_prizes p ON c.prize_id = p.id 
+        WHERE c.user_id = ? AND c.id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$memberId, $claimId]);
+} else {
+    $stmt = $pdo->prepare("
+        SELECT c.*, p.name as prize_name 
+        FROM reward_claims c 
+        JOIN event_prizes p ON c.prize_id = p.id 
+        WHERE c.user_id = ? AND c.status = 'PENDING'
+        ORDER BY c.created_at DESC LIMIT 1
+    ");
+    $stmt->execute([$memberId]);
+}
 $claim = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$claim) {

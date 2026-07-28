@@ -6,7 +6,7 @@
         <h3 style="margin:0 0 8px; font-size:20px; font-weight:800;">🎉 Anda Punya Kupon Grand Opening!</h3>
         <p style="margin:0; font-size:14px; opacity:0.9;">Tukarkan segera di Outlet Kalibunder sebelum hangus.</p>
     </div>
-    <a href="reward-claim.php" class="btn" style="background:#fff; color:#c41230; padding:12px 24px; border-radius:99px; text-decoration:none; font-weight:800;">LIHAT KUPON</a>
+    <a href="reward-claim.php?id=<?= $pendingGrandOpeningClaim['id'] ?>" class="btn" style="background:#fff; color:#c41230; padding:12px 24px; border-radius:99px; text-decoration:none; font-weight:800;">LIHAT KUPON</a>
 </div>
 <?php endif; ?>
 <?php if ($profilePercent === 0 || $profilePercent < 40): ?>

@@ -19,6 +19,29 @@ if($memberId<=0){ header('Location: login.php'); exit; }
 $member=loyalty_member_by_id($pdo,$memberId);
 if(!$member){ unset($_SESSION['member_id']); header('Location: index.php'); exit; }
 $redemptions=loyalty_member_reward_redemptions($pdo,$memberId,120);
+$st = $pdo->prepare("SELECT rc.*, p.name as prize_name FROM reward_claims rc JOIN event_prizes p ON rc.prize_id = p.id WHERE rc.user_id=? ORDER BY rc.id DESC LIMIT 120");
+$st->execute([$memberId]);
+$eventClaims = $st->fetchAll(PDO::FETCH_ASSOC);
+foreach($eventClaims as $ec) {
+    $s = 'requested';
+    if($ec['status'] === 'CLAIMED' || $ec['status'] === 'AUTO_CLAIMED') $s = 'completed';
+    if($ec['status'] === 'EXPIRED') $s = 'cancelled';
+    $redemptions[] = [
+        'id' => 'evt_' . $ec['id'],
+        'redemption_code' => $ec['qr_code'],
+        'status' => $s,
+        'product_name' => 'Undian: ' . $ec['prize_name'],
+        'points_used' => 0,
+        'order_no' => '-',
+        'created_at' => $ec['created_at'],
+        'completed_at' => ($s === 'completed') ? $ec['updated_at'] ?? $ec['created_at'] : null,
+        'is_event' => true,
+        'event_claim_id' => $ec['id']
+    ];
+}
+usort($redemptions, function($a, $b) {
+    return strtotime($b['created_at']) - strtotime($a['created_at']);
+});
 ?>
 <!doctype html><html lang="id"><head>
 <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png">
@@ -255,7 +278,11 @@ a { text-decoration: none; color: inherit; }
     <div class="ticket-list">
       <?php foreach($redemptions as $r): 
         $code=(string)($r['redemption_code'] ?: ('RDM-'.$r['id'])); 
-        $adminUrl = url('/loyalty/redemptions?q='.rawurlencode($code));
+        if (!empty($r['is_event'])) {
+            $adminUrl = url('/user/reward-claim.php?id=' . $r['event_claim_id']);
+        } else {
+            $adminUrl = url('/loyalty/redemptions?q='.rawurlencode($code));
+        }
         $qr='https://quickchart.io/qr?size=180&margin=1&text='.rawurlencode($adminUrl); 
       ?>
       <article class="ticket">
