@@ -14,7 +14,7 @@ $total = array_sum(array_map(fn($x) => (float)$x['grand_total'], $items ?? []));
 
 <div class="row g-4 mb-5">
     <div class="col-12 mb-4">
-        <div class="sim-card shadow-sm border-0 sticky-top" style="top: 20px;">
+        <div class="sim-card shadow-sm border-0">
             <h5 class="fw-bold border-bottom pb-3 mb-3"><?= sim_icon('ti-clipboard-plus', 'me-1 text-primary') ?> Form Pembelian Baru</h5>
             
             <form method="post">
