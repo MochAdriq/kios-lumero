@@ -13,20 +13,54 @@ $total = array_sum(array_map(fn($x) => (float)$x['grand_total'], $items ?? []));
 </div>
 
 <div class="row g-4 mb-5">
-    <div class="col-lg-4">
+    <div class="col-12 mb-4">
         <div class="sim-card shadow-sm border-0 sticky-top" style="top: 20px;">
             <h5 class="fw-bold border-bottom pb-3 mb-3"><?= sim_icon('ti-clipboard-plus', 'me-1 text-primary') ?> Form Pembelian Baru</h5>
             
             <form method="post">
                 <?= csrf_field() ?>
                 
-                <div class="bg-light p-3 rounded mb-3 border">
-                    <h6 class="small fw-bold text-secondary mb-3 text-uppercase">1. Info Transaksi</h6>
-                    <div>
-                        <label class="form-label small fw-medium mb-1">Tanggal Pembelian <span class="text-danger">*</span></label>
-                        <input type="date" name="purchase_date" value="<?= today() ?>" class="form-control form-control-sm" required>
+                <div class="row">
+                    <!-- Sisi Kiri: Info Transaksi, Pembayaran, dan Tombol Simpan -->
+                    <div class="col-md-4">
+                        <div class="bg-light p-3 rounded mb-3 border">
+                            <h6 class="small fw-bold text-secondary mb-3 text-uppercase">1. Info Transaksi</h6>
+                            <div>
+                                <label class="form-label small fw-medium mb-1">Tanggal Pembelian <span class="text-danger">*</span></label>
+                                <input type="date" name="purchase_date" value="<?= today() ?>" class="form-control form-control-sm" required>
+                            </div>
+                        </div>
+
+                        <div class="bg-warning-subtle p-3 rounded mb-3 border border-warning-subtle">
+                            <h6 class="small fw-bold text-dark mb-3 text-uppercase">3. Pembayaran</h6>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small fw-medium mb-1">Jumlah Dibayar</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white text-muted">Rp</span>
+                                        <input type="number" step="0.01" name="paid_amount" class="form-control" placeholder="0">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-medium mb-1">Jatuh Tempo</label>
+                                    <input type="date" name="due_date" class="form-control form-control-sm">
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">*Kosongkan jika lunas</small>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label small fw-medium mb-1">Catatan</label>
+                                <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Catatan PO (opsional)..."></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger rounded-pill w-100 fw-bold shadow-sm py-3 mb-3">
+                            <?= sim_icon('ti-device-floppy', 'me-1') ?> Simpan Belanja
+                        </button>
                     </div>
-                </div>
+
+                    <!-- Sisi Kanan: Detail Bahan -->
+                    <div class="col-md-8">
+                        <div class="bg-light p-3 rounded border border-primary-subtle h-100 d-flex flex-column">
 
                 <div class="bg-light p-3 rounded mb-3 border border-primary-subtle">
                     <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
@@ -104,42 +138,19 @@ $total = array_sum(array_map(fn($x) => (float)$x['grand_total'], $items ?? []));
                         </div>
                     </div>
                     
-                    <div class="d-flex justify-content-between align-items-center bg-white p-2 rounded border border-secondary-subtle">
+                    <div class="mt-auto d-flex justify-content-between align-items-center bg-white p-3 rounded border border-secondary-subtle">
                         <span class="small text-muted fw-medium">Total Estimasi:</span>
-                        <span class="fw-bold text-dark fs-6">Rp <span id="text-subtotal">0</span></span>
+                        <span class="fw-bold text-dark fs-5">Rp <span id="text-subtotal">0</span></span>
                     </div>
                 </div>
+            </div>
+        </div>
+    </form>
 
-                <div class="bg-warning-subtle p-3 rounded mb-4 border border-warning-subtle">
-                    <h6 class="small fw-bold text-dark mb-3 text-uppercase">3. Pembayaran</h6>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-medium mb-1">Jumlah Dibayar</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white text-muted">Rp</span>
-                                <input type="number" step="0.01" name="paid_amount" class="form-control" placeholder="0">
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-medium mb-1">Jatuh Tempo</label>
-                            <input type="date" name="due_date" class="form-control form-control-sm">
-                            <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">*Kosongkan jika lunas</small>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="form-label small fw-medium mb-1">Catatan</label>
-                        <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Catatan PO (opsional)..."></textarea>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-danger rounded-pill w-100 fw-bold shadow-sm py-2">
-                    <?= sim_icon('ti-device-floppy', 'me-1') ?> Simpan Belanja
-                </button>
-            </form>
         </div>
     </div>
 
-    <div class="col-lg-8">
+    <div class="col-12">
         <div class="sim-card shadow-sm border-0 h-100">
             
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-3 gap-3 border-bottom pb-3">
