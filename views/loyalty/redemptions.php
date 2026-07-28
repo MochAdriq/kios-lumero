@@ -41,9 +41,10 @@
         <div class="card border-0 shadow-sm rounded-4 h-100">
             <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
                 <h5 class="fw-bold text-primary mb-3"><i class="ti ti-gift me-2"></i>Validasi Reward (Poin)</h5>
-                <form id="form-reward" action="<?= url('/loyalty/redemptions') ?>" method="GET" class="d-flex gap-2">
-                    <input type="text" id="input-reward" name="q" class="form-control rounded-pill" placeholder="Cari Kode Penukaran..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-                    <button type="submit" class="btn btn-primary rounded-pill px-3">Cari</button>
+                <form id="form-reward" action="<?= url('/loyalty/processRewardClaim') ?>" method="POST" class="d-flex gap-2">
+                    <?= csrf_field() ?>
+                    <input type="text" id="input-reward" name="redemption_code" class="form-control rounded-pill" placeholder="Masukkan Kode Penukaran..." required>
+                    <button type="submit" class="btn btn-primary rounded-pill px-3" style="flex-shrink:0;">Selesai</button>
                 </form>
             </div>
             <div class="card-body px-4 mt-3">
@@ -73,13 +74,9 @@
                                 <td><?= htmlspecialchars($rd['reward_name'] ?? 'Hadiah') ?></td>
                                 <td class="text-end">
                                     <?php if (($rd['status'] ?? '') === 'requested'): ?>
-                                    <form action="<?= url('/loyalty/redemptions/update-status') ?>" method="POST" class="d-inline" onsubmit="return confirm('Selesaikan penukaran ini?');">
-                                        <input type="hidden" name="id" value="<?= (int)$rd['id'] ?>">
-                                        <input type="hidden" name="status" value="completed">
-                                        <button type="submit" class="btn btn-sm btn-success rounded-pill">Validasi</button>
-                                    </form>
+                                        <span class="badge bg-warning-subtle text-warning rounded-pill">PENDING</span>
                                     <?php else: ?>
-                                    <span class="badge bg-success-subtle text-success rounded-pill">SELESAI</span>
+                                        <span class="badge bg-success-subtle text-success rounded-pill">SELESAI</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -170,8 +167,9 @@
     </div>
 </div>
 
-<form id="hidden-form" action="<?= url('/loyalty/redemptions') ?>" method="GET" style="display:none;">
-    <input type="hidden" name="q" id="hidden-q">
+<form id="hidden-form" action="<?= url('/loyalty/processRewardClaim') ?>" method="POST" style="display:none;">
+    <?= csrf_field() ?>
+    <input type="hidden" name="redemption_code" id="hidden-q">
 </form>
 
 <script src="https://unpkg.com/html5-qrcode"></script>

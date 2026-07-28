@@ -215,6 +215,56 @@ class LoyaltyController extends Controller
         exit;
     }
 
+    public function processRewardClaim()
+    {
+        Auth::requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/loyalty/redemptions'));
+            exit;
+        }
+
+        $code = trim($_POST['redemption_code'] ?? '');
+        $adminId = $_SESSION['user_id'] ?? null;
+        $pdo = Database::connection();
+        require_once __DIR__ . '/../../config/loyalty.php';
+
+        try {
+            if ($code === '') throw new Exception("Kode Penukaran tidak boleh kosong.");
+
+            $pdo->beginTransaction();
+
+            $stmt = $pdo->prepare("SELECT r.*, p.name AS reward_name 
+                                   FROM point_reward_redemptions r
+                                   LEFT JOIN point_reward_products p ON p.id = r.reward_product_id
+                                   WHERE r.redemption_code = ? FOR UPDATE");
+            $stmt->execute([$code]);
+            $redemption = $stmt->fetch();
+
+            if (!$redemption) {
+                throw new Exception("Kode Penukaran tidak ditemukan atau salah.");
+            }
+
+            if ($redemption['status'] === 'completed') {
+                throw new Exception("Hadiah ini sudah divalidasi dan diambil sebelumnya.");
+            }
+            if ($redemption['status'] === 'rejected') {
+                throw new Exception("Klaim ini sudah ditolak.");
+            }
+
+            // Validasi sukses
+            loyalty_update_reward_redemption_status($pdo, $redemption['id'], 'completed', $adminId, 'Divalidasi otomatis via Scan.');
+            
+            $pdo->commit();
+            $_SESSION['flash_success'] = 'Berhasil! Penukaran hadiah Poin "' . ($redemption['reward_name'] ?? 'Produk') . '" telah divalidasi.';
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+
+        header('Location: ' . url('/loyalty/redemptions'));
+        exit;
+    }
+
     public function updateSettings()
     {
         Auth::requireLogin();
