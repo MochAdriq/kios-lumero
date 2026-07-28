@@ -37,7 +37,8 @@
                 <form id="claim-form" action="<?= url('/loyalty/processEventClaim') ?>" method="POST">
                     <?= csrf_field() ?>
                     <div class="mb-4">
-                        <input type="text" id="qr_code_input" name="qr_code" class="form-control form-control-lg text-center fw-bold" placeholder="Contoh: KAL-A1B2C3D4" required autofocus style="letter-spacing: 2px; font-size: 1.5rem;">
+                        <?php $prefillCode = htmlspecialchars($_GET['code'] ?? ''); ?>
+                        <input type="text" id="qr_code_input" name="qr_code" value="<?= $prefillCode ?>" class="form-control form-control-lg text-center fw-bold" placeholder="Contoh: KAL-A1B2C3D4" required autofocus style="letter-spacing: 2px; font-size: 1.5rem;">
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold">
                         <i class="ti ti-check me-2"></i> Tandai Sudah Diambil
