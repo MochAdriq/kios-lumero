@@ -278,12 +278,7 @@ a { text-decoration: none; color: inherit; }
     <div class="ticket-list">
       <?php foreach($redemptions as $r): 
         $code=(string)($r['redemption_code'] ?: ('RDM-'.$r['id'])); 
-        if (!empty($r['is_event'])) {
-            $adminUrl = url('/user/reward-claim.php?id=' . $r['event_claim_id']);
-        } else {
-            $adminUrl = url('/loyalty/redemptions?q='.rawurlencode($code));
-        }
-        $qr='https://quickchart.io/qr?size=180&margin=1&text='.rawurlencode($adminUrl); 
+        $qr='https://quickchart.io/qr?size=180&margin=1&text='.rawurlencode($code); 
       ?>
       <article class="ticket">
         <div class="ticket-body">

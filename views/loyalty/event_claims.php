@@ -5,7 +5,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h3 class="fw-bold mb-1"><i class="ti ti-ticket me-2 text-primary"></i>Validasi Hadiah Undian</h3>
-                <p class="text-muted mb-0">Scan QR Code dari HP pelanggan atau masukkan Kode Klaim secara manual untuk menyerahkan hadiah.</p>
+                <p class="text-muted mb-0">Gunakan fitur Scan Kamera di bawah untuk memindai QR Code kupon pelanggan, atau masukkan Kode secara manual.</p>
             </div>
         </div>
     </div>
