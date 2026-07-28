@@ -59,14 +59,14 @@
     { key: 'lada_hitam', label: 'Lada Hitam', img: assets.lada_hitam, match: ['lada hitam', 'black pepper', 'blackpepper'] },
     { key: 'garlic', label: 'Garlic / Bawang', img: assets.garlic, match: ['garlic', 'bawang', 'sicilian'] },
     { key: 'teriyaki', label: 'Teriyaki', img: assets.teriyaki, match: ['teriyaki'] },
-    { key: 'sadis_mozzarella', label: 'Geprek Mozzarella', img: assets.saus, match: ['smashed chili extra mozzarella'] },
-    { key: 'sadis_mentai', label: 'Geprek Mentai', img: assets.saus, match: ['smashed chili extra mentai'] },
+    { key: 'sadis_mozzarella', label: 'Geprek Mozzarella', img: assets.sauce, match: ['smashed chili extra mozzarella'] },
+    { key: 'sadis_mentai', label: 'Geprek Mentai', img: assets.sauce, match: ['smashed chili extra mentai'] },
     { key: 'sadis', label: 'Sadis / Geprek', img: assets.sadis, match: ['sadis', 'geprek', 'pedas', 'spicy', 'smashed chili'] },
     { key: 'bbq', label: 'BBQ Spicy', img: assets.bbq, match: ['bbq', 'barbeque'] },
     { key: 'mentai', label: 'Mentai / Mayo', img: assets.mentai, match: ['mentai', 'mayo', 'mayonnaise'] },
-    { key: 'picante', label: 'Italian Picante', img: assets.saus, match: ['picante'] },
-    { key: 'mozzarella', label: 'Mozzarella', img: assets.saus, match: ['mozzarella'] },
-    { key: 'carbonara', label: 'Carbonara', img: assets.saus, match: ['carbonara'] }
+    { key: 'picante', label: 'Italian Picante', img: assets.sauce, match: ['picante'] },
+    { key: 'mozzarella', label: 'Mozzarella', img: assets.sauce, match: ['mozzarella'] },
+    { key: 'carbonara', label: 'Carbonara', img: assets.sauce, match: ['carbonara'] }
   ];
 
   function meta(item) {
