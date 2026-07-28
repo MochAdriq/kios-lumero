@@ -1245,7 +1245,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         const j = Math.floor(Math.random() * (i + 1));
         [baseItems[i], baseItems[j]] = [baseItems[j], baseItems[i]];
     }
-    const TARGET_IDX = 90;
+    const TARGET_IDX = 45;
 
     const baseLoop = baseItems.length * CARD_W;
     const cycle = Math.ceil(1500 / baseLoop);
@@ -1271,12 +1271,12 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         if (state === 'idle') {
             if (currentX >= safeStart + baseLoop) currentX -= baseLoop;
         } else if (state === 'spin') {
-            if (velocity < 15) velocity += 0.5;
-            const d = 0.1, dist = velocity * velocity / (2 * d);
+            if (velocity < 25) velocity += 1;
+            const d = 0.15, dist = velocity * velocity / (2 * d);
             if ((targetX - currentX) <= dist) state = 'decel';
         } else if (state === 'decel') {
             const dist = Math.max(0, targetX - currentX);
-            let v = Math.sqrt(2 * 0.1 * dist);
+            let v = Math.sqrt(2 * 0.15 * dist);
             if (v < 0.3) v = 0.3;
             velocity = v;
             if (dist <= 0.3) {
