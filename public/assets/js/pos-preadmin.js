@@ -677,11 +677,11 @@
         // Tetap jalankan polling (opsional, jika ada PC/Agent juga berjalan)
         startPrintPolling(currentPrintOrderId);
 
-        // AUTO-PRINT ANDROID THERMER:
-        // Beri jeda sedikit agar modal selesai animasi, lalu tembak Thermer (Bluetooth Print App)
+        // AUTO-PRINT ANDROID:
+        // Beri jeda sedikit agar modal selesai animasi, lalu tembak RawBT
         setTimeout(() => {
-          if (typeof window.printThermer === 'function') {
-            window.printThermer();
+          if (typeof window.printRawBT === 'function') {
+            window.printRawBT();
           }
         }, 800);
       }
