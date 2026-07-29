@@ -5,6 +5,10 @@ require_once __DIR__ . '/../../helpers/receipt_helper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
 try {
     $orderId = (int)($_GET['id'] ?? 0);
     if ($orderId <= 0) {

@@ -204,7 +204,14 @@ function printOrderRawBT(orderId, btn) {
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
     }
     fetch('<?= url('/api/print/rawbt.php?id=') ?>' + orderId)
-        .then(r => r.json())
+        .then(async r => {
+            const text = await r.text();
+            try {
+                return JSON.parse(text);
+            } catch (err) {
+                throw new Error("Bukan JSON: " + text.substring(0, 50));
+            }
+        })
         .then(d => {
             if (btn) {
                 btn.disabled = false;
@@ -221,7 +228,7 @@ function printOrderRawBT(orderId, btn) {
                 btn.disabled = false;
                 btn.innerHTML = 'Cetak';
             }
-            alert('Error koneksi saat membuat link RawBT.');
+            alert('Error: ' + e.message);
         });
 }
 </script>
