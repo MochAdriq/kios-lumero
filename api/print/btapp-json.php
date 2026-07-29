@@ -215,7 +215,7 @@ try {
             }
         }
         
-        bp_text($a, 'Scan QR di atas untuk klaim', 0, 1, 0);
+        bp_text($a, 'Masukan kode di atas untuk klaim point.', 0, 1, 0);
     }
     
     bp_line($a);

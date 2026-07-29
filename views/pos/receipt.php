@@ -105,7 +105,7 @@ $items = $receipt['items'];
             <img src="<?= htmlspecialchars(loyalty_member_qr_url($claimCode, 130)) ?>" alt="QR Klaim Poin" style="width:130px; height:130px; object-fit:contain; border:1px solid #ead7b6; border-radius:10px; background:#fff; padding:6px;">
         </div>
         <?php endif; ?>
-        <div style="font-size:11px; color:#666; font-weight:bold; margin-top:4px;">Scan QR di atas untuk mengklaim poin member</div>
+        <div style="font-size:11px; color:#666; font-weight:bold; margin-top:4px;">Masukan kode di atas untuk klaim point.</div>
     </div>
     <?php endif; ?>
 
