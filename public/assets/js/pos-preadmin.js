@@ -672,11 +672,11 @@
           // Tetap jalankan polling (opsional, jika ada PC/Agent juga berjalan)
           startPrintPolling(currentPrintOrderId);
           
-          // AUTO-PRINT ANDROID RAWBT:
-          // Beri jeda sedikit agar modal selesai animasi, lalu tembak RawBT
+          // AUTO-PRINT ANDROID THERMER:
+          // Beri jeda sedikit agar modal selesai animasi, lalu tembak Thermer (Bluetooth Print App)
           setTimeout(() => {
-              if (typeof window.printRawBT === 'function') {
-                  window.printRawBT();
+              if (typeof window.printThermer === 'function') {
+                  window.printThermer();
               }
           }, 800);
       }
@@ -719,6 +719,37 @@
       
       poll();
   }
+
+  window.printThermer = function() {
+      if (!currentPrintOrderId) return;
+      const btn = document.getElementById('btnPrintThermer');
+      const origHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ke Thermer...';
+      }
+      
+      fetch(appUrl + '/api/print/rawbt.php?id=' + currentPrintOrderId)
+          .then(r => r.json())
+          .then(d => {
+              if (btn) {
+                  btn.disabled = false;
+                  btn.innerHTML = origHtml;
+              }
+              if (d.success && d.btapp_url) {
+                  window.location.href = d.btapp_url;
+              } else {
+                  alert('Gagal membuat link printer: ' + (d.message || 'Unknown'));
+              }
+          })
+          .catch(e => {
+              if (btn) {
+                  btn.disabled = false;
+                  btn.innerHTML = origHtml;
+              }
+              alert('Error koneksi saat membuat link Thermer.');
+          });
+  };
 
   window.printRawBT = function() {
       if (!currentPrintOrderId) return;

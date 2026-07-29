@@ -42,9 +42,18 @@ try {
     $b64 = build_rawbt_base64($order, $items, 32, current_outlet_name());
     $rawbtUrl = 'rawbt:base64,' . $b64;
 
+    // Generate my.bluetoothprint.scheme URL for Thermer / Bluetooth Print App
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443) || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $scheme = $https ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $dir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
+    $jsonUrl = $scheme . '://' . $host . $dir . '/btapp-json.php?id=' . $orderId . '&t=' . time();
+    $btappUrl = 'my.bluetoothprint.scheme://' . $jsonUrl;
+
     echo json_encode([
         'success' => true,
-        'rawbt_url' => $rawbtUrl
+        'rawbt_url' => $rawbtUrl,
+        'btapp_url' => $btappUrl
     ]);
 
 } catch (Throwable $e) {

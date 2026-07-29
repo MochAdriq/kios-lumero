@@ -235,11 +235,14 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                 <iframe id="simReceiptFrame" src="" style="width: 100%; height: 380px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"></iframe>
             </div>
             <div class="modal-footer d-flex flex-column gap-2 p-3 bg-white border-top">
+                <button type="button" id="btnPrintThermer" class="btn btn-primary w-100 fw-bold d-flex align-items-center justify-content-center py-2 fs-14" style="border-radius: 10px;" onclick="printThermer()">
+                    <?= sim_icon('ti-bluetooth', 'me-2') ?> Cetak Otomatis (Thermer / BT Print)
+                </button>
                 <button type="button" id="btnPrintRawBT" class="btn btn-success w-100 fw-bold d-flex align-items-center justify-content-center py-2 fs-14" style="border-radius: 10px;" onclick="printRawBT()">
-                    <?= sim_icon('ti-bluetooth', 'me-2') ?> Cetak ke Printer Android (RawBT)
+                    <?= sim_icon('ti-bluetooth', 'me-2') ?> Cetak Otomatis (RawBT)
                 </button>
                 <button type="button" id="btnRetryPrint" class="btn btn-warning w-100 fw-bold align-items-center justify-content-center py-2 fs-14 d-none" style="border-radius: 10px;" onclick="retryPrintAgent()">
-                    <?= sim_icon('ti-reload', 'me-2') ?> Coba Cetak Ulang (Agent)
+                    <?= sim_icon('ti-reload', 'me-2') ?> Coba Cetak Ulang (Agent PC)
                 </button>
                 <button type="button" class="btn btn-outline-primary w-100 fw-bold d-flex align-items-center justify-content-center py-2 fs-14" style="border-radius: 10px;" onclick="printSimReceipt()">
                     <?= sim_icon('ti-printer', 'me-2') ?> Cetak Manual (Browser / PDF)
