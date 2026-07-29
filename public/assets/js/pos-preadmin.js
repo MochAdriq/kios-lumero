@@ -627,9 +627,9 @@
           submitBtn.innerHTML = origText;
         }
         if (data.success && data.qris_url) {
-          showQrisModal(data.qris_url, data.qris_string, data.order_number, data.grand_total, data.receipt_url);
+          showQrisModal(data.qris_url, data.qris_string, data.order_number, data.grand_total, data.receipt_url, data.order_id);
         } else if (data.success && data.receipt_url) {
-          showReceiptPopupModal(data.receipt_url, data.order_number);
+          showReceiptPopupModal(data.receipt_url, data.order_number, data.order_id);
         } else {
           alert('Gagal memproses transaksi: ' + (data.message || 'Error tidak diketahui'));
         }
@@ -646,22 +646,29 @@
   let printPollTimer = null;
   let currentPrintOrderId = 0;
 
-  window.showReceiptPopupModal = function (receiptUrl, orderNo) {
+  window.showReceiptPopupModal = function (receiptUrl, orderNo, orderId = 0) {
     const modalEl = document.getElementById('simPosReceiptModal');
     const frame = document.getElementById('simReceiptFrame');
     const orderBadge = document.getElementById('posReceiptOrderNo');
     
     if (orderBadge && orderNo) orderBadge.textContent = orderNo;
     
+    currentPrintOrderId = orderId;
+
     if (frame && receiptUrl) {
       const embedUrl = receiptUrl + (receiptUrl.includes('?') ? '&' : '?') + 'embed=1';
       frame.src = embedUrl;
       
-      // Try to extract order ID from receipt URL
-      try {
-          const urlObj = new URL(receiptUrl, window.location.origin);
-          currentPrintOrderId = urlObj.searchParams.get('id') || 0;
-      } catch(e) {}
+      // Fallback: extract order ID from receipt URL if not passed explicitly
+      if (!currentPrintOrderId) {
+          try {
+              const parts = receiptUrl.split('/');
+              const lastPart = parts.pop();
+              if (lastPart && !isNaN(lastPart)) {
+                  currentPrintOrderId = parseInt(lastPart);
+              }
+          } catch(e) {}
+      }
     }
     
     if (modalEl && window.bootstrap) {
