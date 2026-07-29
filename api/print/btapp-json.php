@@ -28,6 +28,22 @@ function bp_qr(&$arr, $content) {
     $arr[] = $obj;
 }
 
+function bp_html(&$arr, $html) {
+    if (empty($html)) return;
+    $obj = new stdClass();
+    $obj->type = 4; // HTML
+    $obj->content = $html;
+    $arr[] = $obj;
+}
+
+function bp_image_base64_html(&$arr, $base64, $width = 150) {
+    if (empty($base64)) return;
+    // Menggunakan tag HTML img dengan data URI (Base64)
+    // Supaya Thermer tidak perlu mendownload dari internet/localhost
+    $html = '<div style="text-align:center;"><img src="data:image/jpeg;base64,' . $base64 . '" style="width:' . $width . 'px; height:' . $width . 'px; object-fit:contain;" /></div>';
+    bp_html($arr, $html);
+}
+
 function bp_image_base64(&$arr, $base64) {
     if (empty($base64)) return;
     $obj = new stdClass();
@@ -130,7 +146,7 @@ try {
 
     $logoPath = __DIR__ . '/../../public/assets/images/pos-products/black-white-logo.jpg';
     if (file_exists($logoPath)) {
-        bp_image_base64($a, base64_encode(file_get_contents($logoPath)));
+        bp_image_base64_html($a, base64_encode(file_get_contents($logoPath)), 160);
     }
 
     bp_text($a, 'LUMERO CHICKEN CRISPY', 1, 1, 3);
@@ -181,8 +197,16 @@ try {
         bp_text($a, $claimCode, 1, 1, 3);
         bp_text($a, 'Bonus: +' . $claimPoints . ' Poin', 1, 1, 0);
         
-        // Menambahkan Native QR Code (Bukan Gambar, Diproses internal oleh Mesin Printer)
-        bp_qr($a, url('/user/?claim=' . urlencode($claimCode)));
+        // Karena Native QR dan Native Image sering gagal di printer low-end, kita gunakan HTML Base64
+        if (function_exists('loyalty_member_qr_url')) {
+            $qrUrl = loyalty_member_qr_url($claimCode, 150);
+            $qrData = @file_get_contents($qrUrl);
+            if ($qrData) {
+                bp_image_base64_html($a, base64_encode($qrData), 150);
+            } else {
+                bp_qr($a, url('/user/?claim=' . urlencode($claimCode))); // fallback
+            }
+        }
         
         bp_text($a, 'Scan QR di atas untuk klaim', 0, 1, 0);
     }
