@@ -729,9 +729,10 @@
           setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
       }
       
-      // Gunakan halaman launcher terpisah (seperti DCelup)
-      const launcherUrl = appUrl + '/api/print/launcher.php?id=' + currentPrintOrderId;
-      window.open(launcherUrl, '_blank');
+      // Bypass launcher, langsung panggil scheme
+      const jsonUrl = appUrl + '/api/print/btapp-json.php?id=' + currentPrintOrderId + '&t=' + Date.now();
+      const schemeUrl = 'my.bluetoothprint.scheme://' + jsonUrl;
+      window.location.href = schemeUrl;
   };
 
   window.printRawBT = function() {

@@ -68,25 +68,27 @@ try {
         bp_cash_drawer_pulse($a);
     }
 
-    bp_text($a, strtoupper(current_outlet_name()), 1, 1, 3);
-    bp_text($a, 'POS KASIR', 0, 1, 0);
+    bp_text($a, 'LUMERO CHICKEN CRISPY', 1, 1, 3);
+    bp_text($a, strtoupper(current_outlet_name() ?: 'PASEKON'), 0, 1, 0);
+    bp_text($a, $order['order_number'] ?? '', 1, 1, 2);
     bp_line($a);
-    bp_text($a, 'Order    : ' . ($order['order_number'] ?? '-'), 0, 0, 0);
-    bp_text($a, 'Tanggal  : ' . date('d/m/Y H:i', strtotime($order['created_at'] ?? 'now')), 0, 0, 0);
-    bp_text($a, 'Bayar    : ' . strtoupper((string)($order['payment_method'] ?? '-')), 0, 0, 0);
     
-    if (!empty($order['customer_name']) || !empty($order['customer_phone'])) {
-        $cName = mb_substr($order['customer_name'] ?? $order['customer_phone'], 0, 15);
-        bp_text($a, 'Plgn     : ' . $cName, 0, 0, 0);
+    bp_text($a, 'Tgl    : ' . date('d/m/Y H:i', strtotime($order['created_at'] ?? 'now')), 0, 0, 0);
+    bp_text($a, 'Kasir  : ' . ($order['cashier_name'] ?? 'Kasir'), 0, 0, 0);
+    bp_text($a, 'Bayar  : ' . strtoupper((string)($order['payment_method'] ?? '-')), 0, 0, 0);
+    
+    if (!empty($order['customer_phone'])) {
+        $phone = $order['customer_phone'];
+        $masked = function_exists('loyalty_mask_phone') ? loyalty_mask_phone($phone) : substr($phone, 0, 4) . '****' . substr($phone, -2);
+        bp_text($a, 'Member : ' . $masked, 0, 0, 0);
     }
     bp_line($a);
 
     foreach ($items as $it) {
-        $name = strtoupper((string)($it['item_name'] ?? 'ITEM'));
+        $name = strtoupper((string)($it['variant_name_snapshot'] ?: $it['product_name_snapshot']));
         bp_text($a, $name, 1, 0, 0);
-        $qtyPrice = ((int)($it['quantity'] ?? 1)) . ' x ' . rupiahPlain($it['price'] ?? 0);
         
-        // Pad left and right manually for qty x price = subtotal
+        $qtyPrice = ((int)($it['quantity'] ?? 1)) . 'x ' . rupiahPlain($it['price'] ?? 0);
         $sub = rupiahPlain($it['subtotal'] ?? 0);
         $sp = max(1, 32 - strlen($qtyPrice) - strlen($sub));
         bp_text($a, $qtyPrice . str_repeat(' ', $sp) . $sub, 0, 0, 0);
@@ -95,20 +97,29 @@ try {
     bp_line($a);
     bp_text($a, 'Subtotal : ' . rupiahPlain($order['subtotal'] ?? 0), 0, 0, 0);
     if ((float)($order['discount_amount'] ?? 0) > 0) {
-        bp_text($a, 'Diskon   : ' . rupiahPlain($order['discount_amount']), 0, 0, 0);
+        bp_text($a, 'Diskon   : -' . rupiahPlain($order['discount_amount']), 0, 0, 0);
     }
     
     bp_text($a, 'TOTAL    : ' . rupiahPlain($order['grand_total'] ?? 0), 1, 0, 2);
-    bp_line($a);
     
-    if ($order['payment_method'] === 'cash') {
+    if (strtolower(trim((string)($order['payment_method'] ?? ''))) === 'cash') {
+        bp_line($a);
         bp_text($a, 'Dibayar  : ' . rupiahPlain($order['paid_amount'] ?? 0), 0, 0, 0);
         bp_text($a, 'Kembali  : ' . rupiahPlain($order['change_amount'] ?? 0), 0, 0, 0);
     }
     
+    $claimCode = trim((string)($order['loyalty_claim_code'] ?? ''));
+    $claimPoints = (int)($order['loyalty_claim_points'] ?? max(1, floor(($order['grand_total'] ?? 0) / 1000)));
+    if (empty($order['member_id']) && $claimCode !== '') {
+        bp_line($a);
+        bp_text($a, 'KODE KLAIM POIN', 1, 1, 0);
+        bp_text($a, $claimCode, 1, 1, 3);
+        bp_text($a, 'Bonus: +' . $claimPoints . ' Poin', 1, 1, 0);
+        bp_text($a, 'Scan QR di struk digital', 0, 1, 0);
+    }
+    
     bp_line($a);
-    bp_text($a, 'Terima kasih', 1, 1, 0);
-    bp_text($a, 'Selamat menikmati', 0, 1, 0);
+    bp_text($a, 'Terima kasih. Selamat menikmati.', 0, 1, 0);
     bp_text($a, ' ', 0, 0, 0);
     bp_text($a, ' ', 0, 0, 0);
 
