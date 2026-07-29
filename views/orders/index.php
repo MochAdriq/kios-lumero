@@ -203,7 +203,7 @@ function printOrderRawBT(orderId, btn) {
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
     }
-    fetch('<?= url('/api/print/rawbt.php?id=') ?>' + orderId)
+    fetch('<?= app_base_url() . '/api/print/rawbt.php?id=' ?>' + orderId)
         .then(async r => {
             const text = await r.text();
             try {
