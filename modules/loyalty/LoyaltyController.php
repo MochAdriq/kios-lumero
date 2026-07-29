@@ -255,7 +255,7 @@ class LoyaltyController extends Controller
             loyalty_update_reward_redemption_status($pdo, $redemption['id'], 'completed', $adminId, 'Divalidasi otomatis via Scan.');
             
             $pdo->commit();
-            $_SESSION['flash_success'] = 'Berhasil! Penukaran hadiah Poin "' . ($redemption['reward_name'] ?? 'Produk') . '" telah divalidasi.';
+            $_SESSION['flash_success'] = 'Hadiah berhasil di claim, buatkan hadiah nya sekarang juga (' . ($redemption['reward_name'] ?? 'Produk') . ')';
         } catch (Throwable $e) {
             try { if ($pdo->inTransaction()) $pdo->rollBack(); } catch (Throwable $rx) {}
             $_SESSION['flash_error'] = $e->getMessage();
@@ -347,8 +347,61 @@ class LoyaltyController extends Controller
             $pdo->prepare("UPDATE reward_claims SET status = 'CLAIMED' WHERE id = ?")->execute([$claim['id']]);
             $pdo->prepare("UPDATE event_prizes SET stock = stock - 1 WHERE id = ?")->execute([$claim['ep_id']]);
 
+            // Buat pesanan Rp 0 agar tercetak di dapur & memotong HPP/stok bahan
+            try {
+                require_once __DIR__ . '/../../config/loyalty.php';
+                $orderNo = loyalty_next_point_order_no($pdo);
+                $memberId = (int)($claim['user_id'] ?? 0);
+                $member = [];
+                if ($memberId > 0) {
+                    $stMem = $pdo->prepare("SELECT * FROM members WHERE id=? LIMIT 1");
+                    $stMem->execute([$memberId]);
+                    $member = $stMem->fetch(PDO::FETCH_ASSOC) ?: [];
+                }
+                
+                $customerName = trim((string)($member['name'] ?? 'Pemenang Undian')) ?: 'Pemenang Undian';
+                $phone = loyalty_normalize_phone((string)($member['phone'] ?? ''));
+                $note = 'Klaim Hadiah Undian: ' . $code . ' - ' . $claim['prize_name'];
+                
+                // Gunakan 0 untuk HPP sementara jika event_prizes tidak memiliki pengaturan HPP khusus
+                $rewardHpp = 0; 
+                
+                $cols = []; $vals = [];
+                $add = function($col,$val) use (&$cols,&$vals,$pdo){ if(loyalty_col_exists($pdo,'orders',$col)){ $cols[]=$col; $vals[]=$val; } };
+                $add('brand_id',1); $add('outlet_id',1);
+                $add('order_number',$orderNo); $add('channel','kasir'); $add('order_source','wic');
+                $add('customer_name',$customerName); $add('customer_phone',$phone); $add('member_id',$memberId ?: null);
+                
+                $sessionId = (int)$pdo->query("SELECT id FROM daily_store_sessions WHERE outlet_id=1 ORDER BY status='open' DESC, id DESC LIMIT 1")->fetchColumn();
+                $add('daily_store_session_id', $sessionId ?: 0);
+                $add('business_date', date('Y-m-d'));
+                $add('payment_method','point'); $add('payment_status','paid');
+                $add('subtotal',0); $add('tax',0); $add('discount',0); $add('discount_note',$note); $add('total',0);
+                $add('total_hpp',$rewardHpp); $add('gross_profit',0 - $rewardHpp);
+                $add('paid_amount',0); $add('change_amount',0); $add('status','done');
+                $add('print_status','waiting'); $add('print_error',null);
+                $add('created_by',$_SESSION['user_id'] ?? null); $add('paid_at',date('Y-m-d H:i:s'));
+                
+                if ($cols) {
+                    $sql = "INSERT INTO orders (`".implode('`,`',$cols)."`) VALUES (".implode(',',array_fill(0,count($cols),'?')).")";
+                    $st = $pdo->prepare($sql); $st->execute($vals);
+                    $orderId = (int)$pdo->lastInsertId();
+                    
+                    if ($orderId > 0 && loyalty_table_exists($pdo,'order_items')) {
+                        $icols=[]; $ivals=[];
+                        $iadd=function($col,$val) use (&$icols,&$ivals,$pdo){ if(loyalty_col_exists($pdo,'order_items',$col)){ $icols[]=$col; $ivals[]=$val; } };
+                        $iadd('brand_id',1); $iadd('outlet_id',1); $iadd('order_id',$orderId); $iadd('item_type','reward');
+                        $iadd('item_name','[UNDIAN] '.$claim['prize_name']); $iadd('qty',1); 
+                        $iadd('price',0); $iadd('hpp',$rewardHpp); $iadd('line_total',0); $iadd('line_hpp',$rewardHpp); $iadd('line_profit',0 - $rewardHpp);
+                        if ($icols) {
+                            $pdo->prepare("INSERT INTO order_items (`".implode('`,`',$icols)."`) VALUES (".implode(',',array_fill(0,count($icols),'?')).")")->execute($ivals);
+                        }
+                    }
+                }
+            } catch (Throwable $ex) {}
+
             $pdo->commit();
-            $_SESSION['flash_success'] = 'Berhasil! Hadiah "' . $claim['prize_name'] . '" telah ditukarkan dan stok dipotong.';
+            $_SESSION['flash_success'] = 'Hadiah berhasil di claim, buatkan hadiah nya sekarang juga (' . $claim['prize_name'] . ')';
         } catch (Throwable $e) {
             try { if ($pdo->inTransaction()) $pdo->rollBack(); } catch (Throwable $rx) {}
             $_SESSION['flash_error'] = $e->getMessage();

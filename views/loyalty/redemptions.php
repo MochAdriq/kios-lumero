@@ -192,6 +192,19 @@ document.addEventListener("DOMContentLoaded", function() {
     const scanIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
     const closeIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
+    // Bersihkan input manual
+    function extractCode(text) {
+        let matched = text.match(/(RDM-[A-Z0-9\-]+|[A-Z0-9]{8,12})/i);
+        return matched ? matched[1].toUpperCase() : text.trim();
+    }
+
+    formReward.addEventListener('submit', function(e) {
+        inputReward.value = extractCode(inputReward.value);
+    });
+    formEvent.addEventListener('submit', function(e) {
+        inputEvent.value = extractCode(inputEvent.value);
+    });
+
     if (btnScan) {
         btnScan.addEventListener('click', function() {
             if (html5QrcodeScanner) {
@@ -218,15 +231,19 @@ document.addEventListener("DOMContentLoaded", function() {
         btnScan.classList.replace('btn-danger', 'btn-primary');
         
         let text = decodedText.trim();
+        let matched = text.match(/(RDM-[A-Z0-9\-]+|[A-Z0-9]{8,12})/i);
         
-        // Auto-detect based on KAL- prefix for event
-        if (text.startsWith('KAL-')) {
-            inputEvent.value = text;
-            formEvent.submit();
+        if (matched) {
+            let code = matched[1].toUpperCase();
+            if (code.startsWith('RDM-')) {
+                hiddenQ.value = code;
+                hiddenForm.submit();
+            } else {
+                inputEvent.value = code;
+                formEvent.submit();
+            }
         } else {
-            // Assume it's a reward point code
-            hiddenQ.value = text;
-            hiddenForm.submit();
+            alert('Format kode tidak dikenali dari hasil scan: ' + text);
         }
     }
 

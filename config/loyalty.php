@@ -851,7 +851,7 @@ function loyalty_insert_reward_order(PDO $pdo, array $member, array $reward, int
     $add('total_hpp',$rewardHpp); $add('gross_profit',max(0,$pointNominal-$rewardHpp));
     $add('loyalty_points_earned',0); $add('loyalty_points_redeemed',$pointsUsed); $add('loyalty_point_value',(int)(loyalty_settings($pdo)['redeem_point_value'] ?? 0)); $add('loyalty_redeem_amount',$pointNominal); $add('nominal_point',$pointNominal); $add('loyalty_claim_status','none');
     $add('paid_amount',0); $add('change_amount',0); $add('status','waiting_payment');
-    $add('print_status','printed'); $add('print_error','Auto record penukaran reward; tidak dicetak otomatis.');
+    $add('print_status','waiting'); $add('print_error',null);
     $add('created_by',$createdBy); $add('paid_at',null);
     if(!$cols) return 0;
     $sql="INSERT INTO orders (`".implode('`,`',$cols)."`) VALUES (".implode(',',array_fill(0,count($cols),'?')).")";
@@ -943,7 +943,7 @@ function loyalty_sync_single_completed_reward_redemption(PDO $pdo, array $r, $ad
     $set('total_hpp',$rewardHpp); $set('gross_profit',$pointNominal-$rewardHpp);
     $set('loyalty_points_earned',0); $set('loyalty_points_redeemed',$pointsUsed); $set('loyalty_point_value',(int)(loyalty_settings($pdo)['redeem_point_value'] ?? 0)); $set('loyalty_redeem_amount',$pointNominal); $set('nominal_point',$pointNominal); $set('loyalty_claim_status','none');
     $set('paid_amount',0); $set('change_amount',0); $set('status','done');
-    $set('print_status','printed'); $set('print_error','Auto record penukaran reward; tidak dicetak otomatis.');
+    $set('print_status','waiting'); $set('print_error',null);
     $set('created_at',$doneAt); $set('paid_at',$doneAt);
     if($sets){
         $vals[]=$orderId;
