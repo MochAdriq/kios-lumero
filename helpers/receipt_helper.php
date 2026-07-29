@@ -105,6 +105,31 @@ if (!function_exists('build_rawbt_base64')) {
             // Keep it simple: regular text
             $data .= $esc . 'E' . chr(0) . $esc . 'a' . chr(0) . $line . "\n";
         }
+        $data .= "\n";
+        
+        // Cek jika ada loyalty code
+        $claimCode = trim((string)($order['loyalty_claim_code'] ?? ''));
+        if (empty($order['member_id']) && $claimCode !== '') {
+            $data .= $esc . 'a' . chr(1); // center
+            $data .= "KODE KLAIM POIN\n";
+            $data .= $esc . 'E' . chr(1) . $claimCode . $esc . 'E' . chr(0) . "\n\n";
+            
+            $qrUrl = url('/user/?claim=' . urlencode($claimCode));
+            
+            // ESC/POS QR Code
+            $qrLen = strlen($qrUrl) + 3;
+            $pL = $qrLen % 256;
+            $pH = floor($qrLen / 256);
+            
+            $data .= $gs . '(k' . chr(3) . chr(0) . chr(49) . chr(67) . chr(6); // Size 6
+            $data .= $gs . '(k' . chr(3) . chr(0) . chr(49) . chr(69) . chr(48); // Error correction
+            $data .= $gs . '(k' . chr($pL) . chr($pH) . chr(49) . chr(80) . chr(48) . $qrUrl; // Store data
+            $data .= $gs . '(k' . chr(3) . chr(0) . chr(49) . chr(81) . chr(48); // Print QR
+            
+            $data .= "\nScan untuk klaim poin Anda\n\n";
+            $data .= $esc . 'a' . chr(0); // left
+        }
+
         $data .= "\n\n\n";
         $data .= $gs . 'V' . chr(0); // cut
         
