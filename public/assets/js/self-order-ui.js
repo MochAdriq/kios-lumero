@@ -56,7 +56,7 @@
   ];
   const sauceDefs = [
     { key: 'keju', label: 'Keju', img: assets.keju, match: ['keju', 'cheese'] },
-    { key: 'lada_hitam', label: 'Lada Hitam', img: assets.lada_hitam, match: ['lada hitam', 'black pepper', 'blackpepper'] },
+    { key: 'lada_hitam', label: 'Black Pepper', img: assets.lada_hitam, match: ['lada hitam', 'black pepper', 'blackpepper'] },
     { key: 'garlic', label: 'Garlic / Bawang', img: assets.garlic, match: ['garlic', 'bawang', 'sicilian'] },
     { key: 'teriyaki', label: 'Teriyaki', img: assets.teriyaki, match: ['teriyaki'] },
     { key: 'sadis_mozzarella', label: 'Geprek Mozzarella', img: assets.sauce, match: ['smashed chili extra mozzarella'] },
