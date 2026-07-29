@@ -31,13 +31,12 @@
 
         <script>
             function testRawBT() {
-                // Fetch the JSON from test-print.php
-                fetch('test-print.php')
+                // Fetch ESC/POS Base64 from rawbt-test.php
+                fetch('rawbt-test.php')
                 .then(res => res.text())
                 .then(text => {
-                    // RawBT accepts base64 encoded JSON
-                    let b64 = btoa(unescape(encodeURIComponent(text)));
-                    window.location.href = 'rawbt:data:application/json;base64,' + b64;
+                    let b64 = text.trim();
+                    window.location.href = 'rawbt:base64,' + b64;
                 })
                 .catch(e => alert("Gagal mengambil data: " + e));
             }
