@@ -101,6 +101,7 @@
                     <td class="text-end fw-bold" data-sort="<?= $o['grand_total'] ?>"><?= rupiah($o['grand_total']) ?></td>
                     <td class="text-end">
                         <a class="btn btn-light btn-sm rounded-pill" href="<?= url('/pos/receipt/'.$o['id']) ?>">Struk</a>
+                        <a class="btn btn-primary btn-sm rounded-pill text-white ms-1" href="<?= url('/api/print/launcher.php?id='.$o['id']) ?>" target="_blank" title="Cetak ke Printer">Cetak</a>
                         <?php if($o['order_status'] === 'processing'): ?>
                             <form action="<?= url('/orders/update-status') ?>" method="post" class="d-inline" onsubmit="return confirm('Tandai pesanan ini selesai?');">
                                 <?= csrf_field() ?>
