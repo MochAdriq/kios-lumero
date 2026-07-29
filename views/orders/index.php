@@ -81,7 +81,7 @@
                         <?php 
                         $pMethod = strtoupper(trim($o['payment_method'] ?? ''));
                         $oType = strtolower(trim($o['order_type'] ?? 'takeaway'));
-                        if ($pMethod === 'POINT' || $pMethod === 'LOYALTY' || !empty($o['loyalty_claim_code'])) {
+                        if ($pMethod === 'POINT' || $pMethod === 'LOYALTY') {
                             echo '<span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-gift-fill me-1"></i>Tukar Poin</span>';
                         } elseif ($oType === 'delivery') {
                             echo '<span class="badge bg-info text-white px-2 py-1"><i class="bi bi-truck me-1"></i>Delivery / Kirim</span>';
