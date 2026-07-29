@@ -149,7 +149,8 @@ try {
         bp_image_base64_html($a, base64_encode(file_get_contents($logoPath)), 160);
     }
 
-    bp_text($a, 'LUMERO CHICKEN CRISPY', 1, 1, 3);
+    bp_text($a, 'LUMERO CHICKEN', 1, 1, 3);
+    bp_text($a, 'CRISPY', 0, 1, 0);
     bp_text($a, strtoupper('KASIR'), 0, 1, 0);
     bp_text($a, $order['order_number'] ?? '', 1, 1, 2);
     bp_line($a);
