@@ -238,14 +238,16 @@ class ProductController extends Controller
             $existing = $m->one("SELECT id FROM product_variants WHERE outlet_id = ? AND sku = ?", [$branchId, $masterVar['sku']]);
             if ($existing) continue;
             
-            // Find or create category in branch
-            $branchCat = $m->one("SELECT id FROM product_categories WHERE outlet_id = ? AND name = ? LIMIT 1", [$branchId, $catName]);
+            $slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $catName)) . '-b' . $branchId;
+            $branchCat = $m->one("SELECT id FROM product_categories WHERE outlet_id = ? AND slug = ? LIMIT 1", [$branchId, $slug]);
             if ($branchCat) {
                 $bCatId = (int)$branchCat['id'];
+                // Update name just in case it changed
+                $m->execSql("UPDATE product_categories SET name = ? WHERE id = ?", [$catName, $bCatId]);
             } else {
-                $slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $catName)) . '-b' . $branchId;
                 $m->execSql("INSERT INTO product_categories (outlet_id, name, slug, sort_order, is_active, created_at, updated_at) VALUES (?, ?, ?, 0, 1, NOW(), NOW())", [$branchId, $catName, $slug]);
-                $bCatId = (int)Database::connection()->lastInsertId();
+                $branchCat = $m->one("SELECT id FROM product_categories WHERE outlet_id = ? AND slug = ? LIMIT 1", [$branchId, $slug]);
+                $bCatId = (int)($branchCat['id'] ?? 0);
             }
 
             // Clone product
