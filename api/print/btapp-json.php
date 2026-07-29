@@ -19,6 +19,15 @@ function bp_line(&$arr) {
     bp_text($arr, str_repeat('-', 32), 0, 0, 0); 
 }
 
+function bp_qr(&$arr, $content) {
+    if (empty($content)) return;
+    $obj = new stdClass();
+    $obj->type = 2; // Native QR Code
+    $obj->content = $content;
+    $obj->align = 1; // Center
+    $arr[] = $obj;
+}
+
 function bp_image_base64(&$arr, $base64) {
     if (empty($base64)) return;
     $obj = new stdClass();
@@ -119,13 +128,13 @@ try {
         bp_cash_drawer_pulse($a);
     }
 
-    $logoPath = __DIR__ . '/../../public/assets/images/pos-products/apple-touch-icon.jpeg';
+    $logoPath = __DIR__ . '/../../public/assets/images/pos-products/black-white-logo.jpg';
     if (file_exists($logoPath)) {
         bp_image_base64($a, base64_encode(file_get_contents($logoPath)));
     }
 
     bp_text($a, 'LUMERO CHICKEN CRISPY', 1, 1, 3);
-    bp_text($a, strtoupper(current_outlet_name() ?: 'PASEKON'), 0, 1, 0);
+    bp_text($a, strtoupper(current_outlet_name() ?: 'KASIR'), 0, 1, 0);
     bp_text($a, $order['order_number'] ?? '', 1, 1, 2);
     bp_line($a);
     
@@ -172,11 +181,8 @@ try {
         bp_text($a, $claimCode, 1, 1, 3);
         bp_text($a, 'Bonus: +' . $claimPoints . ' Poin', 1, 1, 0);
         
-        // Menambahkan QR Code sebagai Image Base64 (Server-side rendered)
-        if (function_exists('loyalty_member_qr_url')) {
-            $qrUrl = loyalty_member_qr_url($claimCode, 150);
-            bp_image_url($a, $qrUrl);
-        }
+        // Menambahkan Native QR Code (Bukan Gambar, Diproses internal oleh Mesin Printer)
+        bp_qr($a, url('/user/?claim=' . urlencode($claimCode)));
         
         bp_text($a, 'Scan QR di atas untuk klaim', 0, 1, 0);
     }
