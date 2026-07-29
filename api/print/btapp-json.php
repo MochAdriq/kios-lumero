@@ -144,10 +144,11 @@ try {
         bp_cash_drawer_pulse($a);
     }
 
-    $logoPath = __DIR__ . '/../../public/assets/images/pos-products/black-white-logo.jpg';
-    if (file_exists($logoPath)) {
-        bp_image_base64_html($a, base64_encode(file_get_contents($logoPath)), 160);
-    }
+    // Logo dimatikan sementara karena keterbatasan memori image printer
+    // $logoPath = __DIR__ . '/../../public/assets/images/pos-products/black-white-logo.jpg';
+    // if (file_exists($logoPath)) {
+    //     bp_image_base64_html($a, base64_encode(file_get_contents($logoPath)), 160);
+    // }
 
     bp_text($a, 'LUMERO CHICKEN CRISPY', 1, 1, 3);
     bp_text($a, strtoupper(current_outlet_name() ?: 'KASIR'), 0, 1, 0);
@@ -197,16 +198,9 @@ try {
         bp_text($a, $claimCode, 1, 1, 3);
         bp_text($a, 'Bonus: +' . $claimPoints . ' Poin', 1, 1, 0);
         
-        // Karena Native QR dan Native Image sering gagal di printer low-end, kita gunakan HTML Base64
-        if (function_exists('loyalty_member_qr_url')) {
-            $qrUrl = loyalty_member_qr_url($claimCode, 150);
-            $qrData = @file_get_contents($qrUrl);
-            if ($qrData) {
-                bp_image_base64_html($a, base64_encode($qrData), 150);
-            } else {
-                bp_qr($a, url('/user/?claim=' . urlencode($claimCode))); // fallback
-            }
-        }
+        // HANYA MENGGUNAKAN NATIVE QR CODE (TYPE: 2)
+        // Memaksa printer menggunakan chip pembuat QR internalnya (bebas masalah memori)
+        bp_qr($a, url('/user/?claim=' . urlencode($claimCode)));
         
         bp_text($a, 'Scan QR di atas untuk klaim', 0, 1, 0);
     }
