@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../core/Database.php';
 require_once __DIR__ . '/../../helpers/functions.php';
+require_once __DIR__ . '/../../config/loyalty.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -16,6 +17,7 @@ function bp_text(&$arr, $content, $bold=0, $align=0, $format=0) {
 
 function bp_line(&$arr) { 
     bp_text($arr, str_repeat('-', 32), 0, 0, 0); 
+}
 function bp_html(&$arr, $html) {
     if (empty($html)) return;
     $obj = new stdClass();
