@@ -12,7 +12,7 @@
   const has = (s, arr) => arr.some(x => norm(s).includes(norm(x)));
   const findCat = id => categories.find(c => Number(c.id) === Number(id)) || categories[0] || null;
   const isChickenCat = cat => cat && has(cat.name + ' ' + cat.slug, ['ayam', 'chicken']) && has(cat.name + ' ' + cat.slug, ['crispy', 'crips']);
-  const isIceCreamCat = cat => cat && has(cat.name + ' ' + cat.slug, ['es krim', 'ice cream', 'icecream']);
+  const isIceCreamCat = cat => false;
   const iceBaseDefs = [
     { key: 'vanilla', label: 'Vanilla', img: assets.svg_vanilla, match: ['vanilla'] },
     { key: 'coklat', label: 'Coklat', img: assets.svg_coklat, match: ['coklat', 'chocolate'] },
