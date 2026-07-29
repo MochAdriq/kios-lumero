@@ -232,6 +232,11 @@ class ProductController extends Controller
 
         foreach ($branches as $b) {
             $branchId = (int)$b['id'];
+            if ($branchId === (int)$masterProd['outlet_id']) continue;
+
+            // Check if variant SKU already exists in this branch
+            $existing = $m->one("SELECT id FROM product_variants WHERE outlet_id = ? AND sku = ?", [$branchId, $masterVar['sku']]);
+            if ($existing) continue;
             
             // Find or create category in branch
             $branchCat = $m->one("SELECT id FROM product_categories WHERE outlet_id = ? AND name = ? LIMIT 1", [$branchId, $catName]);
