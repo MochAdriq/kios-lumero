@@ -3,8 +3,9 @@ class CentralSettingsModel extends Model
 {
     public function getAllItems(): array
     {
-        $raws = $this->all("SELECT id, name, sku, 'raw_material' as type, COALESCE(average_cost, 0) as unit_cost, unit_id FROM raw_materials WHERE is_active=1");
-        $subs = $this->all("SELECT id, name, '' as sku, 'sub_recipe' as type, COALESCE(total_hpp / IF(yield_qty > 0, yield_qty, 1), 0) as unit_cost, yield_unit_id as unit_id FROM recipes WHERE recipe_type='sub_recipe'");
+        $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+        $raws = $this->all("SELECT id, name, sku, 'raw_material' as type, COALESCE(average_cost, 0) as unit_cost, unit_id FROM raw_materials WHERE is_active=1 AND (outlet_id = ? OR outlet_id = 0 OR outlet_id IS NULL)", [$outletId]);
+        $subs = $this->all("SELECT id, name, '' as sku, 'sub_recipe' as type, COALESCE(total_hpp / IF(yield_qty > 0, yield_qty, 1), 0) as unit_cost, yield_unit_id as unit_id FROM recipes WHERE recipe_type='sub_recipe' AND (outlet_id = ? OR outlet_id = 0 OR outlet_id IS NULL)", [$outletId]);
         return array_merge($raws, $subs);
     }
 
