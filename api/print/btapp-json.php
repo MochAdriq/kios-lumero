@@ -18,6 +18,24 @@ function bp_line(&$arr) {
     bp_text($arr, str_repeat('-', 32), 0, 0, 0); 
 }
 
+function bp_image(&$arr, $base64) {
+    if (empty($base64)) return;
+    $obj = new stdClass();
+    $obj->type = 3;
+    $obj->content = $base64;
+    $obj->align = 1;
+    $arr[] = $obj;
+}
+
+function bp_qr(&$arr, $text) {
+    if (empty($text)) return;
+    $obj = new stdClass();
+    $obj->type = 2;
+    $obj->content = $text;
+    $obj->align = 1;
+    $arr[] = $obj;
+}
+
 function bp_cash_drawer_pulse(&$arr) {
     $obj = new stdClass();
     $obj->type = 0;
@@ -68,6 +86,12 @@ try {
         bp_cash_drawer_pulse($a);
     }
 
+    $logoPath = __DIR__ . '/../../public/assets/images/pos-products/icon-192.png';
+    $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
+    if ($logoBase64) {
+        bp_image($a, $logoBase64);
+    }
+
     bp_text($a, 'LUMERO CHICKEN CRISPY', 1, 1, 3);
     bp_text($a, strtoupper(current_outlet_name() ?: 'PASEKON'), 0, 1, 0);
     bp_text($a, $order['order_number'] ?? '', 1, 1, 2);
@@ -115,7 +139,11 @@ try {
         bp_text($a, 'KODE KLAIM POIN', 1, 1, 0);
         bp_text($a, $claimCode, 1, 1, 3);
         bp_text($a, 'Bonus: +' . $claimPoints . ' Poin', 1, 1, 0);
-        bp_text($a, 'Scan QR di struk digital', 0, 1, 0);
+        
+        // Menambahkan QR Code Native untuk Thermer
+        bp_qr($a, $claimCode);
+        
+        bp_text($a, 'Scan QR di atas untuk klaim', 0, 1, 0);
     }
     
     bp_line($a);
