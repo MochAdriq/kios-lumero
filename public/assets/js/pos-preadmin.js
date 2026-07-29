@@ -725,30 +725,17 @@
       const btn = document.getElementById('btnPrintThermer');
       const origHtml = btn ? btn.innerHTML : '';
       if (btn) {
-          btn.disabled = true;
           btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ke Thermer...';
+          setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
       }
       
-      fetch(appUrl + '/api/print/rawbt.php?id=' + currentPrintOrderId)
-          .then(r => r.json())
-          .then(d => {
-              if (btn) {
-                  btn.disabled = false;
-                  btn.innerHTML = origHtml;
-              }
-              if (d.success && d.btapp_url) {
-                  window.location.href = d.btapp_url;
-              } else {
-                  alert('Gagal membuat link printer: ' + (d.message || 'Unknown'));
-              }
-          })
-          .catch(e => {
-              if (btn) {
-                  btn.disabled = false;
-                  btn.innerHTML = origHtml;
-              }
-              alert('Error koneksi saat membuat link Thermer.');
-          });
+      // Construct URL synchronously to prevent browser intent blocking
+      const t = Math.floor(Date.now() / 1000);
+      const hostPath = window.location.origin + appUrl; // e.g. https://domain.com/kios-lumero
+      const jsonUrl = hostPath + '/api/print/btapp-json.php?id=' + currentPrintOrderId + '&t=' + t;
+      const schemeUrl = 'my.bluetoothprint.scheme://' + jsonUrl;
+      
+      window.location.href = schemeUrl;
   };
 
   window.printRawBT = function() {
