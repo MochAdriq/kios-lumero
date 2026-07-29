@@ -135,7 +135,7 @@ if (!function_exists('build_rawbt_base64')) {
             $pL = $qrLen % 256;
             $pH = floor($qrLen / 256);
             
-            $data .= $gs . '(k' . chr(3) . chr(0) . chr(49) . chr(67) . chr(6); // Size 6
+            $data .= $gs . '(k' . chr(3) . chr(0) . chr(49) . chr(67) . chr(4); // Size 4
             $data .= $gs . '(k' . chr(3) . chr(0) . chr(49) . chr(69) . chr(48); // Error correction
             $data .= $gs . '(k' . chr($pL) . chr($pH) . chr(49) . chr(80) . chr(48) . $qrUrl; // Store data
             $data .= $gs . '(k' . chr(3) . chr(0) . chr(49) . chr(81) . chr(48); // Print QR
