@@ -16,23 +16,11 @@ function bp_text(&$arr, $content, $bold=0, $align=0, $format=0) {
 
 function bp_line(&$arr) { 
     bp_text($arr, str_repeat('-', 32), 0, 0, 0); 
-}
-
-function bp_image(&$arr, $base64) {
-    if (empty($base64)) return;
+function bp_html(&$arr, $html) {
+    if (empty($html)) return;
     $obj = new stdClass();
-    $obj->type = 3;
-    $obj->content = $base64;
-    $obj->align = 1;
-    $arr[] = $obj;
-}
-
-function bp_qr(&$arr, $text) {
-    if (empty($text)) return;
-    $obj = new stdClass();
-    $obj->type = 2;
-    $obj->content = $text;
-    $obj->align = 1;
+    $obj->type = 4;
+    $obj->content = $html;
     $arr[] = $obj;
 }
 
@@ -79,18 +67,13 @@ try {
         $order['change_amount'] = max(0, $pay['amount_paid'] - $order['grand_total']);
     }
 
-    $isCash = strtolower(trim((string)($order['payment_method'] ?? ''))) === 'cash';
-
     $a = [];
-    if ($isCash) {
+    if (strtolower(trim((string)($order['payment_method'] ?? ''))) === 'cash') {
         bp_cash_drawer_pulse($a);
     }
 
-    $logoPath = __DIR__ . '/../../public/assets/images/pos-products/icon-192.png';
-    $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
-    if ($logoBase64) {
-        bp_image($a, $logoBase64);
-    }
+    $logoHtml = '<div style="text-align:center;"><img src="'.asset('images/pos-products/icon-192.png').'" style="width:160px; height:160px; object-fit:contain;" /></div>';
+    bp_html($a, $logoHtml);
 
     bp_text($a, 'LUMERO CHICKEN CRISPY', 1, 1, 3);
     bp_text($a, strtoupper(current_outlet_name() ?: 'PASEKON'), 0, 1, 0);
@@ -140,8 +123,11 @@ try {
         bp_text($a, $claimCode, 1, 1, 3);
         bp_text($a, 'Bonus: +' . $claimPoints . ' Poin', 1, 1, 0);
         
-        // Menambahkan QR Code Native untuk Thermer
-        bp_qr($a, $claimCode);
+        // Menambahkan QR Code HTML untuk Thermer
+        if (function_exists('loyalty_member_qr_url')) {
+            $qrHtml = '<div style="text-align:center;"><img src="'.htmlspecialchars(loyalty_member_qr_url($claimCode, 150)).'" style="width:150px; height:150px; object-fit:contain;" /></div>';
+            bp_html($a, $qrHtml);
+        }
         
         bp_text($a, 'Scan QR di atas untuk klaim', 0, 1, 0);
     }
