@@ -220,7 +220,7 @@ class ProductController extends Controller
 
     private function pushProductToBranches(int $masterProductId, int $masterVariantId, int $masterRecipeId): void
     {
-        $m = new Model();
+        $m = new ProductModel();
         $branches = $m->all("SELECT id FROM outlets WHERE id != 1 AND is_active = 1 AND is_hq = 0");
         if (!$branches) return;
 
