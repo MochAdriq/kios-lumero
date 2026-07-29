@@ -129,8 +129,8 @@ class ProductModel extends Model
             $vid=(int)$this->db->lastInsertId();
             
             // Auto create an empty final recipe container for this variant
-            $stmt=$this->db->prepare("INSERT INTO recipes (product_variant_id, name, recipe_type, yield_qty, yield_unit_id, is_active, created_at, updated_at) VALUES (?, ?, 'final', 1, 4, 1, ?, ?)");
-            $stmt->execute([$vid, $d['name'] . ' - ' . ($d['variant_name'] ?: 'Default'), now(), now()]);
+            $stmt=$this->db->prepare("INSERT INTO recipes (outlet_id, product_variant_id, name, recipe_type, yield_qty, yield_unit_id, is_active, created_at, updated_at) VALUES (?, ?, ?, 'final', 1, 4, 1, ?, ?)");
+            $stmt->execute([$outletId, $vid, $d['name'] . ' - ' . ($d['variant_name'] ?: 'Default'), now(), now()]);
             if (!$inTrans) $this->db->commit();
             return $vid;
         } catch(Throwable $e){
