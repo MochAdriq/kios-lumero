@@ -57,11 +57,9 @@
     { key: 'lada_hitam', label: 'Black Pepper', img: assets.lada_hitam, match: ['lada hitam', 'black pepper', 'blackpepper'] },
     { key: 'garlic', label: 'Garlic / Bawang', img: assets.garlic, match: ['garlic', 'bawang', 'sicilian'] },
     { key: 'teriyaki', label: 'Teriyaki', img: assets.teriyaki, match: ['teriyaki'] },
-    { key: 'sadis_mozzarella', label: 'Geprek Mozzarella', img: assets.sauce, match: ['smashed chili extra mozzarella', 'geprek extra mozzarella'] },
-    { key: 'sadis_mentai', label: 'Geprek Mentai', img: assets.sauce, match: ['smashed chili extra mentai', 'geprek extra mentai'] },
-    { key: 'sadis', label: 'Sadis / Geprek', img: assets.sadis, match: ['sadis', 'geprek', 'pedas', 'smashed chili'] },
+    { key: 'sadis', label: 'Sadis', img: assets.sadis, match: ['sadis', 'geprek', 'pedas', 'smashed chili'] },
     { key: 'bbq', label: 'Italian Barbeque', img: assets.bbq, match: ['bbq', 'barbeque', 'italian barbeque', 'bbq spicy'] },
-    { key: 'mentai', label: 'Mentai / Mayo', img: assets.mentai, match: ['mentai', 'mayo', 'mayonnaise'] },
+    { key: 'mentai', label: 'Mentai', img: assets.mentai, match: ['mentai', 'mayo', 'mayonnaise'] },
     { key: 'picante', label: 'Italian Picante', img: assets.sauce, match: ['picante'] },
     { key: 'mozzarella', label: 'Mozzarella', img: assets.sauce, match: ['mozzarella'] },
     { key: 'carbonara', label: 'Carbonara', img: assets.sauce, match: ['carbonara'] }
@@ -103,7 +101,7 @@
   function renderFlow() {
     const cat = currentCat();
     if (!flowBar) return;
-        if (isIceCreamCat(cat)) {
+    if (isIceCreamCat(cat)) {
       const steps = [['base', 'Rasa Base'], ['pack', 'Pilih Wadah'], ['topping', 'Pilih Topping']];
       const idx = stepIndex();
       flowBar.innerHTML = '<div class="k2-flow">' + steps.map((s, i) => `<span class="${i === idx ? 'active' : (i < idx ? 'done' : '')}">${esc(s[1])}</span>`).join('') + '</div>';
@@ -314,7 +312,7 @@
     if (!cat) return;
     if (isIceCreamCat(cat)) renderIceCream(); else if (isChickenCat(cat)) renderChicken(); else renderSimple(cat);
   }
-    function goBack() {
+  function goBack() {
     if (isIceCreamCat(currentCat())) {
       if (state.step === 'topping') { state.step = 'pack'; state.iceTopping = null; }
       else if (state.step === 'pack') { state.step = 'base'; state.icePack = null; state.iceBase = null; }
@@ -450,14 +448,14 @@
     if (btn.classList.contains('choose-style')) { state.style = btn.dataset.style; state.step = state.style === 'sauce' ? 'sauce' : 'rice'; renderMain(); return; }
     if (btn.classList.contains('choose-sauce')) { state.sauce = btn.dataset.sauce; state.step = 'rice'; renderMain(); return; }
     if (btn.classList.contains('choose-rice')) { addVariantById(btn.dataset.variant); state = { ...state, step: 'parts', part: null, style: null, sauce: null, rice: null }; renderMain(); return; }
-    
+
     if (btn.classList.contains('choose-ice-base')) { state.iceBase = btn.dataset.base; state.step = 'pack'; renderMain(); return; }
     if (btn.classList.contains('choose-ice-pack')) { state.icePack = btn.dataset.pack; state.step = 'topping'; renderMain(); return; }
-    if (btn.classList.contains('choose-ice-final')) { 
-      addVariantById(btn.dataset.variant); 
-      state = { ...state, step: 'base', iceBase: null, icePack: null, iceTopping: null }; 
-      renderMain(); 
-      return; 
+    if (btn.classList.contains('choose-ice-final')) {
+      addVariantById(btn.dataset.variant);
+      state = { ...state, step: 'base', iceBase: null, icePack: null, iceTopping: null };
+      renderMain();
+      return;
     }
     if (btn.classList.contains('choose-variant')) { addVariantById(btn.dataset.id); return; }
   });
@@ -650,160 +648,160 @@
     const modalEl = document.getElementById('simPosReceiptModal');
     const frame = document.getElementById('simReceiptFrame');
     const orderBadge = document.getElementById('posReceiptOrderNo');
-    
+
     if (orderBadge && orderNo) orderBadge.textContent = orderNo;
-    
+
     currentPrintOrderId = orderId;
 
     if (frame && receiptUrl) {
       const embedUrl = receiptUrl + (receiptUrl.includes('?') ? '&' : '?') + 'embed=1';
       frame.src = embedUrl;
-      
+
       // Fallback: extract order ID from receipt URL if not passed explicitly
       if (!currentPrintOrderId) {
-          try {
-              const parts = receiptUrl.split('/');
-              const lastPart = parts.pop();
-              if (lastPart && !isNaN(lastPart)) {
-                  currentPrintOrderId = parseInt(lastPart);
-              }
-          } catch(e) {}
+        try {
+          const parts = receiptUrl.split('/');
+          const lastPart = parts.pop();
+          if (lastPart && !isNaN(lastPart)) {
+            currentPrintOrderId = parseInt(lastPart);
+          }
+        } catch (e) { }
       }
     }
-    
+
     if (modalEl && window.bootstrap) {
       const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
       bsModal.show();
-      
+
       if (currentPrintOrderId) {
-          // Tetap jalankan polling (opsional, jika ada PC/Agent juga berjalan)
-          startPrintPolling(currentPrintOrderId);
-          
-          // AUTO-PRINT ANDROID THERMER:
-          // Beri jeda sedikit agar modal selesai animasi, lalu tembak Thermer (Bluetooth Print App)
-          setTimeout(() => {
-              if (typeof window.printThermer === 'function') {
-                  window.printThermer();
-              }
-          }, 800);
+        // Tetap jalankan polling (opsional, jika ada PC/Agent juga berjalan)
+        startPrintPolling(currentPrintOrderId);
+
+        // AUTO-PRINT ANDROID THERMER:
+        // Beri jeda sedikit agar modal selesai animasi, lalu tembak Thermer (Bluetooth Print App)
+        setTimeout(() => {
+          if (typeof window.printThermer === 'function') {
+            window.printThermer();
+          }
+        }, 800);
       }
     }
   };
 
   function startPrintPolling(orderId) {
-      if (printPollTimer) clearTimeout(printPollTimer);
-      
-      const statusContainer = document.getElementById('printAgentStatus');
-      const retryBtn = document.getElementById('btnRetryPrint');
-      if (!statusContainer) return;
-      
-      statusContainer.className = 'alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
-      statusContainer.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Menunggu Printer...';
-      if (retryBtn) retryBtn.classList.add('d-none');
-      
-      const poll = () => {
-          fetch(appUrl + '/api/print/status.php?order_id=' + orderId)
-            .then(r => r.json())
-            .then(d => {
-                if (!d.success) return;
-                
-                if (d.order.print_status === 'printed') {
-                    statusContainer.className = 'alert alert-success py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
-                    statusContainer.innerHTML = '✅ Berhasil Dicetak (Agent)';
-                    return; // Stop polling
-                } else if (d.order.print_status === 'failed') {
-                    statusContainer.className = 'alert alert-danger py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
-                    statusContainer.innerHTML = '❌ Gagal Cetak: ' + (d.order.print_error || 'Printer error');
-                    if (retryBtn) retryBtn.classList.remove('d-none');
-                    return; // Stop polling
-                }
-                
-                printPollTimer = setTimeout(poll, 1500);
-            }).catch(e => {
-                printPollTimer = setTimeout(poll, 2500);
-            });
-      };
-      
-      poll();
+    if (printPollTimer) clearTimeout(printPollTimer);
+
+    const statusContainer = document.getElementById('printAgentStatus');
+    const retryBtn = document.getElementById('btnRetryPrint');
+    if (!statusContainer) return;
+
+    statusContainer.className = 'alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
+    statusContainer.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Menunggu Printer...';
+    if (retryBtn) retryBtn.classList.add('d-none');
+
+    const poll = () => {
+      fetch(appUrl + '/api/print/status.php?order_id=' + orderId)
+        .then(r => r.json())
+        .then(d => {
+          if (!d.success) return;
+
+          if (d.order.print_status === 'printed') {
+            statusContainer.className = 'alert alert-success py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
+            statusContainer.innerHTML = '✅ Berhasil Dicetak (Agent)';
+            return; // Stop polling
+          } else if (d.order.print_status === 'failed') {
+            statusContainer.className = 'alert alert-danger py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
+            statusContainer.innerHTML = '❌ Gagal Cetak: ' + (d.order.print_error || 'Printer error');
+            if (retryBtn) retryBtn.classList.remove('d-none');
+            return; // Stop polling
+          }
+
+          printPollTimer = setTimeout(poll, 1500);
+        }).catch(e => {
+          printPollTimer = setTimeout(poll, 2500);
+        });
+    };
+
+    poll();
   }
 
-  window.printThermer = function() {
-      if (!currentPrintOrderId) return;
-      const btn = document.getElementById('btnPrintThermer');
-      const origHtml = btn ? btn.innerHTML : '';
-      if (btn) {
-          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ke Thermer...';
-          setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
-      }
-      
-      // Bypass launcher, langsung panggil scheme
-      const baseUrl = typeof window.appUrl !== 'undefined' ? window.appUrl : window.location.origin;
-      const jsonUrl = baseUrl + '/api/print/btapp-json.php?id=' + currentPrintOrderId + '&t=' + Date.now();
-      const schemeUrl = 'my.bluetoothprint.scheme://' + jsonUrl;
-      
-      console.log('Auto-print Triggered! schemeUrl:', schemeUrl);
-      window.location.href = schemeUrl;
+  window.printThermer = function () {
+    if (!currentPrintOrderId) return;
+    const btn = document.getElementById('btnPrintThermer');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ke Thermer...';
+      setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
+    }
+
+    // Bypass launcher, langsung panggil scheme
+    const baseUrl = typeof window.appUrl !== 'undefined' ? window.appUrl : window.location.origin;
+    const jsonUrl = baseUrl + '/api/print/btapp-json.php?id=' + currentPrintOrderId + '&t=' + Date.now();
+    const schemeUrl = 'my.bluetoothprint.scheme://' + jsonUrl;
+
+    console.log('Auto-print Triggered! schemeUrl:', schemeUrl);
+    window.location.href = schemeUrl;
   };
 
-  window.printRawBT = function() {
-      if (!currentPrintOrderId) return;
-      const btn = document.getElementById('btnPrintRawBT');
-      const origHtml = btn ? btn.innerHTML : '';
-      if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ke Android...';
-      }
-      
-      fetch(appUrl + '/api/print/rawbt.php?id=' + currentPrintOrderId)
-          .then(r => r.json())
-          .then(d => {
-              if (btn) {
-                  btn.disabled = false;
-                  btn.innerHTML = origHtml;
-              }
-              if (d.success && d.rawbt_url) {
-                  window.location.href = d.rawbt_url;
-              } else {
-                  alert('Gagal membuat link printer: ' + (d.message || 'Unknown'));
-              }
-          })
-          .catch(e => {
-              if (btn) {
-                  btn.disabled = false;
-                  btn.innerHTML = origHtml;
-              }
-              alert('Error koneksi saat membuat link RawBT.');
-          });
-  };
+  window.printRawBT = function () {
+    if (!currentPrintOrderId) return;
+    const btn = document.getElementById('btnPrintRawBT');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ke Android...';
+    }
 
-  window.retryPrintAgent = function() {
-      if (!currentPrintOrderId) return;
-      
-      const retryBtn = document.getElementById('btnRetryPrint');
-      if (retryBtn) {
-          retryBtn.disabled = true;
-          retryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ulang...';
-      }
-      
-      let formData = new FormData();
-      formData.append('order_id', currentPrintOrderId);
-      
-      fetch(appUrl + '/api/print/retry.php', {
-          method: 'POST',
-          body: formData
-      }).then(r => r.json()).then(d => {
-          if (retryBtn) {
-              retryBtn.disabled = false;
-              retryBtn.innerHTML = 'Coba Cetak Ulang (Agent)';
-          }
-          startPrintPolling(currentPrintOrderId);
-      }).catch(e => {
-          if (retryBtn) {
-              retryBtn.disabled = false;
-              retryBtn.innerHTML = 'Coba Cetak Ulang (Agent)';
-          }
-          alert('Gagal mengirim ulang perintah cetak.');
+    fetch(appUrl + '/api/print/rawbt.php?id=' + currentPrintOrderId)
+      .then(r => r.json())
+      .then(d => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+        if (d.success && d.rawbt_url) {
+          window.location.href = d.rawbt_url;
+        } else {
+          alert('Gagal membuat link printer: ' + (d.message || 'Unknown'));
+        }
+      })
+      .catch(e => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+        alert('Error koneksi saat membuat link RawBT.');
       });
+  };
+
+  window.retryPrintAgent = function () {
+    if (!currentPrintOrderId) return;
+
+    const retryBtn = document.getElementById('btnRetryPrint');
+    if (retryBtn) {
+      retryBtn.disabled = true;
+      retryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ulang...';
+    }
+
+    let formData = new FormData();
+    formData.append('order_id', currentPrintOrderId);
+
+    fetch(appUrl + '/api/print/retry.php', {
+      method: 'POST',
+      body: formData
+    }).then(r => r.json()).then(d => {
+      if (retryBtn) {
+        retryBtn.disabled = false;
+        retryBtn.innerHTML = 'Coba Cetak Ulang (Agent)';
+      }
+      startPrintPolling(currentPrintOrderId);
+    }).catch(e => {
+      if (retryBtn) {
+        retryBtn.disabled = false;
+        retryBtn.innerHTML = 'Coba Cetak Ulang (Agent)';
+      }
+      alert('Gagal mengirim ulang perintah cetak.');
+    });
   };
 
   window.printSimReceipt = function () {
