@@ -643,19 +643,102 @@
       });
   }
 
+  let printPollTimer = null;
+  let currentPrintOrderId = 0;
+
   window.showReceiptPopupModal = function (receiptUrl, orderNo) {
     const modalEl = document.getElementById('simPosReceiptModal');
     const frame = document.getElementById('simReceiptFrame');
     const orderBadge = document.getElementById('posReceiptOrderNo');
+    
     if (orderBadge && orderNo) orderBadge.textContent = orderNo;
+    
     if (frame && receiptUrl) {
       const embedUrl = receiptUrl + (receiptUrl.includes('?') ? '&' : '?') + 'embed=1';
       frame.src = embedUrl;
+      
+      // Try to extract order ID from receipt URL
+      try {
+          const urlObj = new URL(receiptUrl, window.location.origin);
+          currentPrintOrderId = urlObj.searchParams.get('id') || 0;
+      } catch(e) {}
     }
+    
     if (modalEl && window.bootstrap) {
       const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
       bsModal.show();
+      
+      if (currentPrintOrderId) {
+          startPrintPolling(currentPrintOrderId);
+      }
     }
+  };
+
+  function startPrintPolling(orderId) {
+      if (printPollTimer) clearTimeout(printPollTimer);
+      
+      const statusContainer = document.getElementById('printAgentStatus');
+      const retryBtn = document.getElementById('btnRetryPrint');
+      if (!statusContainer) return;
+      
+      statusContainer.className = 'alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
+      statusContainer.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Menunggu Printer...';
+      if (retryBtn) retryBtn.classList.add('d-none');
+      
+      const poll = () => {
+          fetch(appUrl + '/api/print/status.php?order_id=' + orderId)
+            .then(r => r.json())
+            .then(d => {
+                if (!d.success) return;
+                
+                if (d.order.print_status === 'printed') {
+                    statusContainer.className = 'alert alert-success py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
+                    statusContainer.innerHTML = '✅ Berhasil Dicetak (Agent)';
+                    return; // Stop polling
+                } else if (d.order.print_status === 'failed') {
+                    statusContainer.className = 'alert alert-danger py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14';
+                    statusContainer.innerHTML = '❌ Gagal Cetak: ' + (d.order.print_error || 'Printer error');
+                    if (retryBtn) retryBtn.classList.remove('d-none');
+                    return; // Stop polling
+                }
+                
+                printPollTimer = setTimeout(poll, 1500);
+            }).catch(e => {
+                printPollTimer = setTimeout(poll, 2500);
+            });
+      };
+      
+      poll();
+  }
+
+  window.retryPrintAgent = function() {
+      if (!currentPrintOrderId) return;
+      
+      const retryBtn = document.getElementById('btnRetryPrint');
+      if (retryBtn) {
+          retryBtn.disabled = true;
+          retryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ulang...';
+      }
+      
+      let formData = new FormData();
+      formData.append('order_id', currentPrintOrderId);
+      
+      fetch(appUrl + '/api/print/retry.php', {
+          method: 'POST',
+          body: formData
+      }).then(r => r.json()).then(d => {
+          if (retryBtn) {
+              retryBtn.disabled = false;
+              retryBtn.innerHTML = 'Coba Cetak Ulang (Agent)';
+          }
+          startPrintPolling(currentPrintOrderId);
+      }).catch(e => {
+          if (retryBtn) {
+              retryBtn.disabled = false;
+              retryBtn.innerHTML = 'Coba Cetak Ulang (Agent)';
+          }
+          alert('Gagal mengirim ulang perintah cetak.');
+      });
   };
 
   window.printSimReceipt = function () {

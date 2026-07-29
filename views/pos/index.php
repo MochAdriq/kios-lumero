@@ -227,13 +227,19 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                 <span class="badge bg-success ms-auto fs-12 px-3 py-1" id="posReceiptOrderNo">ORD-000</span>
             </div>
             <div class="modal-body p-3 bg-light text-center">
+                <div id="printAgentStatus" class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-center fw-bold fs-14" style="border-radius: 10px;">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Menunggu Printer...
+                </div>
                 <p class="text-muted fs-12 mb-2 fw-medium">Pratinjau Struk Kasir:</p>
                 <!-- Receipt Preview iFrame -->
-                <iframe id="simReceiptFrame" src="" style="width: 100%; height: 480px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"></iframe>
+                <iframe id="simReceiptFrame" src="" style="width: 100%; height: 380px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"></iframe>
             </div>
             <div class="modal-footer d-flex flex-column gap-2 p-3 bg-white border-top">
+                <button type="button" id="btnRetryPrint" class="btn btn-warning w-100 fw-bold align-items-center justify-content-center py-2 fs-14 d-none" style="border-radius: 10px;" onclick="retryPrintAgent()">
+                    <?= sim_icon('ti-reload', 'me-2') ?> Coba Cetak Ulang (Agent)
+                </button>
                 <button type="button" class="btn btn-primary w-100 fw-bold d-flex align-items-center justify-content-center py-2 fs-14" style="border-radius: 10px;" onclick="printSimReceipt()">
-                    <?= sim_icon('ti-printer', 'me-2') ?> Cetak Struk Sekarang
+                    <?= sim_icon('ti-printer', 'me-2') ?> Cetak Manual (Browser)
                 </button>
                 <button type="button" class="btn btn-outline-dark w-100 fw-semibold py-2 fs-14" style="border-radius: 10px;" onclick="resetPosCartAfterOrder()">
                     <?= sim_icon('ti-plus', 'me-2') ?> Order Selanjutnya (Selesai)

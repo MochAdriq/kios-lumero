@@ -154,12 +154,12 @@ class POSModel extends Model
         try {
             $orderNo = $this->nextOrderNumber();
             $stmt = $this->db->prepare("INSERT INTO orders
-                (outlet_id,daily_store_session_id,customer_id,order_number,order_source,order_type,business_date,subtotal,discount_amount,tax_amount,service_amount,grand_total,total_hpp,gross_profit,payment_status,order_status,cashier_id,notes,created_at,updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                (outlet_id,daily_store_session_id,customer_id,order_number,order_source,order_type,business_date,subtotal,discount_amount,tax_amount,service_amount,grand_total,total_hpp,gross_profit,payment_status,order_status,print_status,cashier_id,notes,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $orderBizDate = business_date($outletId);
             $stmt->execute([
                 $outletId,(int)$session['id'],null,$orderNo,$orderSource,$orderType,$orderBizDate,$subtotal,$discount,$tax,$service,$grandTotal,$totalHpp,$grossProfit,
-                'paid','completed',Auth::id(),($payload['notes'] ?? null),now(),now()
+                'paid','completed','waiting',Auth::id(),($payload['notes'] ?? null),now(),now()
             ]);
             $orderId = (int)$this->db->lastInsertId();
             $bizDate = $orderBizDate;
@@ -328,8 +328,8 @@ class POSModel extends Model
 
         if (!$existOrder) {
             $stmt = $this->db->prepare("INSERT INTO orders
-                (outlet_id,daily_store_session_id,customer_id,order_number,order_source,order_type,business_date,subtotal,discount_amount,tax_amount,service_amount,grand_total,total_hpp,gross_profit,payment_status,order_status,cashier_id,notes,created_at,updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                (outlet_id,daily_store_session_id,customer_id,order_number,order_source,order_type,business_date,subtotal,discount_amount,tax_amount,service_amount,grand_total,total_hpp,gross_profit,payment_status,order_status,print_status,cashier_id,notes,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $orderBizDate = business_date($outletId);
             $subtotal = (int)$fo['subtotal'];
             $discount = (int)($fo['discount'] ?? 0);
@@ -338,7 +338,7 @@ class POSModel extends Model
             $grossProfit = $total - $totalHpp;
             $stmt->execute([
                 $outletId,(int)$session['id'],null,$fo['pre_order_no'],'online_order',($fo['pickup_type'] ?: 'dine_in'),$orderBizDate,$subtotal,$discount,0,0,$total,$totalHpp,$grossProfit,
-                'paid','processing',Auth::id(),($fo['customer_note'] ?? null),now(),now()
+                'paid','processing','waiting',Auth::id(),($fo['customer_note'] ?? null),now(),now()
             ]);
             $orderId = (int)$this->db->lastInsertId();
 
