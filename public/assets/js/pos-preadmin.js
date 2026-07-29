@@ -669,7 +669,16 @@
       bsModal.show();
       
       if (currentPrintOrderId) {
+          // Tetap jalankan polling (opsional, jika ada PC/Agent juga berjalan)
           startPrintPolling(currentPrintOrderId);
+          
+          // AUTO-PRINT ANDROID RAWBT:
+          // Beri jeda sedikit agar modal selesai animasi, lalu tembak RawBT
+          setTimeout(() => {
+              if (typeof window.printRawBT === 'function') {
+                  window.printRawBT();
+              }
+          }, 800);
       }
     }
   };
@@ -710,6 +719,37 @@
       
       poll();
   }
+
+  window.printRawBT = function() {
+      if (!currentPrintOrderId) return;
+      const btn = document.getElementById('btnPrintRawBT');
+      const origHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Mengirim ke Android...';
+      }
+      
+      fetch(appUrl + '/api/print/rawbt.php?id=' + currentPrintOrderId)
+          .then(r => r.json())
+          .then(d => {
+              if (btn) {
+                  btn.disabled = false;
+                  btn.innerHTML = origHtml;
+              }
+              if (d.success && d.rawbt_url) {
+                  window.location.href = d.rawbt_url;
+              } else {
+                  alert('Gagal membuat link printer: ' + (d.message || 'Unknown'));
+              }
+          })
+          .catch(e => {
+              if (btn) {
+                  btn.disabled = false;
+                  btn.innerHTML = origHtml;
+              }
+              alert('Error koneksi saat membuat link RawBT.');
+          });
+  };
 
   window.retryPrintAgent = function() {
       if (!currentPrintOrderId) return;

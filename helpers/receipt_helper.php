@@ -74,3 +74,40 @@ if (!function_exists('build_receipt_text')) {
         return $lines;
     }
 }
+
+if (!function_exists('build_rawbt_base64')) {
+    function build_rawbt_base64(array $order, array $items, int $width = 32, $storeName = 'Lumero'): string
+    {
+        $lines = build_receipt_text($order, $items, $width, $storeName);
+        $text = implode("\n", $lines);
+        
+        $esc = "\x1B"; 
+        $gs = "\x1D";
+        $data = $esc . '@'; // init
+        
+        // Open drawer if cash
+        $isCash = strtolower(trim((string)($order['payment_method'] ?? ''))) === 'cash';
+        if ($isCash) {
+            $data .= $esc . 'p' . chr(0) . chr(25) . chr(100);
+        }
+        
+        $data .= $esc . 't' . chr(0); // code page
+        $data .= $esc . 'a' . chr(1); // center
+        $data .= $esc . 'E' . chr(1); // bold on
+        
+        $first = true;
+        foreach ($lines as $line) {
+            if ($first) {
+                $data .= $line . "\n";
+                $first = false;
+                continue;
+            }
+            // Keep it simple: regular text
+            $data .= $esc . 'E' . chr(0) . $esc . 'a' . chr(0) . $line . "\n";
+        }
+        $data .= "\n\n\n";
+        $data .= $gs . 'V' . chr(0); // cut
+        
+        return base64_encode($data);
+    }
+}
