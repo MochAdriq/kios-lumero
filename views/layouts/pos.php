@@ -25,6 +25,8 @@ $storeName = current_outlet_name();
     <link rel="stylesheet" href="<?= asset('css/pos-preadmin-overrides.css') ?>?v=024">
     <link rel="stylesheet" href="<?= asset('css/pos-kasir2-theme.css') ?>?v=008">
     <script>
+    window.appUrl = <?= json_encode(rtrim(app_base_url(), '/')) ?>;
+    const appUrl = window.appUrl;
     function simInitTheme(){
         let tm = localStorage.getItem('sim_theme') || 'light';
         document.documentElement.setAttribute('data-theme', tm);

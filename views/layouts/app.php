@@ -126,6 +126,10 @@ if ($isHQUser) {
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=016">
     <link rel="stylesheet" href="<?= asset('css/daily-stock.css') ?>?v=026">
     <link rel="stylesheet" href="<?= asset('css/module-suite.css') ?>?v=028">
+    <script>
+    window.appUrl = <?= json_encode(rtrim(app_base_url(), '/')) ?>;
+    const appUrl = window.appUrl;
+    </script>
 </head>
 <body class="sim-body">
 <div class="sim-overlay" id="simOverlay"></div>
