@@ -22,8 +22,8 @@ $storeName = current_outlet_name();
     <link rel="stylesheet" href="<?= asset('pos-template/owl.carousel.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('pos-template/owl.theme.default.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('pos-template/style.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/pos-preadmin-overrides.css') ?>?v=023">
-    <link rel="stylesheet" href="<?= asset('css/pos-kasir2-theme.css') ?>?v=007">
+    <link rel="stylesheet" href="<?= asset('css/pos-preadmin-overrides.css') ?>?v=024">
+    <link rel="stylesheet" href="<?= asset('css/pos-kasir2-theme.css') ?>?v=008">
     <script>
     function simInitTheme(){
         let tm = localStorage.getItem('sim_theme') || 'light';
