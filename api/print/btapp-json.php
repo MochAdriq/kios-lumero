@@ -166,8 +166,15 @@ try {
     bp_line($a);
 
     foreach ($items as $it) {
-        $name = strtoupper((string)($it['variant_name_snapshot'] ?: $it['product_name_snapshot']));
-        bp_text($a, $name, 1, 0, 0);
+        $pName = trim((string)($it['product_name_snapshot'] ?? ''));
+        $vName = trim((string)($it['variant_name_snapshot'] ?? ''));
+        $name = $pName;
+        if ($vName !== '' && strtolower($vName) !== 'default' && $vName !== $pName) {
+            $name .= ' - ' . $vName;
+        }
+        if ($name === '') $name = $vName ?: 'Item';
+        
+        bp_text($a, strtoupper($name), 1, 0, 0);
         
         $qtyPrice = ((int)($it['quantity'] ?? 1)) . 'x ' . rupiahPlain($it['price'] ?? 0);
         $sub = rupiahPlain($it['subtotal'] ?? 0);

@@ -68,7 +68,14 @@ $items = $receipt['items'];
     <?php foreach ($items as $it): ?>
     <div class="row" style="align-items:flex-start;">
         <span style="flex:1;">
-            <strong style="font-size:13px;"><?= number_format($it['qty'],0,',','.') ?>x <?= htmlspecialchars($it['variant_name_snapshot'] ?: $it['product_name_snapshot']) ?></strong>
+            <strong style="font-size:13px;"><?= number_format($it['qty'],0,',','.') ?>x <?php
+                $pName = trim((string)($it['product_name_snapshot'] ?? ''));
+                $vName = trim((string)($it['variant_name_snapshot'] ?? ''));
+                $name = $pName;
+                if ($vName !== '' && strtolower($vName) !== 'default' && $vName !== $pName) $name .= ' - ' . $vName;
+                if ($name === '') $name = $vName ?: 'Item';
+                echo htmlspecialchars($name);
+            ?></strong>
         </span>
         <strong style="font-size:13px;"><?= rupiah($it['subtotal']) ?></strong>
     </div>
