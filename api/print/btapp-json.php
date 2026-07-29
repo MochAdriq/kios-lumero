@@ -18,12 +18,57 @@ function bp_text(&$arr, $content, $bold=0, $align=0, $format=0) {
 function bp_line(&$arr) { 
     bp_text($arr, str_repeat('-', 32), 0, 0, 0); 
 }
-function bp_html(&$arr, $html) {
-    if (empty($html)) return;
+
+function bp_image_base64(&$arr, $base64) {
+    if (empty($base64)) return;
     $obj = new stdClass();
-    $obj->type = 4;
-    $obj->content = $html;
+    $obj->type = 3; // Image
+    $obj->content = $base64; // RawBT / Thermer will handle the base64
+    $obj->align = 1; // Center
     $arr[] = $obj;
+}
+
+function bp_image_local(&$arr, $path) {
+    if (!file_exists($path)) return;
+    // Buka gambar PNG/JPEG
+    $info = getimagesize($path);
+    if (!$info) return;
+    
+    $img = null;
+    if ($info[2] === IMAGETYPE_PNG) {
+        $img = @imagecreatefrompng($path);
+    } elseif ($info[2] === IMAGETYPE_JPEG) {
+        $img = @imagecreatefromjpeg($path);
+    }
+    if (!$img) return;
+    
+    $w = imagesx($img);
+    $h = imagesy($img);
+    
+    // Buat gambar baru dengan background putih (menghindari transparan jadi hitam di printer thermal)
+    $newImg = imagecreatetruecolor($w, $h);
+    $white = imagecolorallocate($newImg, 255, 255, 255);
+    imagefill($newImg, 0, 0, $white);
+    
+    imagecopy($newImg, $img, 0, 0, 0, 0, $w, $h);
+    
+    ob_start();
+    imagejpeg($newImg, null, 100);
+    $jpegData = ob_get_clean();
+    
+    imagedestroy($img);
+    imagedestroy($newImg);
+    
+    bp_image_base64($arr, base64_encode($jpegData));
+}
+
+function bp_image_url(&$arr, $url) {
+    if (empty($url)) return;
+    // Download image from URL (e.g., Quickchart QR)
+    $data = @file_get_contents($url);
+    if ($data) {
+        bp_image_base64($arr, base64_encode($data));
+    }
 }
 
 function bp_cash_drawer_pulse(&$arr) {
@@ -74,8 +119,10 @@ try {
         bp_cash_drawer_pulse($a);
     }
 
-    $logoHtml = '<div style="text-align:center;"><img src="'.asset('images/pos-products/icon-192.png').'" style="width:160px; height:160px; object-fit:contain;" /></div>';
-    bp_html($a, $logoHtml);
+    $logoPath = __DIR__ . '/../../public/assets/images/pos-products/apple-touch-icon.jpeg';
+    if (file_exists($logoPath)) {
+        bp_image_base64($a, base64_encode(file_get_contents($logoPath)));
+    }
 
     bp_text($a, 'LUMERO CHICKEN CRISPY', 1, 1, 3);
     bp_text($a, strtoupper(current_outlet_name() ?: 'PASEKON'), 0, 1, 0);
@@ -125,10 +172,10 @@ try {
         bp_text($a, $claimCode, 1, 1, 3);
         bp_text($a, 'Bonus: +' . $claimPoints . ' Poin', 1, 1, 0);
         
-        // Menambahkan QR Code HTML untuk Thermer
+        // Menambahkan QR Code sebagai Image Base64 (Server-side rendered)
         if (function_exists('loyalty_member_qr_url')) {
-            $qrHtml = '<div style="text-align:center;"><img src="'.htmlspecialchars(loyalty_member_qr_url($claimCode, 150)).'" style="width:150px; height:150px; object-fit:contain;" /></div>';
-            bp_html($a, $qrHtml);
+            $qrUrl = loyalty_member_qr_url($claimCode, 150);
+            bp_image_url($a, $qrUrl);
         }
         
         bp_text($a, 'Scan QR di atas untuk klaim', 0, 1, 0);
