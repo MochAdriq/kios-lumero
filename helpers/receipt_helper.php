@@ -35,7 +35,15 @@ if (!function_exists('build_receipt_text')) {
         
         // Items
         foreach ($items as $it) {
-            $name = strtoupper((string)($it['item_name'] ?? 'ITEM'));
+            $pName = trim((string)($it['product_name_snapshot'] ?? ''));
+            $vName = trim((string)($it['variant_name_snapshot'] ?? ''));
+            $name = $pName;
+            if ($vName !== '' && strtolower($vName) !== 'default' && $vName !== $pName) {
+                $name .= ' - ' . $vName;
+            }
+            if ($name === '') $name = $vName ?: 'ITEM';
+            $name = strtoupper($name);
+            
             // Split name if too long
             if (strlen($name) > $width) {
                 $lines[] = substr($name, 0, $width);
@@ -43,7 +51,7 @@ if (!function_exists('build_receipt_text')) {
             }
             $lines[] = substr($name, 0, $width);
             
-            $qtyPrice = ((int)($it['quantity'] ?? 1)) . ' x ' . rupiahPlain($it['price'] ?? 0);
+            $qtyPrice = ((int)($it['qty'] ?? $it['quantity'] ?? 1)) . ' x ' . rupiahPlain($it['selling_price'] ?? $it['price'] ?? 0);
             $lines[] = $pair($qtyPrice, rupiahPlain($it['subtotal'] ?? 0));
         }
         
