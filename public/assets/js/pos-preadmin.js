@@ -390,18 +390,20 @@
     if (emptyCart) emptyCart.style.display = 'none';
     if (cartTableWrap) cartTableWrap.style.display = 'block';
     if (cartRows) cartRows.innerHTML = cart.map((i, idx) => {
-      return `<div class="sim-cart-item">
-        <div class="sim-cart-item-left">
+      return `<div class="sim-cart-item2">
+        <div class="sim-cart-item2-main">
           <img class="sim-cart-thumb" src="${esc(i.image || assets.dummy || '')}" alt="${esc(i.name)}" onerror="this.src='${esc(assets.dummy || '')}'">
-          <div class="sim-cart-item-text">
-            <span class="sim-cart-item-name">${esc(i.name)}</span>
-            <span class="sim-cart-item-price">${money(i.price)}</span>
+          <div class="sim-cart-item2-name-wrap">
+            <span class="sim-cart-item2-name">${esc(i.name)}</span>
           </div>
         </div>
-        <div class="sim-cart-item-right">
-          <button type="button" class="sim-qty-btn sim-qty-minus" data-minus="${idx}">−</button>
-          <span class="sim-qty-val">${i.qty}</span>
-          <button type="button" class="sim-qty-btn sim-qty-plus" data-plus="${idx}">+</button>
+        <div class="sim-cart-item2-action">
+          <span class="sim-cart-item2-price">${money(i.price)}</span>
+          <div class="sim-cart-item2-qty">
+            <button type="button" class="sim-qty-btn sim-qty-minus" data-minus="${idx}">−</button>
+            <span class="sim-qty-val">${i.qty}</span>
+            <button type="button" class="sim-qty-btn sim-qty-plus" data-plus="${idx}">+</button>
+          </div>
         </div>
       </div>`;
     }).join('');

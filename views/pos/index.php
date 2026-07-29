@@ -29,7 +29,7 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
 
         <div class="row pos-wrapper g-0 <?= !$session ? 'pos-locked' : '' ?>">
             <!-- ===== LEFT: PRODUCTS AREA ===== -->
-            <div class="col-md-12 col-lg-7 col-xl-8 d-flex sim-pos-main-col">
+            <div class="col-md-12 col-lg-7 col-xl-7 d-flex sim-pos-main-col">
                 <div class="pos-categories tabs_wrapper p-0 flex-fill sim-pos-workspace">
                     <div class="content-wrap sim-pos-content-wrap">
                         <!-- ===== MAIN CONTENT (no sidebar) ===== -->
@@ -82,7 +82,7 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
             </div>
 
             <!-- ===== RIGHT: ORDER PANEL ===== -->
-            <div class="col-md-12 col-lg-5 col-xl-4 ps-0 d-lg-flex sim-pos-order-col">
+            <div class="col-md-12 col-lg-5 col-xl-5 ps-0 d-lg-flex sim-pos-order-col">
                 <aside class="product-order-list bg-secondary-transparent flex-fill">
                     <div class="card sim-order-card">
                         <div class="card-body">
