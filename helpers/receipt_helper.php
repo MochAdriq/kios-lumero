@@ -85,6 +85,14 @@ if (!function_exists('build_rawbt_base64')) {
         $gs = "\x1D";
         $data = $esc . '@'; // init
         
+        // Print Logo at the top if exists
+        $logoPath = __DIR__ . '/../public/assets/images/pos-products/black-white-logo.jpg';
+        $logoData = build_escpos_image($logoPath);
+        if ($logoData !== '') {
+            $data .= $esc . 'a' . chr(1); // center
+            $data .= $logoData;
+        }
+        
         // Open drawer if cash
         $isCash = strtolower(trim((string)($order['payment_method'] ?? ''))) === 'cash';
         if ($isCash) {
@@ -136,3 +144,66 @@ if (!function_exists('build_rawbt_base64')) {
         return base64_encode($data);
     }
 }
+
+if (!function_exists('build_escpos_image')) {
+    function build_escpos_image(string $imagePath): string
+    {
+        if (!file_exists($imagePath)) return '';
+        
+        $img = @imagecreatefromjpeg($imagePath);
+        if (!$img) $img = @imagecreatefrompng($imagePath);
+        if (!$img) return '';
+        
+        $width = imagesx($img);
+        $height = imagesy($img);
+        
+        // Ensure width is a multiple of 8
+        $widthBytes = (int)ceil($width / 8.0);
+        $paddedWidth = $widthBytes * 8;
+        
+        // ESC/POS raster image command
+        $gs = "\x1D";
+        $data = $gs . "v0" . chr(0); // m=0
+        
+        // Width in bytes
+        $xL = $widthBytes % 256;
+        $xH = floor($widthBytes / 256);
+        $data .= chr($xL) . chr($xH);
+        
+        // Height in pixels
+        $yL = $height % 256;
+        $yH = floor($height / 256);
+        $data .= chr($yL) . chr($yH);
+        
+        // Raster data
+        for ($y = 0; $y < $height; $y++) {
+            for ($xByte = 0; $xByte < $widthBytes; $xByte++) {
+                $byte = 0;
+                for ($b = 0; $b < 8; $b++) {
+                    $x = $xByte * 8 + $b;
+                    $bit = 0;
+                    if ($x < $width) {
+                        $rgb = imagecolorat($img, $x, $y);
+                        $r = ($rgb >> 16) & 0xFF;
+                        $g = ($rgb >> 8) & 0xFF;
+                        $b_col = $rgb & 0xFF;
+                        $luminance = ($r * 0.299) + ($g * 0.587) + ($b_col * 0.114);
+                        // If pixel is dark, set bit to 1 (print dot)
+                        if ($luminance < 128) {
+                            $bit = 1;
+                        }
+                    }
+                    $byte = ($byte << 1) | $bit;
+                }
+                $data .= chr($byte);
+            }
+        }
+        
+        imagedestroy($img);
+        
+        // Add some spacing
+        $data .= "\n\n";
+        return $data;
+    }
+}
+
