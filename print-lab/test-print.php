@@ -73,4 +73,4 @@ bp_html($a, $htmlQr);
 bp_text($a, '=== SELESAI ===', 1, 1, 0);
 bp_text($a, ' ', 0, 0, 0); // Spasi bawah
 
-echo json_encode($a, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+echo json_encode($a, JSON_FORCE_OBJECT | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
