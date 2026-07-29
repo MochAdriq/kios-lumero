@@ -66,18 +66,21 @@ $items = $receipt['items'];
     <?php endif; ?>
     <hr>
     <?php foreach ($items as $it): ?>
-    <div class="row" style="align-items:flex-start;">
-        <span style="flex:1;">
-            <strong style="font-size:13px;"><?= number_format($it['qty'],0,',','.') ?>x <?php
+    <div style="margin-bottom: 6px;">
+        <div style="font-weight:bold; font-size:13px; text-transform:uppercase; margin-bottom:2px;">
+            <?php
                 $pName = trim((string)($it['product_name_snapshot'] ?? ''));
                 $vName = trim((string)($it['variant_name_snapshot'] ?? ''));
                 $name = $pName;
                 if ($vName !== '' && strtolower($vName) !== 'default' && $vName !== $pName) $name .= ' - ' . $vName;
                 if ($name === '') $name = $vName ?: 'Item';
                 echo htmlspecialchars($name);
-            ?></strong>
-        </span>
-        <strong style="font-size:13px;"><?= rupiah($it['subtotal']) ?></strong>
+            ?>
+        </div>
+        <div class="row" style="margin-bottom:0;">
+            <span style="font-size:12px; font-weight:600; color:#555;"><?= number_format($it['qty'],0,',','.') ?>x <?= rupiah($it['selling_price'] ?? $it['price'] ?? 0) ?></span>
+            <strong style="font-size:13px;"><?= rupiah($it['subtotal']) ?></strong>
+        </div>
     </div>
     <?php endforeach; ?>
     <hr>
