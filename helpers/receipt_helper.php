@@ -108,18 +108,16 @@ if (!function_exists('build_rawbt_base64')) {
         }
         
         $data .= $esc . 't' . chr(0); // code page
-        $data .= $esc . 'a' . chr(1); // center
-        $data .= $esc . 'E' . chr(1); // bold on
+        $data .= $esc . 'E' . chr(0); // bold off
+        $data .= $esc . 'a' . chr(0); // left align
         
-        $first = true;
-        foreach ($lines as $line) {
-            if ($first) {
+        foreach ($lines as $idx => $line) {
+            if ($idx === 0) {
+                // First line (Store Name) make it bold
+                $data .= $esc . 'E' . chr(1) . $line . $esc . 'E' . chr(0) . "\n";
+            } else {
                 $data .= $line . "\n";
-                $first = false;
-                continue;
             }
-            // Keep it simple: regular text
-            $data .= $esc . 'E' . chr(0) . $esc . 'a' . chr(0) . $line . "\n";
         }
         $data .= "\n";
         
