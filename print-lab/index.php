@@ -20,7 +20,7 @@
         <p>Gunakan tombol di bawah ini dari HP Android yang sudah terhubung dengan printer Bluetooth.</p>
 
         <!-- Link JSON langsung (Thermer Scheme) -->
-        <a href="my.bluetoothprint.scheme://https://lokapedia.id/lumero/temp/test-print.php" class="btn btn-primary">
+        <a href="my.bluetoothprint.scheme://https://lokapedia.id/lumero/print-lab/test-print.php" class="btn btn-primary">
             🖨️ Cetak via Thermer (Scheme)
         </a>
 
