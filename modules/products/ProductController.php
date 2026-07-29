@@ -123,9 +123,21 @@ class ProductController extends Controller
 
             $prodModel = new ProductModel();
             $catId     = (int)($_POST['product_category_id'] ?? 0);
+            if ($catId === 0) {
+                throw new Exception("Silakan pilih Kategori Produk dari dropdown.");
+            }
             $sellPrice = max(0, (float)($_POST['selling_price'] ?? 0));
             $variant   = trim($_POST['variant_name'] ?? '');
             $sku       = trim($_POST['sku'] ?? '');
+            
+            // Check if SKU already exists for this outlet
+            if ($sku !== '') {
+                $existingSku = $prodModel->one("SELECT id FROM product_variants WHERE outlet_id = ? AND sku = ?", [$this->outletId(), $sku]);
+                if ($existingSku) {
+                    throw new Exception("SKU '$sku' sudah digunakan oleh produk lain di cabang ini. Silakan gunakan SKU lain.");
+                }
+            }
+
             $image     = trim($_POST['image'] ?? 'images/pos-products/original.png');
 
             $variantId = $prodModel->createVariant([
