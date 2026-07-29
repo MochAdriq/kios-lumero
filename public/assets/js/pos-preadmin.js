@@ -737,8 +737,11 @@
       }
       
       // Bypass launcher, langsung panggil scheme
-      const jsonUrl = appUrl + '/api/print/btapp-json.php?id=' + currentPrintOrderId + '&t=' + Date.now();
+      const baseUrl = typeof window.appUrl !== 'undefined' ? window.appUrl : window.location.origin;
+      const jsonUrl = baseUrl + '/api/print/btapp-json.php?id=' + currentPrintOrderId + '&t=' + Date.now();
       const schemeUrl = 'my.bluetoothprint.scheme://' + jsonUrl;
+      
+      console.log('Auto-print Triggered! schemeUrl:', schemeUrl);
       window.location.href = schemeUrl;
   };
 
