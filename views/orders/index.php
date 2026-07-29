@@ -101,11 +101,7 @@
                     <td class="text-end fw-bold" data-sort="<?= $o['grand_total'] ?>"><?= rupiah($o['grand_total']) ?></td>
                     <td class="text-end">
                         <a class="btn btn-light btn-sm rounded-pill" href="<?= url('/pos/receipt/'.$o['id']) ?>">Struk</a>
-                        <?php 
-                            $jsonUrl = url('/api/print/btapp-json.php?id='.$o['id'].'&t='.time(), false);
-                            $schemeUrl = 'my.bluetoothprint.scheme://' . $jsonUrl;
-                        ?>
-                        <a class="btn btn-primary btn-sm rounded-pill text-white ms-1" href="<?= htmlspecialchars($schemeUrl) ?>" title="Cetak ke Printer">Cetak</a>
+                        <button class="btn btn-primary btn-sm rounded-pill text-white ms-1" onclick="printOrderRawBT(<?= $o['id'] ?>, this)" title="Cetak ke Printer via RawBT">Cetak</button>
                         <?php if($o['order_status'] === 'processing'): ?>
                             <form action="<?= url('/orders/update-status') ?>" method="post" class="d-inline" onsubmit="return confirm('Tandai pesanan ini selesai?');">
                                 <?= csrf_field() ?>
@@ -200,4 +196,32 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     document.body.appendChild(dtScript);
 });
+</script>
+<script>
+function printOrderRawBT(orderId, btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    }
+    fetch('<?= url('/api/print/rawbt.php?id=') ?>' + orderId)
+        .then(r => r.json())
+        .then(d => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = 'Cetak';
+            }
+            if (d.success && d.rawbt_url) {
+                window.location.href = d.rawbt_url;
+            } else {
+                alert('Gagal membuat link printer: ' + (d.message || 'Unknown'));
+            }
+        })
+        .catch(e => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = 'Cetak';
+            }
+            alert('Error koneksi saat membuat link RawBT.');
+        });
+}
 </script>
