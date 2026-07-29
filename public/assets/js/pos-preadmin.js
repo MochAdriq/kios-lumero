@@ -729,13 +729,9 @@
           setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
       }
       
-      // Construct URL synchronously to prevent browser intent blocking
-      const t = Math.floor(Date.now() / 1000);
-      const hostPath = window.location.origin + appUrl; // e.g. https://domain.com/kios-lumero
-      const jsonUrl = hostPath + '/api/print/btapp-json.php?id=' + currentPrintOrderId + '&t=' + t;
-      const schemeUrl = 'my.bluetoothprint.scheme://' + jsonUrl;
-      
-      window.location.href = schemeUrl;
+      // Gunakan halaman launcher terpisah (seperti DCelup)
+      const launcherUrl = appUrl + '/api/print/launcher.php?id=' + currentPrintOrderId;
+      window.open(launcherUrl, '_blank');
   };
 
   window.printRawBT = function() {
