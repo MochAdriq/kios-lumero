@@ -206,9 +206,7 @@ class POSModel extends Model
             }
             return ['id'=>$orderId,'order_number'=>$orderNo,'grand_total'=>$grandTotal,'change'=>$change];
         } catch (Throwable $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
+            try { if ($this->db->inTransaction()) { $this->db->rollBack(); } } catch (Throwable $rx) {}
             throw $e;
         }
     }

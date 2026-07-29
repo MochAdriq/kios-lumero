@@ -32,6 +32,8 @@ if (file_exists($envFile)) {
 }
 
 echo "Testing WhatsApp OTP...\n";
+$token = app_env('WA_GATEWAY_TOKEN', '');
+echo "Using Token: '" . $token . "'\n";
 $response = WhatsAppGateway::sendOtp('0895338977816', '123456');
 echo "Response:\n";
 print_r($response);

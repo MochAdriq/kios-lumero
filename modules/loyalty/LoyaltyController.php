@@ -257,7 +257,7 @@ class LoyaltyController extends Controller
             $pdo->commit();
             $_SESSION['flash_success'] = 'Berhasil! Penukaran hadiah Poin "' . ($redemption['reward_name'] ?? 'Produk') . '" telah divalidasi.';
         } catch (Throwable $e) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            try { if ($pdo->inTransaction()) $pdo->rollBack(); } catch (Throwable $rx) {}
             $_SESSION['flash_error'] = $e->getMessage();
         }
 
@@ -350,7 +350,7 @@ class LoyaltyController extends Controller
             $pdo->commit();
             $_SESSION['flash_success'] = 'Berhasil! Hadiah "' . $claim['prize_name'] . '" telah ditukarkan dan stok dipotong.';
         } catch (Throwable $e) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            try { if ($pdo->inTransaction()) $pdo->rollBack(); } catch (Throwable $rx) {}
             $_SESSION['flash_error'] = $e->getMessage();
         }
 
@@ -484,7 +484,7 @@ class LoyaltyController extends Controller
 
             $_SESSION['flash_success'] = 'Persentase undian berhasil diperbarui dan divalidasi 100%.';
         } catch (Throwable $e) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            try { if ($pdo->inTransaction()) $pdo->rollBack(); } catch (Throwable $rx) {}
             $_SESSION['flash_error'] = $e->getMessage();
         }
 
