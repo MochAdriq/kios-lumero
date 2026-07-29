@@ -14,7 +14,7 @@ try {
 
     $pdo = Database::connection();
     
-    $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT o.*, outl.name as outlet_name FROM orders o LEFT JOIN outlets outl ON o.outlet_id = outl.id WHERE o.id = ? LIMIT 1");
     $stmt->execute([$orderId]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -39,7 +39,7 @@ try {
     }
 
     // Use helper to build rawbt base64 string
-    $b64 = build_rawbt_base64($order, $items, 32, current_outlet_name());
+    $b64 = build_rawbt_base64($order, $items, 32, $order['outlet_name'] ?? 'Lumero');
     $rawbtUrl = 'rawbt:base64,' . $b64;
 
     // Generate my.bluetoothprint.scheme URL for Thermer / Bluetooth Print App
