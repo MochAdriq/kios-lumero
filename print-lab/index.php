@@ -24,6 +24,25 @@
             🖨️ Cetak via Thermer (Scheme)
         </button>
 
+        <!-- Link RawBT -->
+        <button onclick="testRawBT()" class="btn btn-success">
+            🖨️ Cetak via RawBT
+        </button>
+
+        <script>
+            function testRawBT() {
+                // Fetch the JSON from test-print.php
+                fetch('test-print.php')
+                .then(res => res.text())
+                .then(text => {
+                    // RawBT accepts base64 encoded JSON
+                    let b64 = btoa(unescape(encodeURIComponent(text)));
+                    window.location.href = 'rawbt:data:application/json;base64,' + b64;
+                })
+                .catch(e => alert("Gagal mengambil data: " + e));
+            }
+        </script>
+
         <!-- Link JSON mentah (RawBT / Browser) -->
         <a href="test-print.php" target="_blank" class="btn btn-dark">
             📄 Lihat Output JSON
