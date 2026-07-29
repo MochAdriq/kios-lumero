@@ -351,6 +351,11 @@ function rupiah($value): string
     return 'Rp ' . number_format((float)$value, 0, ',', '.');
 }
 
+function rupiahPlain($value): string
+{
+    return number_format((float)$value, 0, ',', '.');
+}
+
 function csrf_token(): string
 {
     if (empty($_SESSION['_csrf'])) {
