@@ -212,14 +212,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     var statusStr = data[4] || ""; // Status is column index 4
                     statusStr = statusStr.toLowerCase();
                     
-                    // Parse date "YYYY-MM-DD" from "DD/MM/YYYY"
-                    var dateRaw = dateStr.trim().substring(0, 10);
-                    var dateOnly = dateRaw;
-                    if (dateRaw.indexOf('/') === 2) { // DD/MM/YYYY format
-                        var parts = dateRaw.split('/');
-                        if (parts.length === 3) {
-                            dateOnly = parts[2] + '-' + parts[1] + '-' + parts[0];
-                        }
+                    // Extract DD/MM/YYYY or YYYY-MM-DD using regex
+                    var dateOnly = "";
+                    var dmyMatch = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    var ymdMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+                    if (dmyMatch) {
+                        dateOnly = dmyMatch[3] + '-' + dmyMatch[2] + '-' + dmyMatch[1];
+                    } else if (ymdMatch) {
+                        dateOnly = ymdMatch[0];
                     }
                     
                     if (min && dateOnly < min) return false;
