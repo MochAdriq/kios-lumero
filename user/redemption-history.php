@@ -20,7 +20,11 @@ $member=loyalty_member_by_id($pdo,$memberId);
 if(!$member){ unset($_SESSION['member_id']); header('Location: index.php'); exit; }
 // Nomor WA toko untuk tombol konfirmasi
 $storeWaRaw = get_setting('store_whatsapp', '');
-$storeWaNum = preg_replace('/[^0-9]/', '', $storeWaRaw);
+if ($storeWaRaw === '') {
+    $outPhone = $pdo->query("SELECT phone FROM outlets ORDER BY id ASC LIMIT 1")->fetchColumn();
+    if ($outPhone) $storeWaRaw = $outPhone;
+}
+$storeWaNum = preg_replace('/[^0-9]/', '', (string)$storeWaRaw);
 if ($storeWaNum !== '' && str_starts_with($storeWaNum, '0')) { $storeWaNum = '62' . substr($storeWaNum, 1); }
 $memberName = htmlspecialchars(trim((string)($member['name'] ?? 'Member')));
 $redemptions=loyalty_member_reward_redemptions($pdo,$memberId,120);

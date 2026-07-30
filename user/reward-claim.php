@@ -42,7 +42,11 @@ $memberPhone = htmlspecialchars(trim((string)($memberInfo['phone'] ?? '')));
 
 // Nomor WA toko dari settings
 $storeWa = get_setting('store_whatsapp', '');
-$storeWaClean = preg_replace('/[^0-9]/', '', $storeWa);
+if ($storeWa === '') {
+    $outPhone = $pdo->query("SELECT phone FROM outlets ORDER BY id ASC LIMIT 1")->fetchColumn();
+    if ($outPhone) $storeWa = $outPhone;
+}
+$storeWaClean = preg_replace('/[^0-9]/', '', (string)$storeWa);
 if ($storeWaClean !== '' && str_starts_with($storeWaClean, '0')) {
     $storeWaClean = '62' . substr($storeWaClean, 1);
 }
