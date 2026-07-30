@@ -155,9 +155,9 @@ class POSModel extends Model
         $orderStatus = 'pending'; // For kitchen queue
         if ($isChangeOwed) {
             $paymentStatus = 'owes_change';
-        } else if ($paymentMethod === 'qris' || $paymentMethod === 'ewallet' || $paymentMethod === 'transfer') {
-            $paymentStatus = 'waiting_verification';
         }
+        // QRIS/ewallet/transfer dari POS kasir langsung dianggap Lunas
+        // karena kasir sudah melihat bukti pembayaran secara langsung
 
         $this->db->beginTransaction();
         try {
