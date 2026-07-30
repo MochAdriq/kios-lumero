@@ -4,7 +4,7 @@ require_once __DIR__.'/../helpers/functions.php';
 require_once __DIR__.'/../core/Database.php';
 $pdo = Database::connection();
 require_once __DIR__.'/../config/loyalty.php';
-require_once __DIR__.'/../helpers/WhatsAppGateway.php';
+// WhatsAppGateway tidak digunakan lagi (OTP dihapus)
 date_default_timezone_set('Asia/Jakarta');
 try{ if(isset($pdo) && $pdo instanceof PDO) $pdo->exec("SET time_zone = '+07:00'"); }catch(Throwable $e){}
 loyalty_ensure_tables($pdo);
@@ -95,21 +95,15 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       $_SESSION['member_login_phone']=$phone;
       if($m){ if(($m['status'] ?? 'active')!=='active') throw new Exception('Member sedang nonaktif. Hubungi kasir/admin.'); $_SESSION['member_login_mode']=empty($m['pin_hash'])?'setup':'pin'; loyalty_activity($pdo,(int)$m['id'],$phone,'member_phone_check','Cek nomor dari halaman member'); $msg=empty($m['pin_hash'])?'Nomor ditemukan. Buat PIN untuk aktivasi akun.':'Nomor sudah terdaftar. Silakan masukkan PIN.'; }
       else{ 
-          $otpCode = str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-          $_SESSION['member_register_otp'] = $otpCode;
-          $_SESSION['member_login_mode'] = 'verify_otp';
-          WhatsAppGateway::sendOtp($phone, $otpCode);
-          loyalty_activity($pdo,null,$phone,'member_phone_check_new','Kirim OTP WhatsApp member baru'); 
-          $msg = empty($_SESSION['pending_event_reward']) ? 'Nomor belum terdaftar. Kode OTP 6 digit telah dikirim ke WhatsApp Anda.' : 'Satu langkah terakhir. Masukkan 6 digit kunci brankas yang kami kirimkan ke WhatsApp Anda agar kupon tidak diklaim orang lain.';
+          // Nomor baru — langsung ke pembuatan PIN tanpa OTP
+          $_SESSION['member_login_mode'] = 'register';
+          loyalty_activity($pdo,null,$phone,'member_phone_check_new','Nomor baru, langsung ke buat PIN'); 
+          $msg = 'Nomor belum terdaftar. Silakan buat PIN 4 digit untuk membuat akun member baru.';
       }
     }elseif($action==='verify_otp'){
-      $phone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? ''));
-      $inputOtp=trim((string)($_POST['otp'] ?? ''));
-      $savedOtp=(string)($_SESSION['member_register_otp'] ?? '');
-      if(strlen($phone)<9) throw new Exception('Sesi nomor HP tidak ditemukan. Masukkan nomor HP kembali.');
-      if($savedOtp==='' || $inputOtp!==$savedOtp) throw new Exception('Kode OTP salah. Periksa kembali pesan WhatsApp Anda.');
+      // OTP sudah dihapus — fallback redirect saja
       $_SESSION['member_login_mode']='register';
-      $msg='OTP WhatsApp valid! Silakan buat 4 digit PIN untuk akun member Anda.';
+      $msg='Silakan buat PIN 4 digit untuk akun member Anda.';
     }elseif($action==='login_pin'){
       $phone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $pin=trim((string)($_POST['pin'] ?? ''));
       if(strlen($phone)<9) throw new Exception('Sesi nomor HP tidak ditemukan. Masukkan nomor HP kembali.');

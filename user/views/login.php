@@ -137,18 +137,7 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
                     </form>
 
                 <?php elseif($pendingMode==='verify_otp'): ?>
-                    <form method="post" class="floating-form" autocomplete="off">
-                        <input type="hidden" name="csrf" value="<?=mem_e($csrf)?>">
-                        <input type="hidden" name="action" value="verify_otp">
-                        <div class="input-group">
-                            <label>Kode OTP WhatsApp</label>
-                            <input name="otp" type="text" inputmode="numeric" maxlength="6" required placeholder="123456" autofocus>
-                        </div>
-                        <p style="font-size:13px; color:var(--muted); font-weight:600; line-height:1.5; margin:0;">
-                            Kode 6 digit telah dikirim ke WhatsApp Anda. 
-                        </p>
-                        <button class="btn-primary">Verifikasi OTP</button>
-                    </form>
+                    <?php /* OTP dihapus — redirect ke register */ $_SESSION['member_login_mode']='register'; header('Location: login.php'); exit; ?>
 
                 <?php else: ?>
                     <p class="subtitle" style="margin-bottom:24px; font-size:13px;"><?=($pendingMode==='setup')?'Akun ini belum memiliki PIN. Buat PIN untuk aktivasi keamanan.':'Nomor Anda baru. Buat PIN untuk menyelesaikan pendaftaran member.'?></p>

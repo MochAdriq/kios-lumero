@@ -55,6 +55,9 @@
                     <option value="false" <?= ($settings['printer_enabled']??'')==='false'?'selected':'' ?>>Nonaktif</option>
                 </select>
                 
+                <label class="form-label mt-3">Nomor WhatsApp Toko (untuk Konfirmasi Hadiah)</label>
+                <input name="settings[store_whatsapp]" value="<?= htmlspecialchars($settings['store_whatsapp']??'') ?>" class="form-control" placeholder="Contoh: 08xxxxxxxxxx">
+                <div class="form-text">Nomor ini akan dipakai sebagai tujuan WA konfirmasi saat pelanggan menukar kupon/poin. Biarkan kosong jika belum dipakai.</div>
 
             </div>
         </div>
