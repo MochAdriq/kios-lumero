@@ -1,0 +1,16 @@
+{
+  "name": "Lumero Self-Order",
+  "short_name": "Lumero",
+  "description": "Lumero Self-Order for Customers",
+  "start_url": "./user/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#ff6b00",
+  "icons": [
+    {
+      "src": "public/assets/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

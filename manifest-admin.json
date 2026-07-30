@@ -1,0 +1,16 @@
+{
+  "name": "Lumero POS Admin",
+  "short_name": "Lumero POS",
+  "description": "Lumero Point of Sale System",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#b91c1c",
+  "icons": [
+    {
+      "src": "public/assets/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -33,6 +33,15 @@ $freeOrderVoiceBase = '../public/assets/audio/';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Selamat Datang - Lumero Self-Order</title>
+    <link rel="manifest" href="../manifest-user.json">
+    <link rel="apple-touch-icon" href="../public/assets/images/icon-512x512.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('../sw.js').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
     <link rel="stylesheet" href="../public/assets/css/self-order-ui.css">
     <style>
         :root {

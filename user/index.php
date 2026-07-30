@@ -122,6 +122,15 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Kejutan Spesial Untukmu! â€” Lumero</title>
+    <link rel="manifest" href="../manifest-user.json">
+    <link rel="apple-touch-icon" href="../public/assets/images/icon-512x512.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('../sw.js').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
     <link rel="icon" type="image/png" href="../public/assets/images/pos-products/icon-192.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -401,6 +410,15 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
             animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
         }
     </style>
+    <link rel="manifest" href="../manifest-user.json">
+    <link rel="apple-touch-icon" href="../public/assets/images/icon-512x512.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('../sw.js').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
 </head>
 <body>
 
@@ -1068,6 +1086,15 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         .btn-spin .spin-icon { animation: spinIcon 3s linear infinite; }
         @keyframes spinIcon { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
+    <link rel="manifest" href="../manifest-user.json">
+    <link rel="apple-touch-icon" href="../public/assets/images/icon-512x512.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('../sw.js').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
 </head>
 <body>
 

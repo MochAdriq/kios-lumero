@@ -112,6 +112,15 @@ if (!empty($activeOutletsList)) {
             color: #FF2D55;
         }
     </style>
+    <link rel="manifest" href="../manifest-user.json">
+    <link rel="apple-touch-icon" href="../public/assets/images/icon-512x512.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('../sw.js').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
 </head>
 <body>
 

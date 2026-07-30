@@ -44,6 +44,15 @@ $storeName = current_outlet_name();
     }
     simInitTheme();
     </script>
+    <link rel="manifest" href="<?= url('/manifest-admin.json', false) ?>">
+    <link rel="apple-touch-icon" href="<?= url('/public/assets/images/icon-512x512.png', false) ?>">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('<?= url('/sw.js', false) ?>').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
 </head>
 <body class="pos-page sim-pos-template sim-pos-lumero k2-body <?= isset($_GET['embed']) ? 'is-embed-modal' : '' ?>" style="<?= isset($_GET['embed']) ? 'background:#fff !important; padding:0 !important;' : '' ?>">
 <div id="global-loader" style="display:none"><div class="whirly-loader"></div></div>

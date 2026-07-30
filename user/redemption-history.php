@@ -238,7 +238,16 @@ a { text-decoration: none; color: inherit; }
   font-weight: 700; cursor: pointer; transition: background 0.2s;
 }
 .qr-modal-close:hover { background: rgba(255,255,255,0.2); }
-</style></head>
+</style>    <link rel="manifest" href="../manifest-user.json">
+    <link rel="apple-touch-icon" href="../public/assets/images/icon-512x512.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('../sw.js').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
+</head>
 <body>
 
 <header class="topbar">

@@ -130,6 +130,15 @@ if ($isHQUser) {
     window.appUrl = <?= json_encode(rtrim(app_base_url(), '/')) ?>;
     const appUrl = window.appUrl;
     </script>
+    <link rel="manifest" href="<?= url('/manifest-admin.json', false) ?>">
+    <link rel="apple-touch-icon" href="<?= url('/public/assets/images/icon-512x512.png', false) ?>">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('<?= url('/sw.js', false) ?>').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
 </head>
 <body class="sim-body">
 <div class="sim-overlay" id="simOverlay"></div>
