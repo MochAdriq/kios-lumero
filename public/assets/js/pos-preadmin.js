@@ -114,24 +114,30 @@
     flowBar.innerHTML = '<div class="k2-flow">' + steps.map((s, i) => `<span class="${i === idx ? 'active' : (i < idx ? 'done' : '')}">${esc(s[1])}</span>`).join('') + '</div>';
     if (flowBack) flowBack.style.display = idx > 0 ? 'inline-flex' : 'none';
   }
-  function optionCard({ cls = '', attrs = '', img = '', label = '', sub = '', price = '', disabled = false }) {
-    return `<button type="button" class="sim-kasir2-card ${cls}" ${attrs} ${disabled ? 'disabled' : ''}>
+  function optionCard({ cls = '', attrs = '', img = '', label = '', sub = '', price = '', disabled = false, warn = false }) {
+    const warnBadge = warn ? '<span style="position:absolute;top:6px;right:6px;background:#ef4444;color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:99px;z-index:2;letter-spacing:0.03em;">STOK HABIS</span>' : '';
+    return `<button type="button" class="sim-kasir2-card ${cls}" ${attrs} ${disabled ? 'disabled' : ''} style="position:relative;${warn ? 'opacity:0.75;' : ''}">
+      ${warnBadge}
       <span class="sim-kasir2-img"><img src="${esc(img || assets.dummy || '')}" alt="${esc(label)}" onerror="this.src='${esc(assets.dummy || '')}'"></span>
       <span class="sim-kasir2-cat">${esc(sub || "Lumero Menu")}</span>
       <strong title="${esc(label)}">${esc(label)}</strong>
-      <span class="sim-kasir2-bottom"><b>${price ? esc(price) : ''}</b><em>${disabled ? 'Tidak tersedia' : 'Pilih'}</em></span>
+      <span class="sim-kasir2-bottom"><b>${price ? esc(price) : ''}</b><em>${disabled ? 'Tidak tersedia' : (warn ? 'Override' : 'Pilih')}</em></span>
     </button>`;
   }
   function productCard(item) {
-    const disabled = Number(item.price || 0) <= 0 || Number(item.ready_stock || 0) <= 0;
+    const noPrice = Number(item.price || 0) <= 0;
+    const noStock = Number(item.ready_stock || 0) <= 0;
+    const disabled = noPrice; // hanya disable jika tidak ada harga
+    const warn = !noPrice && noStock; // peringatan jika stok habis tapi masih bisa dipilih
     return optionCard({
       cls: 'choose-variant',
       attrs: `data-id="${Number(item.variant_id)}"`,
       img: item.image,
       label: item.name || item.full_name,
-      sub: Number(item.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Sekali klik masuk keranjang',
+      sub: noStock ? 'Stok Habis — Bisa Di-override' : 'Sekali klik masuk keranjang',
       price: money(item.price),
-      disabled
+      disabled,
+      warn
     });
   }
   function renderSimple(cat) {
@@ -153,7 +159,8 @@
       const matched = items.filter(i => meta(i).part === p.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0) && matched.every(i => Number(i.price || 0) <= 0);
+        const warn = !disabled && matched.every(i => Number(i.ready_stock || 0) <= 0);
         out.push({ ...p, count, disabled });
       }
     });
@@ -164,8 +171,8 @@
     const originalItems = items.filter(i => meta(i).style === 'original');
     const sauceItems = items.filter(i => meta(i).style === 'sauce');
     const arr = [];
-    if (originalItems.length) arr.push({ key: 'original', label: 'Original', img: assets.original, sub: 'Tanpa saus tambahan', disabled: originalItems.every(i => Number(i.ready_stock || 0) <= 0) });
-    if (sauceItems.length) arr.push({ key: 'sauce', label: 'Plus Saus', img: assets.sauce, sub: 'Pilih saus favorit', disabled: sauceItems.every(i => Number(i.ready_stock || 0) <= 0) });
+    if (originalItems.length) arr.push({ key: 'original', label: 'Original', img: assets.original, sub: 'Tanpa saus tambahan', disabled: originalItems.every(i => Number(i.price || 0) <= 0), warn: originalItems.every(i => Number(i.ready_stock || 0) <= 0) });
+    if (sauceItems.length) arr.push({ key: 'sauce', label: 'Plus Saus', img: assets.sauce, sub: 'Pilih saus favorit', disabled: sauceItems.every(i => Number(i.price || 0) <= 0), warn: sauceItems.every(i => Number(i.ready_stock || 0) <= 0) });
     return arr;
   }
   function availableSauces() {
@@ -175,7 +182,8 @@
       const matched = items.filter(i => meta(i).sauce === s.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0) && matched.every(i => Number(i.price || 0) <= 0);
+        const warn = !disabled && matched.every(i => Number(i.ready_stock || 0) <= 0);
         arr.push({ ...s, count, disabled });
       }
     });
@@ -187,8 +195,8 @@
     const no = items.find(i => meta(i).rice === 0) || items.find(i => meta(i).rice === null);
     const yes = items.find(i => meta(i).rice === 1);
     const opts = [];
-    if (no) opts.push({ key: 0, label: 'Tanpa Nasi', img: assets.rice_no, item: no, sub: Number(no.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Item langsung masuk keranjang', disabled: Number(no.ready_stock || 0) <= 0 });
-    if (yes) opts.push({ key: 1, label: 'Plus Nasi', img: assets.rice_yes, item: yes, sub: Number(yes.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Item langsung masuk keranjang', disabled: Number(yes.ready_stock || 0) <= 0 });
+    if (no) opts.push({ key: 0, label: 'Tanpa Nasi', img: assets.rice_no, item: no, sub: Number(no.ready_stock || 0) <= 0 ? 'Stok Habis — Override' : 'Item langsung masuk keranjang', warn: Number(no.ready_stock || 0) <= 0, disabled: Number(no.price || 0) <= 0 });
+    if (yes) opts.push({ key: 1, label: 'Plus Nasi', img: assets.rice_yes, item: yes, sub: Number(yes.ready_stock || 0) <= 0 ? 'Stok Habis — Override' : 'Item langsung masuk keranjang', warn: Number(yes.ready_stock || 0) <= 0, disabled: Number(yes.price || 0) <= 0 });
     return opts;
   }
   function renderChicken() {
@@ -200,21 +208,21 @@
       const parts = availableParts();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih bagian ayam terlebih dahulu';
       productGrid.innerHTML = parts.length
-        ? parts.map(p => optionCard({ cls: 'choose-part', attrs: `data-part="${p.key}"`, img: p.img, label: p.label, sub: p.disabled ? 'Bahan Habis' : `${p.count} varian tersedia`, disabled: p.disabled })).join('')
+        ? parts.map(p => optionCard({ cls: 'choose-part', attrs: `data-part="${p.key}"`, img: p.img, label: p.label, sub: p.warn ? 'Stok Habis — Override' : (p.disabled ? 'Tidak Tersedia' : `${p.count} varian tersedia`), disabled: p.disabled, warn: p.warn })).join('')
         : '<div class="sim-empty-panel">Belum ada varian ayam pada kategori ini.</div>';
       return;
     }
     if (state.step === 'style') {
       const styles = availableStyles();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | ' + (partDefs.find(p => p.key === state.part)?.label || 'Bagian ayam');
-      productGrid.innerHTML = styles.map(s => optionCard({ cls: 'choose-style', attrs: `data-style="${s.key}"`, img: s.img, label: s.label, sub: s.disabled ? 'Bahan Habis' : s.sub, disabled: s.disabled })).join('');
+      productGrid.innerHTML = styles.map(s => optionCard({ cls: 'choose-style', attrs: `data-style="${s.key}"`, img: s.img, label: s.label, sub: s.warn ? 'Stok Habis — Override' : (s.disabled ? 'Tidak Tersedia' : s.sub), disabled: s.disabled, warn: s.warn })).join('');
       return;
     }
     if (state.step === 'sauce') {
       const sauces = availableSauces();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih saus';
       productGrid.innerHTML = sauces.length
-        ? sauces.map(s => optionCard({ cls: 'choose-sauce', attrs: `data-sauce="${s.key}"`, img: s.img, label: s.label, sub: s.disabled ? 'Bahan Habis' : `${s.count} varian tersedia`, disabled: s.disabled })).join('')
+        ? sauces.map(s => optionCard({ cls: 'choose-sauce', attrs: `data-sauce="${s.key}"`, img: s.img, label: s.label, sub: s.warn ? 'Stok Habis — Override' : (s.disabled ? 'Tidak Tersedia' : `${s.count} varian tersedia`), disabled: s.disabled, warn: s.warn })).join('')
         : '<div class="sim-empty-panel">Saus untuk pilihan ini belum tersedia.</div>';
       return;
     }
@@ -222,7 +230,7 @@
       const opts = matchingRiceOptions();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih nasi lalu masuk keranjang';
       productGrid.innerHTML = opts.length
-        ? opts.map(o => optionCard({ cls: 'choose-rice', attrs: `data-rice="${o.key}" data-variant="${Number(o.item.variant_id)}"`, img: o.img, label: o.label, sub: o.sub, price: money(o.item.price), disabled: o.disabled })).join('')
+        ? opts.map(o => optionCard({ cls: 'choose-rice', attrs: `data-rice="${o.key}" data-variant="${Number(o.item.variant_id)}"`, img: o.img, label: o.label, sub: o.sub, price: money(o.item.price), disabled: o.disabled, warn: o.warn })).join('')
         : '<div class="sim-empty-panel">Varian final belum cocok. Gunakan pencarian produk atau cek master produk.</div>';
       if (!opts.length) {
         const fallback = chickenItems().filter(i => meta(i).part === state.part && meta(i).style === state.style && (state.style !== 'sauce' || meta(i).sauce === state.sauce));
@@ -238,8 +246,9 @@
       const matched = items.filter(i => meta(i).iceBase === b.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
-        out.push({ ...b, count, disabled });
+        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0) && matched.every(i => Number(i.price || 0) <= 0);
+        const warn = !disabled && matched.every(i => Number(i.ready_stock || 0) <= 0);
+        out.push({ ...b, count, disabled, warn });
       }
     });
     return out;
@@ -251,7 +260,8 @@
       const matched = items.filter(i => meta(i).icePack === p.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0) && matched.every(i => Number(i.price || 0) <= 0);
+        const warn = !disabled && matched.every(i => Number(i.ready_stock || 0) <= 0);
         let itemRef = count === 1 ? matched[0] : null;
         out.push({ ...p, count, disabled, item: itemRef });
       }
@@ -265,7 +275,8 @@
       const matched = items.filter(i => meta(i).iceTopping === t.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0) && matched.every(i => Number(i.price || 0) <= 0);
+        const warn = !disabled && matched.every(i => Number(i.ready_stock || 0) <= 0);
         let itemRef = count === 1 ? matched[0] : null;
         out.push({ ...t, count, disabled, item: itemRef });
       }
@@ -281,7 +292,7 @@
       const bases = availableIceBases();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih rasa dasar';
       productGrid.innerHTML = bases.length
-        ? bases.map(b => optionCard({ cls: 'choose-ice-base', attrs: `data-base="${b.key}"`, img: b.img, label: b.label, sub: b.disabled ? 'Bahan Habis' : `${b.count} varian tersedia`, disabled: b.disabled })).join('')
+        ? bases.map(b => optionCard({ cls: 'choose-ice-base', attrs: `data-base="${b.key}"`, img: b.img, label: b.label, sub: b.warn ? 'Stok Habis — Override' : (b.disabled ? 'Tidak Tersedia' : `${b.count} varian tersedia`), disabled: b.disabled, warn: b.warn })).join('')
         : '<div class="sim-empty-panel">Belum ada varian es krim.</div>';
       return;
     }
@@ -292,7 +303,7 @@
         let isFinal = p.key === 'cone'; // cone has no toppings in our structure
         let attrs = `data-pack="${p.key}"`;
         if (isFinal && p.item) attrs += ` data-variant="${Number(p.item.variant_id)}"`;
-        return optionCard({ cls: isFinal ? 'choose-ice-final' : 'choose-ice-pack', attrs: attrs, img: p.img, label: p.label, sub: p.disabled ? 'Bahan Habis' : (isFinal ? 'Klik untuk tambah ke keranjang' : 'Lanjut pilih topping'), price: isFinal ? money(p.item?.price) : '', disabled: p.disabled });
+        return optionCard({ cls: isFinal ? 'choose-ice-final' : 'choose-ice-pack', attrs: attrs, img: p.img, label: p.label, sub: p.warn ? 'Stok Habis — Override' : (p.disabled ? 'Tidak Tersedia' : (isFinal ? 'Klik untuk tambah ke keranjang' : 'Lanjut pilih topping')), price: isFinal ? money(p.item?.price) : '', disabled: p.disabled, warn: p.warn });
       }).join('');
       return;
     }
@@ -302,7 +313,7 @@
       productGrid.innerHTML = toppings.map(t => {
         let attrs = `data-topping="${t.key}"`;
         if (t.item) attrs += ` data-variant="${Number(t.item.variant_id)}"`;
-        return optionCard({ cls: 'choose-ice-final', attrs: attrs, img: t.img, label: t.label, sub: t.disabled ? 'Bahan Habis' : 'Klik untuk tambah ke keranjang', price: money(t.item?.price), disabled: t.disabled });
+        return optionCard({ cls: 'choose-ice-final', attrs: attrs, img: t.img, label: t.label, sub: t.warn ? 'Stok Habis — Override' : (t.disabled ? 'Tidak Tersedia' : 'Klik untuk tambah ke keranjang'), price: money(t.item?.price), disabled: t.disabled, warn: t.warn });
       }).join('');
       return;
     }
