@@ -231,19 +231,48 @@ document.addEventListener("DOMContentLoaded", function() {
         btnScan.classList.replace('btn-danger', 'btn-primary');
         
         let text = decodedText.trim();
-        let matched = text.match(/(RDM-[A-Z0-9\-]+|[A-Z0-9]{8,12})/i);
+        let code = '';
+
+        // 1. Coba ekstrak dari URL ?claim=... (struk kasir)
+        let urlMatch = text.match(/[?&]claim=([A-Z0-9\-]+)/i);
+        if (urlMatch) {
+            code = urlMatch[1].toUpperCase();
+        }
         
-        if (matched) {
-            let code = matched[1].toUpperCase();
-            if (code.startsWith('RDM-')) {
+        // 2. Coba ekstrak KAL-... (kupon undian event)
+        if (!code) {
+            let kalMatch = text.match(/(KAL-[A-Z0-9]+)/i);
+            if (kalMatch) code = kalMatch[1].toUpperCase();
+        }
+
+        // 3. Coba ekstrak RDM-... (tukar poin)
+        if (!code) {
+            let rdmMatch = text.match(/(RDM-[A-Z0-9\-]+)/i);
+            if (rdmMatch) code = rdmMatch[1].toUpperCase();
+        }
+
+        // 4. Fallback: ambil string alfanumerik 6-20 karakter
+        if (!code) {
+            let anyMatch = text.match(/\b([A-Z0-9]{6,20})\b/i);
+            if (anyMatch) code = anyMatch[1].toUpperCase();
+        }
+
+        if (code) {
+            if (code.startsWith('KAL-')) {
+                // Kupon undian → form event
+                inputEvent.value = code;
+                formEvent.submit();
+            } else if (code.startsWith('RDM-')) {
+                // Tukar poin → hidden form reward
                 hiddenQ.value = code;
                 hiddenForm.submit();
             } else {
-                inputEvent.value = code;
-                formEvent.submit();
+                // Struk kasir atau kode lainnya → coba sebagai reward (kasir bisa pilih manual)
+                hiddenQ.value = code;
+                hiddenForm.submit();
             }
         } else {
-            alert('Format kode tidak dikenali dari hasil scan: ' + text);
+            alert('Format kode tidak dikenali dari hasil scan. Teks mentah: ' + text);
         }
     }
 
