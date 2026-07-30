@@ -440,8 +440,8 @@ function printOrderRawBT(orderId, btn) {
     document.addEventListener('DOMContentLoaded', function() {
         // Handle row click
         $('#ordersTable tbody').on('click', 'tr', function(e) {
-            // Ignore clicks on buttons/links inside the row
-            if ($(e.target).closest('button, a, form').length) return;
+            // Ignore clicks on buttons/links/checkboxes inside the row
+            if ($(e.target).closest('button, a, form, input').length) return;
             
             const orderIdStr = $(this).find('input[name="id"]').val() || $(this).find('a[href*="/pos/receipt/"]').attr('href').split('/').pop();
             const orderId = parseInt(orderIdStr);
