@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Format Rupiah for Javascript
             function formatRupiah(number) {
-                return 'Rp ' + number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                return 'Rp ' + Math.round(number).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             }
 
             // Update cumulative summaries on filter
