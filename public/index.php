@@ -119,8 +119,10 @@ if (class_exists('POSController')) {
     $router->post('/pos/checkout', [POSController::class,'checkout']);
     $router->get('/pos/receipt/{id}', [POSController::class,'receipt']);
     $router->get('/orders', [POSController::class,'orders']);
+    $router->get('/orders/details', [POSController::class,'orderDetails']);
     $router->post('/orders/update-status', [POSController::class,'updateOrderStatus']);
     $router->post('/orders/update-payment', [POSController::class,'updatePaymentStatus']);
+    $router->post('/orders/update-item-fulfillment', [POSController::class,'updateItemFulfillment']);
     $router->get('/payments', [POSController::class,'payments']);
     $router->post('/payments/verify', [POSController::class,'verifyPayment']);
     if (class_exists('MidtransController')) {

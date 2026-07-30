@@ -292,3 +292,125 @@ function printOrderRawBT(orderId, btn) {
         });
 }
 </script>
+
+<!-- KDS Checklist Modal -->
+<div class="modal fade" id="kdsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="kdsModalTitle">Detail Pesanan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="kdsLoading" class="text-center py-4 text-muted" style="display:none;">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div> Mengambil data...
+                </div>
+                <div id="kdsContent" style="display:none;">
+                    <div class="mb-3 p-3 bg-light rounded-3">
+                        <div class="fw-bold" id="kdsCustomerName"></div>
+                        <div class="text-muted small" id="kdsOrderMeta"></div>
+                    </div>
+                    <h6 class="fw-bold mb-3">Daftar Menu:</h6>
+                    <div id="kdsItemsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle row click
+        $('#ordersTable tbody').on('click', 'tr', function(e) {
+            // Ignore clicks on buttons/links inside the row
+            if ($(e.target).closest('button, a, form').length) return;
+            
+            const orderIdStr = $(this).find('input[name="id"]').val() || $(this).find('a[href*="/pos/receipt/"]').attr('href').split('/').pop();
+            const orderId = parseInt(orderIdStr);
+            if (!orderId) return;
+
+            const modal = new bootstrap.Modal(document.getElementById('kdsModal'));
+            modal.show();
+
+            $('#kdsContent').hide();
+            $('#kdsLoading').show();
+
+            fetch(`<?= url('/orders/details') ?>?id=${orderId}`)
+                .then(res => res.json())
+                .then(data => {
+                    $('#kdsLoading').hide();
+                    if(data.success) {
+                        $('#kdsCustomerName').text(data.order.customer_name || 'Guest ' + data.order.order_number);
+                        $('#kdsOrderMeta').text('#' + data.order.order_number + ' • ' + (data.order.order_type === 'dine_in' ? 'Dine In' : 'Takeaway'));
+                        
+                        let itemsHtml = '';
+                        data.items.forEach(item => {
+                            const qty = Math.floor(item.qty);
+                            const fulfilled = Math.floor(item.fulfilled_qty || 0);
+                            
+                            itemsHtml += `
+                            <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2">
+                                <div>
+                                    <div class="fw-medium text-dark">${item.product_name_snapshot}</div>
+                                    ${item.variant_name_snapshot ? `<div class="small text-muted">${item.variant_name_snapshot}</div>` : ''}
+                                    ${item.notes ? `<div class="small text-danger fst-italic">Note: ${item.notes}</div>` : ''}
+                                </div>
+                                <div class="d-flex gap-2">`;
+                            
+                            for(let i=1; i<=qty; i++) {
+                                const isChecked = i <= fulfilled ? 'checked' : '';
+                                itemsHtml += `
+                                    <div class="form-check" style="min-height: 24px;">
+                                        <input class="form-check-input kds-checkbox" type="checkbox" style="width:24px; height:24px; cursor:pointer;" 
+                                            data-order-id="${data.order.id}" 
+                                            data-item-id="${item.id}" 
+                                            data-item-qty="${qty}"
+                                            value="1" ${isChecked}>
+                                    </div>`;
+                            }
+                            itemsHtml += `</div></div>`;
+                        });
+                        
+                        $('#kdsItemsList').html(itemsHtml || '<div class="text-muted small">Tidak ada item</div>');
+                        $('#kdsContent').show();
+                    } else {
+                        $('#kdsItemsList').html('<div class="text-danger small">Gagal mengambil data.</div>');
+                        $('#kdsContent').show();
+                    }
+                })
+                .catch(err => {
+                    $('#kdsLoading').hide();
+                    $('#kdsItemsList').html('<div class="text-danger small">Koneksi terputus.</div>');
+                    $('#kdsContent').show();
+                });
+        });
+
+        // Handle checkbox click
+        $(document).on('change', '.kds-checkbox', function() {
+            const container = $(this).closest('.d-flex.gap-2');
+            const checkedCount = container.find('.kds-checkbox:checked').length;
+            const orderId = $(this).data('order-id');
+            const itemId = $(this).data('item-id');
+            
+            const formData = new FormData();
+            formData.append('ajax', '1');
+            formData.append('order_id', orderId);
+            formData.append('item_id', itemId);
+            formData.append('fulfilled_qty', checkedCount);
+            
+            fetch(`<?= url('/orders/update-item-fulfillment') ?>`, {
+                method: 'POST',
+                body: formData
+            }).then(res => res.json()).then(data => {
+                if(data.success && data.auto_ready) {
+                    location.reload(); // Reload immediately if order becomes ready
+                }
+            });
+        });
+
+        // Reload page when KDS modal is closed to refresh statuses
+        $('#kdsModal').on('hidden.bs.modal', function () {
+            location.reload();
+        });
+    });
+</script>

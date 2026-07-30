@@ -188,6 +188,64 @@ class POSController extends Controller
         $this->redirect('/orders');
     }
 
+    public function orderDetails(): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
+        $orderId = (int)($_GET['id'] ?? 0);
+        if ($orderId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid order ID']);
+            return;
+        }
+        $data = $this->model->getOrderById($orderId, $this->model->outletId());
+        if (!$data['order']) {
+            echo json_encode(['success' => false, 'message' => 'Order not found']);
+            return;
+        }
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'order' => $data['order'], 'items' => $data['items']]);
+    }
+
+    public function updateItemFulfillment(): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+               || (!empty($_POST['ajax']) && $_POST['ajax'] === '1');
+        
+        $orderId = (int)($_POST['order_id'] ?? 0);
+        $itemId = (int)($_POST['item_id'] ?? 0);
+        $fulfilledQty = (float)($_POST['fulfilled_qty'] ?? 0);
+
+        if ($orderId <= 0 || $itemId <= 0) {
+            if ($isAjax) { echo json_encode(['success' => false, 'message' => 'Invalid IDs']); return; }
+            $this->redirect('/orders');
+            return;
+        }
+
+        $pdo = Database::connection();
+        $st = $pdo->prepare("UPDATE order_items SET fulfilled_qty = ? WHERE id = ? AND order_id = ?");
+        $st->execute([$fulfilledQty, $itemId, $orderId]);
+
+        // Auto-status check: Are all items fulfilled?
+        $stCheck = $pdo->prepare("SELECT SUM(qty) AS total_qty, SUM(fulfilled_qty) AS total_fulfilled FROM order_items WHERE order_id = ?");
+        $stCheck->execute([$orderId]);
+        $totals = $stCheck->fetch(PDO::FETCH_ASSOC);
+
+        $autoReady = false;
+        if ($totals && (float)$totals['total_fulfilled'] >= (float)$totals['total_qty']) {
+            $pdo->prepare("UPDATE orders SET order_status = 'ready', updated_at = NOW() WHERE id = ? AND order_status IN ('pending', 'preparing')")->execute([$orderId]);
+            $autoReady = true;
+        } else {
+            $pdo->prepare("UPDATE orders SET order_status = 'preparing', updated_at = NOW() WHERE id = ? AND order_status = 'pending'")->execute([$orderId]);
+        }
+
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'auto_ready' => $autoReady]);
+        } else {
+            $this->redirect('/orders');
+        }
+    }
+
     public function payments(): void
     {
         Auth::requireRoles(['super_admin','administrator','cashier']);
