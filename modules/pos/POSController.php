@@ -155,13 +155,14 @@ class POSController extends Controller
             $st = $pdo->prepare("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?");
             $st->execute([$status, $orderId]);
             
-            $st2 = $pdo->prepare("
-                UPDATE free_orders fo
-                JOIN orders o ON fo.pre_order_no = o.order_number
-                SET fo.order_status = ?
-                WHERE o.id = ?
-            ");
-            $st2->execute([$status, $orderId]);
+            $orderSt = $pdo->prepare("SELECT order_number FROM orders WHERE id = ?");
+            $orderSt->execute([$orderId]);
+            $orderNo = $orderSt->fetchColumn();
+            
+            if ($orderNo) {
+                $st2 = $pdo->prepare("UPDATE free_orders SET order_status = ? WHERE pre_order_no = ?");
+                $st2->execute([$status, $orderNo]);
+            }
             
             $_SESSION['flash_success'] = 'Status pesanan berhasil diupdate menjadi ' . strtoupper($status) . '.';
         } else {
