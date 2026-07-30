@@ -38,11 +38,11 @@
     <div class="row g-2 mb-3 align-items-end">
         <div class="col-md-3">
             <label class="form-label mb-1 small text-muted">Dari Tanggal</label>
-            <input type="date" id="filterStartDate" class="form-control form-control-sm border-0 bg-light">
+            <input type="date" id="filterStartDate" class="form-control form-control-sm border-0 bg-light" value="<?= date('Y-m-d') ?>">
         </div>
         <div class="col-md-3">
             <label class="form-label mb-1 small text-muted">Sampai Tanggal</label>
-            <input type="date" id="filterEndDate" class="form-control form-control-sm border-0 bg-light">
+            <input type="date" id="filterEndDate" class="form-control form-control-sm border-0 bg-light" value="<?= date('Y-m-d') ?>">
         </div>
         <div class="col-md-3">
             <label class="form-label mb-1 small text-muted">Status</label>
@@ -212,8 +212,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     var statusStr = data[4] || ""; // Status is column index 4
                     statusStr = statusStr.toLowerCase();
                     
-                    // Parse date "YYYY-MM-DD" from "YYYY-MM-DD HH:mm:ss"
-                    var dateOnly = dateStr.trim().substring(0, 10);
+                    // Parse date "YYYY-MM-DD" from "DD/MM/YYYY"
+                    var dateRaw = dateStr.trim().substring(0, 10);
+                    var dateOnly = dateRaw;
+                    if (dateRaw.indexOf('/') === 2) { // DD/MM/YYYY format
+                        var parts = dateRaw.split('/');
+                        if (parts.length === 3) {
+                            dateOnly = parts[2] + '-' + parts[1] + '-' + parts[0];
+                        }
+                    }
                     
                     if (min && dateOnly < min) return false;
                     if (max && dateOnly > max) return false;
