@@ -7,7 +7,7 @@
         <div class="card bg-primary text-white rounded-4 border-0 shadow-sm h-100">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 opacity-75">Total Transaksi Valid</h6>
-                <h3 class="card-title mb-0 fw-bold"><?= number_format($summary['total_orders'] ?? 0, 0, ',', '.') ?></h3>
+                <h3 class="card-title mb-0 fw-bold" id="summary_total_orders"><?= number_format($summary['total_orders'] ?? 0, 0, ',', '.') ?></h3>
             </div>
         </div>
     </div>
@@ -15,7 +15,7 @@
         <div class="card bg-success text-white rounded-4 border-0 shadow-sm h-100">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 opacity-75">Total Pendapatan</h6>
-                <h3 class="card-title mb-0 fw-bold"><?= rupiah($summary['total_revenue'] ?? 0) ?></h3>
+                <h3 class="card-title mb-0 fw-bold" id="summary_total_revenue"><?= rupiah($summary['total_revenue'] ?? 0) ?></h3>
             </div>
         </div>
     </div>
@@ -23,7 +23,7 @@
         <div class="card bg-info text-white rounded-4 border-0 shadow-sm h-100">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 opacity-75">Total Profit Kasar</h6>
-                <h3 class="card-title mb-0 fw-bold"><?= rupiah($summary['total_profit'] ?? 0) ?></h3>
+                <h3 class="card-title mb-0 fw-bold" id="summary_total_profit"><?= rupiah($summary['total_profit'] ?? 0) ?></h3>
             </div>
         </div>
     </div>
@@ -81,7 +81,7 @@
             </thead>
             <tbody>
                 <?php foreach ($orders as $o): ?>
-                <tr>
+                <tr data-total="<?= $o['grand_total'] ?>" data-profit="<?= $o['gross_profit'] ?? 0 ?>" data-status="<?= htmlspecialchars($o['order_status'] ?? '') ?>">
                     <td>
                         <div class="fw-bold fs-6 text-dark"><?= htmlspecialchars($o['customer_name'] ?? ('Guest '.$o['order_number'])) ?></div>
                         <div class="text-muted" style="font-size: 11px;">#<?= htmlspecialchars($o['order_number']) ?> &middot; <?= htmlspecialchars($o['order_source']) ?></div>
@@ -256,6 +256,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 $('#filterStatus').val('');
                 table.draw();
             });
+
+            // Format Rupiah for Javascript
+            function formatRupiah(number) {
+                return 'Rp ' + number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+
+            // Update cumulative summaries on filter
+            table.on('draw.dt', function() {
+                var totalOrders = 0;
+                var totalRevenue = 0;
+                var totalProfit = 0;
+
+                table.rows({ search: 'applied' }).every(function(rowIdx, tableLoop, rowLoop) {
+                    var node = this.node();
+                    var orderStatus = $(node).attr('data-status');
+                    var total = parseFloat($(node).attr('data-total')) || 0;
+                    var profit = parseFloat($(node).attr('data-profit')) || 0;
+
+                    // Only count if not cancelled
+                    if (orderStatus !== 'cancelled') {
+                        totalOrders++;
+                        totalRevenue += total;
+                        totalProfit += profit;
+                    }
+                });
+
+                $('#summary_total_orders').text(totalOrders);
+                $('#summary_total_revenue').text(formatRupiah(totalRevenue));
+                $('#summary_total_profit').text(formatRupiah(totalProfit));
+            });
+            
+            // Trigger calculation on initial load
+            table.draw();
         };
         document.body.appendChild(dtBsScript);
     };
