@@ -48,8 +48,17 @@
             <label class="form-label mb-1 small text-muted">Status</label>
             <select id="filterStatus" class="form-select form-select-sm border-0 bg-light">
                 <option value="">Semua Status</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <optgroup label="Status Pembayaran">
+                    <option value="Hutang Kembalian">Hutang Kembalian</option>
+                    <option value="Belum Bayar">Belum Bayar</option>
+                    <option value="Lunas">Lunas</option>
+                </optgroup>
+                <optgroup label="Status Dapur">
+                    <option value="Antre">Antre</option>
+                    <option value="Dimasak">Dimasak</option>
+                    <option value="Siap Saji">Siap Saji</option>
+                    <option value="Selesai">Selesai</option>
+                </optgroup>
             </select>
         </div>
         <div class="col-md-3">
