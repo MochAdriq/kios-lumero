@@ -132,7 +132,29 @@ if ($isHQUser) {
     </script>
     <link rel="manifest" href="<?= url('/manifest-admin.json', false) ?>">
     <link rel="apple-touch-icon" href="<?= url('/public/assets/images/icon-512x512.png', false) ?>">
+    <style>
+      @media all and (display-mode: standalone) {
+        .pwa-install-btn { display: none !important; }
+      }
+    </style>
     <script>
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.style.display = 'inline-flex');
+      });
+
+      function installPWA() {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') { console.log('User accepted the A2HS prompt'); }
+          deferredPrompt = null;
+          document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.style.display = 'none');
+        });
+      }
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('<?= url('/sw.js', false) ?>').catch(err => console.log('SW registration failed: ', err));
@@ -143,14 +165,17 @@ if ($isHQUser) {
 <body class="sim-body">
 <div class="sim-overlay" id="simOverlay"></div>
 <aside class="sim-sidebar" id="simSidebar">
-    <div class="sim-brand">
-        <a href="<?= url('/dashboard') ?>" class="sim-brand-link">
+    <div class="sim-brand" style="display:flex; align-items:center; justify-content:space-between; padding-right: 15px;">
+        <a href="<?= url('/dashboard') ?>" class="sim-brand-link" style="flex:1;">
             <span class="sim-brand-mark"><?= sim_icon('ti-tools-kitchen-2') ?></span>
             <span class="sim-brand-text">
                 <strong>Lumero</strong>
                 <small>POS System</small>
             </span>
         </a>
+        <button class="pwa-install-btn" style="display:none; align-items:center; justify-content:center; gap:4px; background:var(--sim-primary); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:11px; cursor:pointer;" onclick="installPWA()">
+            <?= sim_icon('ti-download', '', 'width:14px;height:14px;') ?> Install
+        </button>
     </div>
 
     <div class="sim-outlet-card">

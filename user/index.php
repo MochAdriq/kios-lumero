@@ -1088,7 +1088,27 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     </style>
     <link rel="manifest" href="../manifest-user.json">
     <link rel="apple-touch-icon" href="../public/assets/images/icon-512x512.png">
+    <style>
+      @media all and (display-mode: standalone) {
+        .pwa-install-btn { display: none !important; }
+      }
+    </style>
     <script>
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.style.display = 'inline-flex');
+      });
+      function installPWA() {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') { console.log('User accepted the A2HS prompt'); }
+          deferredPrompt = null;
+          document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.style.display = 'none');
+        });
+      }
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('../sw.js').catch(err => console.log('SW registration failed: ', err));
@@ -1105,6 +1125,7 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
         Lumero
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
+        <button class="pwa-install-btn btn-nav" style="display: none; cursor: pointer; background: #FF6B00; border: none; color: white; padding: 6px 12px; border-radius: 99px; font-weight: 600; font-size: 13px;" onclick="installPWA()">Install App</button>
         <div class="nav-badge">Traktiran Eksklusif</div>
         <a href="<?= url('/user/login.php') ?>?source=organic" class="btn-nav">Login</a>
     </div>
