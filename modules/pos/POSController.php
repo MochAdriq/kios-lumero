@@ -190,19 +190,28 @@ class POSController extends Controller
 
     public function orderDetails(): void
     {
-        Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
-        $orderId = (int)($_GET['id'] ?? 0);
-        if ($orderId <= 0) {
-            echo json_encode(['success' => false, 'message' => 'Invalid order ID']);
-            return;
-        }
-        $data = $this->model->getOrderById($orderId, $this->model->outletId());
-        if (!$data['order']) {
-            echo json_encode(['success' => false, 'message' => 'Order not found']);
-            return;
-        }
         header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'order' => $data['order'], 'items' => $data['items']]);
+        try {
+            Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
+            $orderId = (int)($_GET['id'] ?? 0);
+            if ($orderId <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Invalid order ID']);
+                return;
+            }
+            $data = $this->model->receipt($orderId, $this->model->outletId());
+            if (!$data || empty($data['order'])) {
+                echo json_encode(['success' => false, 'message' => 'Order not found']);
+                return;
+            }
+            $json = json_encode(['success' => true, 'order' => $data['order'], 'items' => $data['items']]);
+            if ($json === false) {
+                echo json_encode(['success' => false, 'message' => 'JSON Error: ' . json_last_error_msg()]);
+                return;
+            }
+            echo $json;
+        } catch (Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        }
     }
 
     public function updateItemFulfillment(): void
