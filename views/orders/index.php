@@ -87,6 +87,7 @@
                         <div class="text-muted" style="font-size: 11px;">#<?= htmlspecialchars($o['order_number']) ?> &middot; <?= htmlspecialchars($o['order_source']) ?></div>
                     </td>
                     <td data-sort="<?= strtotime($o['created_at']) ?>">
+                        <span class="d-none order-date-raw"><?= date('Y-m-d', strtotime($o['created_at'])) ?></span>
                         <div class="fw-medium"><?= date('H:i', strtotime($o['created_at'])) ?></div>
                         <div class="text-muted" style="font-size: 11px;"><?= date('d M Y', strtotime($o['created_at'])) ?></div>
                     </td>
@@ -212,13 +213,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     var statusStr = data[4] || ""; // Status is column index 4
                     statusStr = statusStr.toLowerCase();
                     
-                    // Extract DD/MM/YYYY or YYYY-MM-DD using regex
+                    // Extract date from hidden YYYY-MM-DD span or fallback to YYYY-MM-DD regex
                     var dateOnly = "";
-                    var dmyMatch = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
                     var ymdMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
-                    if (dmyMatch) {
-                        dateOnly = dmyMatch[3] + '-' + dmyMatch[2] + '-' + dmyMatch[1];
-                    } else if (ymdMatch) {
+                    if (ymdMatch) {
                         dateOnly = ymdMatch[0];
                     }
                     
