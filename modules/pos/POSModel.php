@@ -150,16 +150,28 @@ class POSModel extends Model
         $change = $paymentMethod === 'cash' ? max(0, $paidAmount - $grandTotal) : 0;
         $grossProfit = $grandTotal - $tax - $service - $totalHpp;
 
+        $isChangeOwed = !empty($payload['is_change_owed']) && $change > 0;
+        $paymentStatus = 'paid';
+        $orderStatus = 'pending'; // For kitchen queue
+        if ($isChangeOwed) {
+            $paymentStatus = 'owes_change';
+        } else if ($paymentMethod === 'qris' || $paymentMethod === 'ewallet' || $paymentMethod === 'transfer') {
+            $paymentStatus = 'waiting_verification';
+        }
+
         $this->db->beginTransaction();
         try {
             $orderNo = $this->nextOrderNumber();
+            $custName = !empty($payload['customer_name']) ? $payload['customer_name'] : "Guest $orderNo";
+            $changeOwedAmt = $isChangeOwed ? $change : 0;
+            
             $stmt = $this->db->prepare("INSERT INTO orders
-                (outlet_id,daily_store_session_id,customer_id,order_number,order_source,order_type,business_date,subtotal,discount_amount,tax_amount,service_amount,grand_total,total_hpp,gross_profit,payment_status,order_status,print_status,cashier_id,notes,created_at,updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                (outlet_id,daily_store_session_id,customer_id,customer_name,order_number,order_source,order_type,business_date,subtotal,discount_amount,tax_amount,service_amount,grand_total,change_owed_amount,total_hpp,gross_profit,payment_status,order_status,print_status,cashier_id,notes,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $orderBizDate = business_date($outletId);
             $stmt->execute([
-                $outletId,(int)$session['id'],null,$orderNo,$orderSource,$orderType,$orderBizDate,$subtotal,$discount,$tax,$service,$grandTotal,$totalHpp,$grossProfit,
-                'paid','completed','waiting',Auth::id(),($payload['notes'] ?? null),now(),now()
+                $outletId,(int)$session['id'],null,$custName,$orderNo,$orderSource,$orderType,$orderBizDate,$subtotal,$discount,$tax,$service,$grandTotal,$changeOwedAmt,$totalHpp,$grossProfit,
+                $paymentStatus,$orderStatus,'waiting',Auth::id(),($payload['notes'] ?? null),now(),now()
             ]);
             $orderId = (int)$this->db->lastInsertId();
             $bizDate = $orderBizDate;

@@ -370,7 +370,19 @@
     if (subtotalText) subtotalText.textContent = money(subtotal);
     if (totalText) totalText.textContent = money(total);
     if (taxPreview) taxPreview.textContent = money(tax);
-    if (changeText) changeText.textContent = money(Math.max(0, Number(paidAmount?.value || 0) - total));
+    const changeAmount = Math.max(0, Number(paidAmount?.value || 0) - total);
+    if (changeText) changeText.textContent = money(changeAmount);
+    
+    const changeWrap = document.getElementById('changeOwedWrap');
+    const changeOwed = document.getElementById('isChangeOwed');
+    if (changeWrap) {
+        if (changeAmount > 0) {
+            changeWrap.style.display = 'flex';
+        } else {
+            changeWrap.style.display = 'none';
+            if (changeOwed) changeOwed.checked = false;
+        }
+    }
     if (itemCount) itemCount.textContent = totalQty;
     if (cartJson) cartJson.value = JSON.stringify(cart.map(i => ({ variant_id: i.variant_id, qty: i.qty })));
     const ic2 = document.querySelector('#itemCount2'); if (ic2) ic2.textContent = totalQty;

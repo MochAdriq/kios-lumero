@@ -120,6 +120,7 @@ if (class_exists('POSController')) {
     $router->get('/pos/receipt/{id}', [POSController::class,'receipt']);
     $router->get('/orders', [POSController::class,'orders']);
     $router->post('/orders/update-status', [POSController::class,'updateOrderStatus']);
+    $router->post('/orders/update-payment', [POSController::class,'updatePaymentStatus']);
     $router->get('/payments', [POSController::class,'payments']);
     $router->post('/payments/verify', [POSController::class,'verifyPayment']);
     if (class_exists('MidtransController')) {

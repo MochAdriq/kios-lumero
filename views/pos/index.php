@@ -134,6 +134,7 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                                     <div class="sim-summary-row sim-summary-total"><span>Total</span><strong id="totalText">Rp 0</strong></div>
                                 </div>
                                 <textarea name="notes" class="form-control mt-2 sim-notes-input" rows="1" placeholder="Catatan order..."></textarea>
+                                <input type="text" name="customer_name" class="form-control mt-2 sim-notes-input" placeholder="Nama Pelanggan (opsional)">
 
                                 <!-- Payment Methods -->
                                 <div class="sim-pay-section">
@@ -158,7 +159,11 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                                 <!-- Uang Diterima -->
                                 <div class="sim-paid-section" id="simPaidSection">
                                     <div class="sim-summary-row"><span>Uang Diterima</span><input type="number" class="form-control form-control-sm text-end sim-summary-input" name="paid_amount" id="paidAmount" min="0" step="500" placeholder="50000"></div>
-                                    <div class="sim-summary-row"><span>Kembalian</span><span id="changeText">Rp 0</span></div>
+                                    <div class="sim-summary-row mb-1"><span>Kembalian</span><span id="changeText">Rp 0</span></div>
+                                    <div class="form-check form-switch mb-0 text-end" id="changeOwedWrap" style="display:none; justify-content: flex-end;">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="isChangeOwed" name="is_change_owed" value="1">
+                                        <label class="form-check-label fs-12 text-muted" for="isChangeOwed">Tunda Kembalian (Hutang)</label>
+                                    </div>
                                 </div>
                             </form>
                         </div>

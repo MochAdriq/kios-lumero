@@ -61,58 +61,109 @@
         <table class="table align-middle" id="ordersTable">
             <thead>
                 <tr>
-                    <th>No Order</th>
-                    <th>Tanggal</th>
-                    <th>Sumber</th>
-                    <th>Jenis Pesanan</th>
-                    <th>Payment</th>
-                    <th>Status</th>
+                    <th>Pelanggan / No Order</th>
+                    <th>Waktu</th>
+                    <th>Pesanan</th>
+                    <th>Status Pembayaran</th>
+                    <th>Status Dapur</th>
                     <th class="text-end">Total</th>
-                    <th></th>
+                    <th class="text-end">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($orders as $o): ?>
                 <tr>
-                    <td><strong><?= htmlspecialchars($o['order_number']) ?></strong></td>
-                    <td data-sort="<?= strtotime($o['created_at']) ?>"><?= htmlspecialchars($o['created_at']) ?></td>
-                    <td><?= htmlspecialchars($o['order_source']) ?></td>
+                    <td>
+                        <div class="fw-bold fs-6 text-dark"><?= htmlspecialchars($o['customer_name'] ?? ('Guest '.$o['order_number'])) ?></div>
+                        <div class="text-muted" style="font-size: 11px;">#<?= htmlspecialchars($o['order_number']) ?> &middot; <?= htmlspecialchars($o['order_source']) ?></div>
+                    </td>
+                    <td data-sort="<?= strtotime($o['created_at']) ?>">
+                        <div class="fw-medium"><?= date('H:i', strtotime($o['created_at'])) ?></div>
+                        <div class="text-muted" style="font-size: 11px;"><?= date('d M Y', strtotime($o['created_at'])) ?></div>
+                    </td>
                     <td>
                         <?php 
                         $pMethod = strtoupper(trim($o['payment_method'] ?? ''));
                         $oType = strtolower(trim($o['order_type'] ?? 'takeaway'));
                         if ($pMethod === 'POINT' || $pMethod === 'LOYALTY') {
-                            echo '<span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-gift-fill me-1"></i>Tukar Poin</span>';
+                            echo '<span class="badge bg-warning text-dark px-2 py-1 mb-1 d-inline-block"><i class="bi bi-gift-fill me-1"></i>Tukar Poin</span>';
                         } elseif ($oType === 'delivery') {
-                            echo '<span class="badge bg-info text-white px-2 py-1"><i class="bi bi-truck me-1"></i>Delivery / Kirim</span>';
+                            echo '<span class="badge bg-info text-white px-2 py-1 mb-1 d-inline-block"><i class="bi bi-truck me-1"></i>Delivery</span>';
                         } elseif ($oType === 'dine_in') {
-                            echo '<span class="badge text-white px-2 py-1" style="background-color: #6f42c1;"><i class="bi bi-cup-hot-fill me-1"></i>Dine In</span>';
+                            echo '<span class="badge text-white px-2 py-1 mb-1 d-inline-block" style="background-color: #6f42c1;"><i class="bi bi-cup-hot-fill me-1"></i>Dine In</span>';
                         } else {
-                            echo '<span class="badge bg-success text-white px-2 py-1"><i class="bi bi-bag-check-fill me-1"></i>Takeaway / Ambil</span>';
+                            echo '<span class="badge bg-success text-white px-2 py-1 mb-1 d-inline-block"><i class="bi bi-bag-check-fill me-1"></i>Takeaway</span>';
                         }
                         ?>
+                        <div style="font-size: 11px;" class="text-muted"><i class="bi bi-wallet2"></i> <?= htmlspecialchars(strtoupper($o['payment_method'])) ?></div>
                     </td>
-                    <td><?= htmlspecialchars(strtoupper($o['payment_method'])) ?></td>
                     <td>
-                        <span class="badge-soft <?= $o['order_status']==='completed'?'badge-open':($o['order_status']==='cancelled'?'bg-danger text-white':'') ?>">
-                            <?= htmlspecialchars($o['order_status']) ?>
-                        </span>
+                        <?php if (($o['payment_status'] ?? '') === 'owes_change'): ?>
+                            <span class="badge bg-warning text-dark px-2 py-1">Hutang Kembalian</span>
+                            <div class="text-danger fw-bold mt-1" style="font-size: 12px;">Rp <?= number_format($o['change_owed_amount'] ?? 0, 0, ',', '.') ?></div>
+                        <?php elseif (($o['payment_status'] ?? '') === 'paid'): ?>
+                            <span class="badge bg-success text-white px-2 py-1">Lunas</span>
+                        <?php elseif (($o['payment_status'] ?? '') === 'unpaid'): ?>
+                            <span class="badge bg-danger text-white px-2 py-1">Belum Bayar</span>
+                        <?php else: ?>
+                            <span class="badge bg-secondary px-2 py-1"><?= htmlspecialchars(strtoupper($o['payment_status'] ?? '')) ?></span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if (($o['order_status'] ?? '') === 'pending'): ?>
+                            <span class="badge bg-danger text-white px-2 py-1">Antre</span>
+                        <?php elseif (($o['order_status'] ?? '') === 'preparing'): ?>
+                            <span class="badge bg-warning text-dark px-2 py-1">Dimasak</span>
+                        <?php elseif (($o['order_status'] ?? '') === 'ready'): ?>
+                            <span class="badge bg-info text-dark px-2 py-1">Siap Saji</span>
+                        <?php elseif (($o['order_status'] ?? '') === 'completed'): ?>
+                            <span class="badge bg-success text-white px-2 py-1">Selesai</span>
+                        <?php else: ?>
+                            <span class="badge bg-secondary px-2 py-1"><?= htmlspecialchars(strtoupper($o['order_status'] ?? '')) ?></span>
+                        <?php endif; ?>
                     </td>
                     <td class="text-end fw-bold" data-sort="<?= $o['grand_total'] ?>"><?= rupiah($o['grand_total']) ?></td>
                     <td class="text-end">
-                        <a class="btn btn-light btn-sm rounded-pill" href="<?= url('/pos/receipt/'.$o['id']) ?>">Struk</a>
-                        <button class="btn btn-primary btn-sm rounded-pill text-white ms-1" onclick="printOrderRawBT(<?= $o['id'] ?>, this)" title="Cetak ke Printer via RawBT">Cetak</button>
-                        <?php if($o['order_status'] === 'processing'): ?>
-                            <form action="<?= url('/orders/update-status') ?>" method="post" class="d-inline" onsubmit="return confirm('Tandai pesanan ini selesai?');">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= $o['id'] ?>">
-                                <input type="hidden" name="status" value="completed">
-                                <button type="submit" class="btn btn-success btn-sm rounded-pill ms-1 text-white">✔ Selesai</button>
-                            </form>
-                        <?php endif; ?>
-                        <?php if($o['order_type'] === 'delivery'): ?>
-                        <a class="btn btn-info btn-sm rounded-pill text-white ms-1" href="<?= url('/delivery?q='.urlencode($o['order_number'])) ?>" title="Buka di Monitoring Kurir">Kurir</a>
-                        <?php endif; ?>
+                        <a class="btn btn-light btn-sm rounded-pill mb-1" href="<?= url('/pos/receipt/'.$o['id']) ?>">Struk</a>
+                        <button class="btn btn-light btn-sm rounded-pill mb-1 ms-1" onclick="printOrderRawBT(<?= $o['id'] ?>, this)" title="Cetak ke Printer via RawBT">Cetak</button>
+                        
+                        <div class="mt-1 d-flex gap-1 justify-content-end flex-wrap">
+                            <?php if(($o['payment_status'] ?? '') === 'owes_change'): ?>
+                                <form action="<?= url('/orders/update-payment') ?>" method="post" class="d-inline" onsubmit="return confirm('Lunasi hutang kembalian pesanan ini?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                                    <input type="hidden" name="status" value="paid">
+                                    <button type="submit" class="btn btn-warning btn-sm rounded-pill text-dark" style="font-size:11px;">Lunasi Kembalian</button>
+                                </form>
+                            <?php endif; ?>
+
+                            <?php if(($o['order_status'] ?? '') === 'pending'): ?>
+                                <form action="<?= url('/orders/update-status') ?>" method="post" class="d-inline" onsubmit="return confirm('Tandai pesanan sedang dimasak?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                                    <input type="hidden" name="status" value="preparing">
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill text-white" style="font-size:11px;">Masak</button>
+                                </form>
+                            <?php elseif(($o['order_status'] ?? '') === 'preparing'): ?>
+                                <form action="<?= url('/orders/update-status') ?>" method="post" class="d-inline" onsubmit="return confirm('Tandai pesanan siap saji?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                                    <input type="hidden" name="status" value="ready">
+                                    <button type="submit" class="btn btn-info btn-sm rounded-pill text-white" style="font-size:11px;">Siap Saji</button>
+                                </form>
+                            <?php elseif(($o['order_status'] ?? '') === 'ready'): ?>
+                                <form action="<?= url('/orders/update-status') ?>" method="post" class="d-inline" onsubmit="return confirm('Serahkan pesanan ke pelanggan?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="btn btn-success btn-sm rounded-pill text-white" style="font-size:11px;">Selesai</button>
+                                </form>
+                            <?php endif; ?>
+                            
+                            <?php if(($o['order_type'] ?? '') === 'delivery'): ?>
+                                <a class="btn btn-info btn-sm rounded-pill text-white" style="font-size:11px;" href="<?= url('/delivery?q='.urlencode($o['order_number'])) ?>" title="Buka di Monitoring Kurir">Kurir</a>
+                            <?php endif; ?>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>

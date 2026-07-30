@@ -35,6 +35,8 @@ class POSController extends Controller
                 'paid_amount' => $_POST['paid_amount'] ?? 0,
                 'discount_amount' => $_POST['discount_amount'] ?? 0,
                 'notes' => $_POST['notes'] ?? null,
+                'customer_name' => !empty($_POST['customer_name']) ? trim((string)$_POST['customer_name']) : null,
+                'is_change_owed' => !empty($_POST['is_change_owed']) ? 1 : 0,
                 'member_id' => !empty($_POST['member_id']) ? (int)$_POST['member_id'] : null,
                 'customer_phone' => !empty($_POST['customer_phone']) ? trim((string)$_POST['customer_phone']) : null,
             ]);
@@ -148,7 +150,7 @@ class POSController extends Controller
         verify_csrf();
         $orderId = (int)($_POST['id'] ?? 0);
         $status = trim($_POST['status'] ?? '');
-        if ($orderId > 0 && in_array($status, ['completed'], true)) {
+        if ($orderId > 0 && in_array($status, ['preparing', 'ready', 'completed'], true)) {
             $pdo = Database::connection();
             $st = $pdo->prepare("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?");
             $st->execute([$status, $orderId]);
@@ -164,6 +166,24 @@ class POSController extends Controller
             $_SESSION['flash_success'] = 'Status pesanan berhasil diupdate menjadi ' . strtoupper($status) . '.';
         } else {
             $_SESSION['flash_error'] = 'Gagal mengupdate status pesanan.';
+        }
+        $this->redirect('/orders');
+    }
+
+    public function updatePaymentStatus(): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
+        verify_csrf();
+        $orderId = (int)($_POST['id'] ?? 0);
+        $status = trim($_POST['status'] ?? '');
+        if ($orderId > 0 && in_array($status, ['paid'], true)) {
+            $pdo = Database::connection();
+            $st = $pdo->prepare("UPDATE orders SET payment_status = ?, change_owed_amount = 0, updated_at = NOW() WHERE id = ?");
+            $st->execute([$status, $orderId]);
+            
+            $_SESSION['flash_success'] = 'Hutang kembalian pesanan berhasil dilunasi.';
+        } else {
+            $_SESSION['flash_error'] = 'Gagal melunasi kembalian.';
         }
         $this->redirect('/orders');
     }
