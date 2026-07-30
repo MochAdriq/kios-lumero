@@ -164,6 +164,10 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
                                         <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="isChangeOwed" name="is_change_owed" value="1">
                                         <label class="form-check-label fs-12 text-muted" for="isChangeOwed">Tunda Kembalian (Hutang)</label>
                                     </div>
+                                    <div class="form-check form-switch mb-0 text-end d-flex justify-content-end mt-1">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="skipPrintReceipt" name="skip_print_receipt" value="1">
+                                        <label class="form-check-label fs-12 text-muted" for="skipPrintReceipt">Tanpa Print Struk</label>
+                                    </div>
                                 </div>
                             </form>
                         </div>

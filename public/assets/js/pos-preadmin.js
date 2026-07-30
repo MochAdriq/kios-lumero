@@ -650,7 +650,21 @@
         if (data.success && data.qris_url) {
           showQrisModal(data.qris_url, data.qris_string, data.order_number, data.grand_total, data.receipt_url, data.order_id);
         } else if (data.success && data.receipt_url) {
-          showReceiptPopupModal(data.receipt_url, data.order_number, data.order_id);
+          const skipPrint = document.getElementById('skipPrintReceipt') && document.getElementById('skipPrintReceipt').checked;
+          if (skipPrint) {
+            // Show alert then reload/reset
+            const alertHtml = `<div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+                                 <div class="toast align-items-center text-bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+                                   <div class="d-flex">
+                                     <div class="toast-body fw-bold">Transaksi ${data.order_number} Berhasil!</div>
+                                   </div>
+                                 </div>
+                               </div>`;
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            showReceiptPopupModal(data.receipt_url, data.order_number, data.order_id);
+          }
         } else {
           alert('Gagal memproses transaksi: ' + (data.message || 'Error tidak diketahui'));
         }
