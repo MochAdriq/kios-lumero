@@ -21,8 +21,13 @@ if(!$member){ unset($_SESSION['member_id']); header('Location: index.php'); exit
 // Nomor WA toko untuk tombol konfirmasi
 $storeWaRaw = get_setting('store_whatsapp', '');
 if ($storeWaRaw === '') {
-    $outPhone = $pdo->query("SELECT phone FROM outlets ORDER BY id ASC LIMIT 1")->fetchColumn();
-    if ($outPhone) $storeWaRaw = $outPhone;
+    $sysWa = $pdo->query("SELECT setting_value FROM system_settings WHERE setting_key='store_whatsapp' AND setting_value != '' ORDER BY id DESC LIMIT 1")->fetchColumn();
+    if ($sysWa) {
+        $storeWaRaw = $sysWa;
+    } else {
+        $outPhone = $pdo->query("SELECT phone FROM outlets WHERE phone != '' AND phone IS NOT NULL ORDER BY id ASC LIMIT 1")->fetchColumn();
+        if ($outPhone) $storeWaRaw = $outPhone;
+    }
 }
 $storeWaNum = preg_replace('/[^0-9]/', '', (string)$storeWaRaw);
 if ($storeWaNum !== '' && str_starts_with($storeWaNum, '0')) { $storeWaNum = '62' . substr($storeWaNum, 1); }

@@ -43,8 +43,13 @@ $memberPhone = htmlspecialchars(trim((string)($memberInfo['phone'] ?? '')));
 // Nomor WA toko dari settings
 $storeWa = get_setting('store_whatsapp', '');
 if ($storeWa === '') {
-    $outPhone = $pdo->query("SELECT phone FROM outlets ORDER BY id ASC LIMIT 1")->fetchColumn();
-    if ($outPhone) $storeWa = $outPhone;
+    $sysWa = $pdo->query("SELECT setting_value FROM system_settings WHERE setting_key='store_whatsapp' AND setting_value != '' ORDER BY id DESC LIMIT 1")->fetchColumn();
+    if ($sysWa) {
+        $storeWa = $sysWa;
+    } else {
+        $outPhone = $pdo->query("SELECT phone FROM outlets WHERE phone != '' AND phone IS NOT NULL ORDER BY id ASC LIMIT 1")->fetchColumn();
+        if ($outPhone) $storeWa = $outPhone;
+    }
 }
 $storeWaClean = preg_replace('/[^0-9]/', '', (string)$storeWa);
 if ($storeWaClean !== '' && str_starts_with($storeWaClean, '0')) {
