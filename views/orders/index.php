@@ -61,15 +61,37 @@
                 </optgroup>
             </select>
         </div>
-        <div class="col-md-3">
-            <button class="btn btn-sm btn-secondary w-100" id="resetFilter">Reset Filter</button>
+        <div class="col-md-3 text-end d-flex gap-2 justify-content-end align-items-end">
+            <button class="btn btn-secondary btn-sm" id="resetFilter">Reset Filter</button>
         </div>
+    </div>
+    
+    <div class="bulk-actions mb-3 p-2 bg-light rounded d-none" id="bulkActionsContainer">
+        <span class="small fw-bold me-2"><span id="bulkSelectedCount">0</span> pesanan dipilih:</span>
+        <form action="<?= url('/orders/bulk-update-status') ?>" method="post" id="bulkActionForm" class="d-inline">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action_type" id="bulkActionType" value="">
+            <input type="hidden" name="order_ids" id="bulkOrderIds" value="">
+            
+            <button type="button" class="btn btn-warning btn-sm fw-medium text-dark ms-1" onclick="submitBulkAction('preparing', 'Tandai Dimasak')">
+                <i class="bi bi-fire"></i> Dimasak
+            </button>
+            <button type="button" class="btn btn-info btn-sm fw-medium text-white ms-1" onclick="submitBulkAction('ready', 'Tandai Siap Saji')">
+                <i class="bi bi-check-circle"></i> Siap Saji
+            </button>
+            <button type="button" class="btn btn-success btn-sm fw-medium text-white ms-1" onclick="submitBulkAction('completed', 'Tandai Selesai')">
+                <i class="bi bi-check-all"></i> Selesai
+            </button>
+        </form>
     </div>
 
     <div class="table-responsive">
         <table class="table align-middle" id="ordersTable">
             <thead>
                 <tr>
+                    <th class="text-center" style="width: 40px;">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                    </th>
                     <th>Pelanggan / No Order</th>
                     <th>Waktu</th>
                     <th>Pesanan</th>
@@ -82,6 +104,9 @@
             <tbody>
                 <?php foreach ($orders as $o): ?>
                 <tr data-total="<?= $o['grand_total'] ?>" data-profit="<?= $o['gross_profit'] ?? 0 ?>" data-status="<?= htmlspecialchars($o['order_status'] ?? '') ?>">
+                    <td class="text-center">
+                        <input class="form-check-input order-cb" type="checkbox" value="<?= $o['id'] ?>">
+                    </td>
                     <td>
                         <div class="fw-bold fs-6 text-dark"><?= htmlspecialchars($o['customer_name'] ?? ('Guest '.$o['order_number'])) ?></div>
                         <div class="text-muted" style="font-size: 11px;">#<?= htmlspecialchars($o['order_number']) ?> &middot; <?= htmlspecialchars($o['order_source']) ?></div>
@@ -209,8 +234,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     var max = $('#filterEndDate').val();
                     var statusFilter = $('#filterStatus').val().toLowerCase();
                     
-                    var dateStr = data[1] || ""; // Tanggal is column index 1
-                    var statusStr = data[4] || ""; // Status is column index 4
+                    var dateStr = data[2] || ""; // Tanggal is column index 2 now
+                    var statusStr = data[5] || ""; // Status is column index 5 now
                     statusStr = statusStr.toLowerCase();
                     
                     // Extract date from hidden YYYY-MM-DD span or fallback to YYYY-MM-DD regex
@@ -232,7 +257,10 @@ document.addEventListener('DOMContentLoaded', function() {
             );
 
             var table = $('#ordersTable').DataTable({
-                order: [[1, 'desc']], // Sort by Tanggal desc by default
+                order: [[2, 'desc']], // Sort by Tanggal desc by default (index 2)
+                columnDefs: [
+                    { targets: 0, orderable: false } // Disable sorting on checkbox column
+                ],
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json',
                     lengthMenu: "Tampilkan _MENU_ entri"
@@ -289,6 +317,58 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Trigger calculation on initial load
             table.draw();
+
+            // Bulk Actions Logic
+            $('#selectAll').on('click', function() {
+                var isChecked = this.checked;
+                // Only select visible rows based on current filter
+                table.rows({ search: 'applied' }).nodes().to$().find('.order-cb').prop('checked', isChecked);
+                updateBulkActionUI();
+            });
+
+            $('#ordersTable tbody').on('change', '.order-cb', function() {
+                updateBulkActionUI();
+                
+                // Update selectAll checkbox state
+                var allVisible = table.rows({ search: 'applied' }).nodes().to$().find('.order-cb').length;
+                var checkedVisible = table.rows({ search: 'applied' }).nodes().to$().find('.order-cb:checked').length;
+                $('#selectAll').prop('checked', allVisible === checkedVisible && allVisible > 0);
+            });
+
+            // Update UI on filter change (uncheck invisible ones if we want, or just re-evaluate)
+            table.on('draw.dt', function() {
+                updateBulkActionUI();
+                $('#selectAll').prop('checked', false);
+            });
+
+            window.submitBulkAction = function(actionType, actionName) {
+                var selected = [];
+                // Get all checked checkboxes across all pages in Datatable
+                table.$('.order-cb:checked').each(function() {
+                    selected.push($(this).val());
+                });
+
+                if (selected.length === 0) {
+                    alert('Pilih setidaknya satu pesanan!');
+                    return;
+                }
+
+                if (confirm('Apakah Anda yakin ingin ' + actionName + ' untuk ' + selected.length + ' pesanan terpilih?')) {
+                    $('#bulkActionType').val(actionType);
+                    $('#bulkOrderIds').val(selected.join(','));
+                    $('#bulkActionForm').submit();
+                }
+            };
+
+            function updateBulkActionUI() {
+                var count = table.$('.order-cb:checked').length;
+                $('#bulkSelectedCount').text(count);
+                if (count > 0) {
+                    $('#bulkActionsContainer').removeClass('d-none');
+                } else {
+                    $('#bulkActionsContainer').addClass('d-none');
+                }
+            }
         };
         document.body.appendChild(dtBsScript);
     };
