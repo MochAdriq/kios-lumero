@@ -171,6 +171,50 @@ class POSController extends Controller
         $this->redirect('/orders');
     }
 
+    public function bulkUpdateOrderStatus(): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
+        verify_csrf();
+        
+        $actionType = trim($_POST['action_type'] ?? '');
+        $orderIdsRaw = trim($_POST['order_ids'] ?? '');
+        $orderIds = array_filter(array_map('intval', explode(',', $orderIdsRaw)));
+        
+        if (empty($orderIds) || !in_array($actionType, ['preparing', 'ready', 'completed'], true)) {
+            $_SESSION['flash_error'] = 'Aksi massal tidak valid atau tidak ada pesanan yang dipilih.';
+            $this->redirect('/orders');
+            return;
+        }
+
+        $pdo = Database::connection();
+        $placeholders = str_repeat('?,', count($orderIds) - 1) . '?';
+        
+        try {
+            // Update POS Orders
+            $st = $pdo->prepare("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id IN ($placeholders)");
+            $params = array_merge([$actionType], $orderIds);
+            $st->execute($params);
+            
+            // Get order numbers to update free_orders
+            $stNum = $pdo->prepare("SELECT order_number FROM orders WHERE id IN ($placeholders)");
+            $stNum->execute($orderIds);
+            $orderNumbers = $stNum->fetchAll(PDO::FETCH_COLUMN);
+            
+            if (!empty($orderNumbers)) {
+                $placeholdersFo = str_repeat('?,', count($orderNumbers) - 1) . '?';
+                $stFo = $pdo->prepare("UPDATE free_orders SET order_status = ? WHERE pre_order_no IN ($placeholdersFo)");
+                $paramsFo = array_merge([$actionType], $orderNumbers);
+                $stFo->execute($paramsFo);
+            }
+            
+            $_SESSION['flash_success'] = count($orderIds) . ' pesanan berhasil ditandai sebagai ' . strtoupper($actionType) . '.';
+        } catch (\Throwable $e) {
+            $_SESSION['flash_error'] = 'Gagal melakukan aksi massal: ' . $e->getMessage();
+        }
+        
+        $this->redirect('/orders');
+    }
+
     public function updatePaymentStatus(): void
     {
         Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
