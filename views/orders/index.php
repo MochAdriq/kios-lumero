@@ -341,19 +341,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 $('#selectAll').prop('checked', false);
             });
 
-            window.submitBulkAction = function(actionType, actionName) {
+            window.submitBulkAction = function(actionType, actionName, singleOrderId = null) {
                 var selected = [];
-                // Get all checked checkboxes across all pages in Datatable
-                table.$('.order-cb:checked').each(function() {
-                    selected.push($(this).val());
-                });
+                if (singleOrderId) {
+                    selected.push(singleOrderId);
+                } else {
+                    // Get all checked checkboxes across all pages in Datatable
+                    table.$('.order-cb:checked').each(function() {
+                        selected.push($(this).val());
+                    });
+                }
 
                 if (selected.length === 0) {
                     alert('Pilih setidaknya satu pesanan!');
                     return;
                 }
 
-                if (confirm('Apakah Anda yakin ingin ' + actionName + ' untuk ' + selected.length + ' pesanan terpilih?')) {
+                var confirmMsg = singleOrderId ? 
+                    'Apakah Anda yakin ingin ' + actionName + ' pesanan ini?' : 
+                    'Apakah Anda yakin ingin ' + actionName + ' untuk ' + selected.length + ' pesanan terpilih?';
+
+                if (confirm(confirmMsg)) {
                     $('#bulkActionType').val(actionType);
                     $('#bulkOrderIds').val(selected.join(','));
                     $('#bulkActionForm').submit();
@@ -425,11 +433,32 @@ function printOrderRawBT(orderId, btn) {
                 </div>
                 <div id="kdsContent" style="display:none;">
                     <div class="mb-3 p-3 bg-light rounded-3">
-                        <div class="fw-bold" id="kdsCustomerName"></div>
-                        <div class="text-muted small" id="kdsOrderMeta"></div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-bold fs-5" id="kdsCustomerName"></div>
+                                <div class="text-muted small" id="kdsOrderMeta"></div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold fs-5 text-primary" id="kdsGrandTotal"></div>
+                                <div class="small text-muted" id="kdsOrderDate"></div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3 pt-3 border-top">
+                            <div id="kdsPaymentStatus"></div>
+                            <div id="kdsOrderStatus"></div>
+                        </div>
                     </div>
                     <h6 class="fw-bold mb-3">Daftar Menu:</h6>
                     <div id="kdsItemsList"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 bg-light rounded-bottom-4 justify-content-between" style="display:none;" id="kdsFooter">
+                <div class="d-flex gap-2">
+                    <a href="#" id="kdsBtnReceipt" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Struk</a>
+                    <button type="button" id="kdsBtnPrint" class="btn btn-outline-primary btn-sm rounded-pill px-3">Cetak</button>
+                </div>
+                <div class="d-flex gap-2" id="kdsActionButtons">
+                    <!-- Dynamic action buttons -->
                 </div>
             </div>
         </div>
@@ -451,6 +480,7 @@ function printOrderRawBT(orderId, btn) {
             modal.show();
 
             $('#kdsContent').hide();
+            $('#kdsFooter').hide();
             $('#kdsLoading').show();
 
             fetch(`<?= url('/orders/details') ?>?id=${orderId}`)
@@ -458,8 +488,52 @@ function printOrderRawBT(orderId, btn) {
                 .then(data => {
                     $('#kdsLoading').hide();
                     if(data.success) {
-                        $('#kdsCustomerName').text(data.order.customer_name || 'Guest ' + data.order.order_number);
-                        $('#kdsOrderMeta').text('#' + data.order.order_number + ' • ' + (data.order.order_type === 'dine_in' ? 'Dine In' : 'Takeaway'));
+                        const o = data.order;
+                        $('#kdsCustomerName').text(o.customer_name || 'Guest ' + o.order_number);
+                        $('#kdsOrderMeta').text('#' + o.order_number + ' • ' + (o.order_type === 'dine_in' ? 'Dine In' : (o.order_type === 'delivery' ? 'Delivery' : 'Takeaway')));
+                        
+                        // Formatting currency
+                        const total = 'Rp ' + Math.round(o.grand_total).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                        $('#kdsGrandTotal').text(total);
+                        
+                        // Date formatting simple fallback
+                        $('#kdsOrderDate').text(o.created_at);
+
+                        // Badges
+                        let pStatus = '<span class="badge bg-secondary">Unknown</span>';
+                        if (o.payment_status === 'paid') pStatus = '<span class="badge bg-success">Lunas</span>';
+                        else if (o.payment_status === 'unpaid') pStatus = '<span class="badge bg-danger">Belum Bayar</span>';
+                        else if (o.payment_status === 'owes_change') pStatus = '<span class="badge bg-warning text-dark">Hutang Kembalian</span>';
+                        $('#kdsPaymentStatus').html(pStatus);
+
+                        let oStatus = '<span class="badge bg-secondary">Unknown</span>';
+                        if (o.order_status === 'pending') oStatus = '<span class="badge bg-danger">Antre</span>';
+                        else if (o.order_status === 'preparing') oStatus = '<span class="badge bg-warning text-dark">Dimasak</span>';
+                        else if (o.order_status === 'ready') oStatus = '<span class="badge bg-info text-dark">Siap Saji</span>';
+                        else if (o.order_status === 'completed') oStatus = '<span class="badge bg-success">Selesai</span>';
+                        else if (o.order_status === 'cancelled') oStatus = '<span class="badge bg-dark">Batal</span>';
+                        $('#kdsOrderStatus').html(oStatus);
+
+                        // Actions Footer
+                        $('#kdsBtnReceipt').attr('href', '<?= url('/pos/receipt/') ?>' + o.id);
+                        $('#kdsBtnPrint').off('click').on('click', function() {
+                            printOrderRawBT(o.id, this);
+                        });
+
+                        let actionHtml = '';
+                        if (o.order_status === 'pending') {
+                            actionHtml += `<button type="button" class="btn btn-warning btn-sm rounded-pill text-dark fw-bold px-3" onclick="submitBulkAction('preparing', 'Tandai Dimasak', ${o.id})"><i class="bi bi-fire"></i> Masak</button>`;
+                        } else if (o.order_status === 'preparing') {
+                            actionHtml += `<button type="button" class="btn btn-info btn-sm rounded-pill text-white fw-bold px-3" onclick="submitBulkAction('ready', 'Tandai Siap Saji', ${o.id})"><i class="bi bi-check-circle"></i> Siap Saji</button>`;
+                        } else if (o.order_status === 'ready') {
+                            actionHtml += `<button type="button" class="btn btn-success btn-sm rounded-pill text-white fw-bold px-3" onclick="submitBulkAction('completed', 'Tandai Selesai', ${o.id})"><i class="bi bi-check-all"></i> Selesai</button>`;
+                        }
+                        
+                        if (o.payment_status === 'owes_change') {
+                            actionHtml += `<form action="<?= url('/orders/update-payment') ?>" method="post" class="d-inline" onsubmit="return confirm('Lunasi hutang kembalian pesanan ini?');"><input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>"><input type="hidden" name="id" value="${o.id}"><input type="hidden" name="status" value="paid"><button type="submit" class="btn btn-warning btn-sm rounded-pill text-dark fw-bold px-3">Lunasi Kembalian</button></form>`;
+                        }
+
+                        $('#kdsActionButtons').html(actionHtml);
                         
                         let itemsHtml = '';
                         data.items.forEach(item => {
@@ -489,9 +563,11 @@ function printOrderRawBT(orderId, btn) {
                             itemsHtml += `</div></div>`;
                         });
                         
-                        $('#kdsItemsList').html(itemsHtml || '<div class="text-muted small">Tidak ada item</div>');
+                        $('#kdsItemsList').html(itemsHtml);
                         $('#kdsContent').show();
+                        $('#kdsFooter').show();
                     } else {
+                        alert(data.message || 'Gagal mengambil detail');
                         $('#kdsItemsList').html('<div class="text-danger small">Gagal mengambil data.</div>');
                         $('#kdsContent').show();
                     }
