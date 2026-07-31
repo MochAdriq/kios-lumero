@@ -422,12 +422,17 @@ function loyalty_rate_limited(PDO $pdo, string $phone, string $activity='member_
     $ip=(string)($_SERVER['REMOTE_ADDR'] ?? 'cli');
     $st=$pdo->prepare("SELECT COUNT(*) FROM member_activity_logs WHERE activity_type=? AND (phone=? OR ip_address=?) AND created_at >= (NOW() - INTERVAL ? MINUTE)");
     $st->execute([$activity,$p,$ip,$minutes]);
-    return (int)$st->fetchColumn() >= $limit;
+    $count = (int)$st->fetchColumn();
+    $st->closeCursor();
+    return $count >= $limit;
 }
 function loyalty_add_points(PDO $pdo, int $memberId, int $pointsIn, string $type, string $description='', $transactionId=null, $receiptClaimId=null, $createdBy=null): int {
     $pointsIn=max(0,$pointsIn);
     if($pointsIn<=0) return (int)(loyalty_member_by_id($pdo,$memberId)['total_points'] ?? 0);
-    $st=$pdo->prepare("SELECT * FROM members WHERE id=? FOR UPDATE"); $st->execute([$memberId]); $m=$st->fetch(PDO::FETCH_ASSOC);
+    $st=$pdo->prepare("SELECT * FROM members WHERE id=? FOR UPDATE"); 
+    $st->execute([$memberId]); 
+    $m=$st->fetch(PDO::FETCH_ASSOC);
+    $st->closeCursor();
     if(!$m) throw new Exception('Member tidak ditemukan.');
     $balance=(int)$m['total_points'] + $pointsIn;
     $pdo->prepare("UPDATE members SET total_points=?, updated_at=NOW() WHERE id=?")->execute([$balance,$memberId]);
@@ -438,7 +443,10 @@ function loyalty_add_points(PDO $pdo, int $memberId, int $pointsIn, string $type
 function loyalty_deduct_points(PDO $pdo, int $memberId, int $pointsOut, string $type, string $description='', $transactionId=null, $createdBy=null): int {
     $pointsOut=max(0,$pointsOut);
     if($pointsOut<=0) return (int)(loyalty_member_by_id($pdo,$memberId)['total_points'] ?? 0);
-    $st=$pdo->prepare("SELECT * FROM members WHERE id=? FOR UPDATE"); $st->execute([$memberId]); $m=$st->fetch(PDO::FETCH_ASSOC);
+    $st=$pdo->prepare("SELECT * FROM members WHERE id=? FOR UPDATE"); 
+    $st->execute([$memberId]); 
+    $m=$st->fetch(PDO::FETCH_ASSOC);
+    $st->closeCursor();
     if(!$m) throw new Exception('Member tidak ditemukan.');
     if((int)$m['status']!==1 && ($m['status'] ?? 'active')!=='active') throw new Exception('Member tidak aktif.');
     if((int)$m['total_points'] < $pointsOut) throw new Exception('Point member tidak mencukupi.');
