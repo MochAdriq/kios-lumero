@@ -91,6 +91,7 @@ $menuGroups += [
     'Keuangan & Laporan' => [
         ['label' => 'Biaya Operasional',     'icon' => 'ti ti-wallet',                 'url' => '/expenses',          'roles' => $ADMIN],
         ['label' => 'Laporan Harian',        'icon' => 'ti ti-report-analytics',       'url' => '/reports/daily',     'roles' => $ADMIN],
+        ['label' => 'Penjualan Produk',      'icon' => 'ti ti-shopping-bag',           'url' => '/product-sales',     'roles' => $ADMIN],
         ['label' => 'Laporan Keuangan',      'icon' => 'ti ti-chart-infographic',      'url' => '/reports/financial', 'roles' => $ADMIN],
     ],
 ];
