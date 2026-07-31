@@ -640,7 +640,26 @@
         } else if (data.success && data.receipt_url) {
           const skipCb = document.getElementById('skipPrintReceipt');
           if (skipCb && skipCb.checked) {
-            alert('Transaksi Berhasil: ' + data.order_number);
+            // Bypass receipt modal, but still open cash drawer for cash payments
+            const pm = document.getElementById('paymentMethod');
+            const isCash = !pm || pm.value === 'cash';
+            if (isCash && data.order_id) {
+              // Open cash drawer via Thermer scheme (no print)
+              fetch(appUrl + '/api/print/open-drawer.php?order_id=' + data.order_id + '&payment_method=cash')
+                .then(r => r.json())
+                .then(d => {
+                  if (d.success && d.btapp_url) {
+                    window.location.href = d.btapp_url;
+                  }
+                })
+                .catch(() => {});
+            }
+            // Show brief success toast/alert and reset cart
+            const toastEl = document.createElement('div');
+            toastEl.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;font-weight:700;font-size:15px;padding:12px 28px;border-radius:50px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.18);';
+            toastEl.textContent = '✅ Transaksi Berhasil: ' + data.order_number;
+            document.body.appendChild(toastEl);
+            setTimeout(() => { toastEl.remove(); }, 2500);
             if (typeof resetPosCartAfterOrder === 'function') resetPosCartAfterOrder();
           } else {
             showReceiptPopupModal(data.receipt_url, data.order_number, data.order_id);
