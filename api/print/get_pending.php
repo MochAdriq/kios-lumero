@@ -19,7 +19,7 @@ try {
     // Begin transaction to safely pick one order
     $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare("SELECT * FROM orders WHERE payment_status = 'paid' AND order_status <> 'cancelled' AND print_status = 'waiting' ORDER BY id ASC LIMIT 1 FOR UPDATE");
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE payment_status = 'paid' AND order_status <> 'cancelled' AND print_status IN ('waiting', 'drawer_only') ORDER BY id ASC LIMIT 1 FOR UPDATE");
     $stmt->execute();
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -53,7 +53,12 @@ try {
     }
 
     // Use helper to build receipt
-    $receiptLines = build_receipt_text($order, $items, 32, current_outlet_name());
+    if ($order['print_status'] === 'drawer_only') {
+        // Just print a space to trigger the printer driver to pop the drawer
+        $receiptLines = [" "];
+    } else {
+        $receiptLines = build_receipt_text($order, $items, 32, current_outlet_name());
+    }
 
     echo json_encode([
         'success' => true,

@@ -169,7 +169,7 @@ class POSModel extends Model
                 (outlet_id,daily_store_session_id,customer_id,customer_name,order_number,order_source,order_type,business_date,subtotal,discount_amount,tax_amount,service_amount,grand_total,change_owed_amount,total_hpp,gross_profit,payment_status,order_status,print_status,cashier_id,notes,created_at,updated_at)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $orderBizDate = business_date($outletId);
-            $printStatus = !empty($payload['skip_print_receipt']) ? 'skipped' : 'waiting';
+            $printStatus = !empty($payload['skip_print_receipt']) ? 'drawer_only' : 'waiting';
             $stmt->execute([
                 $outletId,(int)$session['id'],null,$custName,$orderNo,$orderSource,$orderType,$orderBizDate,$subtotal,$discount,$tax,$service,$grandTotal,$changeOwedAmt,$totalHpp,$grossProfit,
                 $paymentStatus,$orderStatus,$printStatus,Auth::id(),($payload['notes'] ?? null),now(),now()
