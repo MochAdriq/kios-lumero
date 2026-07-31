@@ -30,6 +30,40 @@ class LoyaltyController extends Controller
         ]);
     }
 
+    public function memberDetail()
+    {
+        Auth::requireLogin();
+        $pdo = Database::connection();
+        require_once __DIR__ . '/../../config/loyalty.php';
+        loyalty_ensure_tables($pdo);
+
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            header('Location: ' . url('/loyalty/members'));
+            exit;
+        }
+
+        $stmt = $pdo->prepare("SELECT * FROM members WHERE id = ? LIMIT 1");
+        $stmt->execute([$id]);
+        $member = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$member) {
+            header('Location: ' . url('/loyalty/members'));
+            exit;
+        }
+
+        // Ambil riwayat poin
+        $logStmt = $pdo->prepare("SELECT * FROM member_point_logs WHERE member_id = ? ORDER BY created_at DESC");
+        $logStmt->execute([$id]);
+        $pointLogs = $logStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('loyalty/member_detail', [
+            'pageTitle' => 'Detail Member & Riwayat Poin',
+            'member' => $member,
+            'pointLogs' => $pointLogs
+        ]);
+    }
+
     public function rewards()
     {
         Auth::requireLogin();

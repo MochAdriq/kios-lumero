@@ -90,6 +90,7 @@ $router->get('/central-settings/api/items', [CentralSettingsController::class,'a
 
 if (class_exists('LoyaltyController')) {
     $router->get('/loyalty/members', [LoyaltyController::class, 'members']);
+    $router->get('/loyalty/members/detail', [LoyaltyController::class, 'memberDetail']);
     $router->get('/loyalty/rewards', [LoyaltyController::class, 'rewards']);
     $router->post('/loyalty/rewards/save', [LoyaltyController::class, 'saveReward']);
     $router->post('/loyalty/rewards/delete', [LoyaltyController::class, 'deleteReward']);

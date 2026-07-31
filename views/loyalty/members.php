@@ -71,12 +71,13 @@
                                 <th>Total Poin</th>
                                 <th>Total Belanja</th>
                                 <th>Status</th>
+                                <th class="text-end pe-3">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($members)): ?>
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">Belum ada member terdaftar.</td>
+                                <td colspan="5" class="text-center py-4 text-muted">Belum ada member terdaftar.</td>
                             </tr>
                             <?php else: ?>
                             <?php foreach ($members as $m): ?>
@@ -95,6 +96,11 @@
                                     <span class="badge <?= ($m['status'] ?? 'active') === 'active' ? 'bg-success-subtle text-success' : 'bg-secondary' ?> rounded-pill">
                                         <?= strtoupper($m['status'] ?? 'ACTIVE') ?>
                                     </span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a href="<?= url('/loyalty/members/detail?id=' . $m['id']) ?>" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        Detail
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
