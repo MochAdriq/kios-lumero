@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/helpers/utilities.php';
+require_once __DIR__ . '/helpers/functions.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/core/Database.php';
 require_once __DIR__ . '/core/Model.php';
