@@ -42,7 +42,10 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     try {
         $stmt = $pdo->prepare("SELECT status FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go') ORDER BY id DESC LIMIT 1");
         $stmt->execute([$memberId]);
-        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        
+        if ($row) {
             if ($row['status'] === 'PENDING') {
                 return ' 🚨 Maaf, Anda belum menukarkan kupon sebelumnya! Yuk, selesaikan dulu penukaran hadiah Anda di Outlet Lumero Kalibunder sebelum berburu kupon baru.';
             } elseif (in_array($row['status'], ['CLAIMED', 'AUTO_CLAIMED'], true)) {
