@@ -14,6 +14,12 @@
                         </select>
                         <?php endif; ?>
                         
+                        <select name="category_id" class="form-select form-select-sm" style="border-radius:20px; max-width: 150px;">
+                            <option value="">Semua Kategori</option>
+                            <?php foreach($categories as $cat): ?>
+                                <option value="<?= $cat['id'] ?>" <?= $selectedCategory == $cat['id'] ? 'selected' : '' ?>><?= htmlspecialchars($cat['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-light border-end-0" style="border-radius:20px 0 0 20px;"><?= sim_icon('ti-calendar') ?></span>
                             <input type="date" name="start_date" class="form-control border-start-0" value="<?= htmlspecialchars($startDate) ?>" max="<?= date('Y-m-d') ?>">
