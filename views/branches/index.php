@@ -171,6 +171,35 @@ $isHQ = Auth::isHQ();
                             <small class="text-muted">Transaksi setelah jam ini masuk hari berikutnya.</small>
                         </div>
 
+                        <div class="col-12 mt-3">
+                            <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Pengaturan Online Order</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Status Online Order</label>
+                            <select name="is_online_order_active" id="branchIsOnlineOrder" class="form-select">
+                                <option value="1">Buka / Aktif</option>
+                                <option value="0">Tutup / Nonaktif</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-medium">Nomor WhatsApp Cabang</label>
+                            <input name="online_order_wa" id="branchOnlineOrderWa" class="form-control" placeholder="628xxxx (Gunakan kode 62)">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-1">
+                                <input type="hidden" name="allow_delivery" value="0">
+                                <input type="checkbox" name="allow_delivery" id="branchAllowDelivery" class="form-check-input" value="1">
+                                <label class="form-check-label" for="branchAllowDelivery">Aktifkan Opsi Delivery</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-1">
+                                <input type="hidden" name="allow_pickup" value="0">
+                                <input type="checkbox" name="allow_pickup" id="branchAllowPickup" class="form-check-input" value="1" checked>
+                                <label class="form-check-label" for="branchAllowPickup">Aktifkan Ambil Sendiri (Pickup)</label>
+                            </div>
+                        </div>
+
                         <div class="col-12">
                             <div class="d-flex gap-4 p-3 bg-light rounded border">
                                 <div class="form-check">
@@ -292,6 +321,11 @@ function openAddModal() {
     document.getElementById('branchId').value = '';
     document.getElementById('branchIsActive').checked = true;
     
+    document.getElementById('branchIsOnlineOrder').value = '1';
+    document.getElementById('branchOnlineOrderWa').value = '';
+    document.getElementById('branchAllowDelivery').checked = false;
+    document.getElementById('branchAllowPickup').checked = true;
+    
     document.getElementById('modalBranchTitle').innerHTML = '<?= sim_icon('ti-building-store') ?> Tambah Cabang Baru';
     document.getElementById('adminSection').style.display = 'block';
     document.getElementById('adminFields').style.display = 'none';
@@ -311,6 +345,11 @@ function editBranch(b) {
     document.getElementById('branchClosingHour').value = (b.closing_hour || '21:00:00').substring(0, 5);
     document.getElementById('branchIsHQ').checked = !!parseInt(b.is_hq);
     document.getElementById('branchIsActive').checked = !!parseInt(b.is_active);
+    
+    document.getElementById('branchIsOnlineOrder').value = b.is_online_order_active === undefined ? '1' : parseInt(b.is_online_order_active);
+    document.getElementById('branchOnlineOrderWa').value = b.online_order_wa || '';
+    document.getElementById('branchAllowDelivery').checked = !!parseInt(b.allow_delivery || 0);
+    document.getElementById('branchAllowPickup').checked = b.allow_pickup === undefined ? true : !!parseInt(b.allow_pickup);
     
     document.getElementById('modalBranchTitle').innerHTML = '<?= sim_icon('ti-pencil') ?> Edit Cabang';
     

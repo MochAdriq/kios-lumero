@@ -49,6 +49,11 @@ class BranchModel extends Model
         $isActive     = (int)($data['is_active'] ?? 1);
         $type         = trim($data['type'] ?? 'owned');
 
+        $isOnlineOrderActive = (int)($data['is_online_order_active'] ?? 1);
+        $onlineOrderWa       = trim($data['online_order_wa'] ?? '');
+        $allowDelivery       = (int)($data['allow_delivery'] ?? 0);
+        $allowPickup         = (int)($data['allow_pickup'] ?? 1);
+
         if ($name === '') {
             throw new RuntimeException('Nama outlet wajib diisi.');
         }
@@ -104,8 +109,8 @@ class BranchModel extends Model
 
         if ($id > 0) {
             // Update (company_id not changed on update)
-            $this->execSql("UPDATE outlets SET name=?, slug=?, outlet_code=?, type=?, address=?, phone=?, closing_hour=?, is_hq=?, is_active=?, updated_at=NOW() WHERE id=?",
-                [$name, $slug ?: null, $code, $type, $address, $phone, $closingHour, $isHQ, $isActive, $id]);
+            $this->execSql("UPDATE outlets SET name=?, slug=?, outlet_code=?, type=?, address=?, phone=?, closing_hour=?, is_hq=?, is_active=?, is_online_order_active=?, online_order_wa=?, allow_delivery=?, allow_pickup=?, updated_at=NOW() WHERE id=?",
+                [$name, $slug ?: null, $code, $type, $address, $phone, $closingHour, $isHQ, $isActive, $isOnlineOrderActive, $onlineOrderWa ?: null, $allowDelivery, $allowPickup, $id]);
             return $id;
         }
 
@@ -118,8 +123,8 @@ class BranchModel extends Model
 
         // Insert with company_id (required NOT NULL FK to companies table)
         $this->execSql(
-            "INSERT INTO outlets (company_id, name, slug, outlet_code, type, address, phone, closing_hour, is_hq, is_active, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
-            [$companyId, $name, $slug ?: null, $code, $type, $address, $phone, $closingHour, $isHQ, $isActive]
+            "INSERT INTO outlets (company_id, name, slug, outlet_code, type, address, phone, closing_hour, is_hq, is_active, is_online_order_active, online_order_wa, allow_delivery, allow_pickup, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
+            [$companyId, $name, $slug ?: null, $code, $type, $address, $phone, $closingHour, $isHQ, $isActive, $isOnlineOrderActive, $onlineOrderWa ?: null, $allowDelivery, $allowPickup]
         );
         $newBranchId = (int)Database::connection()->lastInsertId();
 

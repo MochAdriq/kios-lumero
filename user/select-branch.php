@@ -12,7 +12,7 @@ if (empty($_SESSION['welcome_passed'])) {
 date_default_timezone_set('Asia/Jakarta');
 try{ if(isset($pdo) && $pdo instanceof PDO) $pdo->exec("SET time_zone = '+07:00'"); }catch(Throwable $e){}
 
-$stOutlets = $pdo->query("SELECT id, slug, name, outlet_code AS code, is_hq, is_active, closing_hour, address, phone, latitude, longitude FROM outlets WHERE is_active = 1 ORDER BY is_hq DESC, name ASC");
+$stOutlets = $pdo->query("SELECT id, slug, name, outlet_code AS code, is_hq, is_active, closing_hour, address, phone, latitude, longitude, is_online_order_active FROM outlets WHERE is_active = 1 ORDER BY is_hq DESC, name ASC");
 $activeOutletsList = $stOutlets ? $stOutlets->fetchAll(PDO::FETCH_ASSOC) : [];
 if (empty($activeOutletsList)) {
     $bc = app_branch_config();
@@ -170,7 +170,7 @@ const dummies = [
 dummies.forEach(d => {
     outlets.push({
         id: d.id, name: d.name, address: d.address, latitude: d.lat, longitude: d.lng,
-        is_open: true, open_time: '10:00', close_time: '21:00', is_dummy: true
+        is_open: true, open_time: '10:00', close_time: '21:00', is_dummy: true, is_online_order_active: 0
     });
 });
 
@@ -271,9 +271,7 @@ function renderBranchCards(userLat, userLng) {
             badgeHtml = `<div class="badge-dist" style="background:rgba(239,68,68,0.25); border-color:#F87171; color:#FECACA;">🚫 SEDANG TUTUP (${distText})</div>`;
         }
         
-        const nameLower = o.name.toLowerCase();
-        const isKalibunder = nameLower.includes('kalibunder') || nameLower.includes('klb');
-        const isOnlineAllowed = isKalibunder;
+        const isOnlineAllowed = parseInt(o.is_online_order_active || 0) === 1;
         
         let borderStyle = isClosest ? 'border: 2px solid #FF2D55; box-shadow: 0 16px 42px rgba(255,45,85,0.3);' : '';
         if (!o.is_open) {
@@ -327,7 +325,7 @@ function selectBranchItem(outletId, isOpen, outletName, openTime, closeTime, isO
         return;
     }
     if (!isOnlineAllowed) {
-        alert(`Mohon maaf, toko ini belum melayani online order. Silakan pilih cabang Kalibunder.`);
+        alert(`Mohon maaf, toko ini belum melayani online order. Silakan pilih cabang lain yang aktif.`);
         return;
     }
     window.location.href = 'online-order.php?outlet_id=' + outletId;
