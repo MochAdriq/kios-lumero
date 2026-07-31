@@ -77,14 +77,6 @@
                                 <td class="px-3 text-end fw-bold text-info"><?= rupiah($row['total_profit']) ?></td>
                             </tr>
                             <?php endforeach; ?>
-                            <?php if (empty($stats)): ?>
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    <?= sim_icon('ti-inbox', 'fs-1 mb-2 d-block') ?>
-                                    Belum ada data penjualan pada rentang tanggal tersebut.
-                                </td>
-                            </tr>
-                            <?php endif; ?>
                         </tbody>
                         <?php if (!empty($stats)): ?>
                         <tfoot class="bg-light fw-bold text-dark">

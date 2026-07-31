@@ -20,6 +20,13 @@ while ($row = $stmtPrizes->fetch()) {
 }
 
 
+if (isset($_GET['reset_spin'])) {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    $pdo->prepare("DELETE FROM event_spin_logs WHERE ip_address = ?")->execute([$ip]);
+    unset($_SESSION['last_spin_time']);
+    die("<div style='padding:20px; text-align:center; font-family:sans-serif;'><h3>Berhasil!</h3><p>Limit putaran untuk perangkat Anda ($ip) sudah direset.</p><a href='index.php' style='display:inline-block; padding:10px 20px; background:#e60023; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold;'>Kembali ke Gacha</a></div>");
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'spin_wheel') {
     header('Content-Type: application/json');
     try {
