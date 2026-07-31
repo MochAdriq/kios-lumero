@@ -103,6 +103,7 @@ class CorrectionModel extends Model
             throw new RuntimeException('Order bukan milik outlet ini.');
         }
 
+        // Phase 1: Atomically mark the order/payment as voided
         $this->db->beginTransaction();
         try {
             // 1. Update order status
@@ -117,10 +118,24 @@ class CorrectionModel extends Model
                 [now(), $orderId]
             );
 
-            // 3. Reverse backflush — return raw materials to stock
-            $this->reverseBackflush($order, $userId, $outletId);
+            if ($this->db->inTransaction()) {
+                $this->db->commit();
+            }
+        } catch (Throwable $e) {
+            try { if ($this->db->inTransaction()) { $this->db->rollBack(); } } catch (Throwable $rx) {}
+            throw $e;
+        }
 
-            // 4. Log correction
+        // Phase 2: Best-effort reversal (inventory, loyalty, log) — runs outside main transaction
+        // because inventory functions may self-commit their own transactions.
+
+        // 3. Reverse backflush — return raw materials to stock
+        try {
+            $this->reverseBackflush($order, $userId, $outletId);
+        } catch (Throwable $e) {}
+
+        // 4. Log correction
+        try {
             $this->execSql(
                 "INSERT INTO stock_corrections (outlet_id, correction_type, reference_type, reference_id, qty, old_value, new_value, reason, created_by, created_at)
                  VALUES (?, 'order_void', 'order', ?, ?, ?, ?, ?, ?, ?)",
@@ -131,8 +146,10 @@ class CorrectionModel extends Model
                     $reason, $userId, now()
                 ]
             );
+        } catch (Throwable $e) {}
 
-            // 5. Reverse product lifetime qty sold
+        // 5. Reverse product lifetime qty sold
+        try {
             foreach ($order['items'] as $item) {
                 if ((int)($item['product_variant_id'] ?? 0) > 0) {
                     $pv = $this->one("SELECT product_id FROM product_variants WHERE id = ?", [(int)$item['product_variant_id']]);
@@ -144,24 +161,26 @@ class CorrectionModel extends Model
                     }
                 }
             }
+        } catch (Throwable $e) {}
 
-            // 6. Undo loyalty points
-            try {
-                require_once __DIR__ . '/../../config/loyalty.php';
-                if (function_exists('loyalty_void_order')) {
-                    loyalty_void_order($this->db, $orderId, $userId);
-                }
-            } catch (Throwable $lx) {}
+        // 6. Undo loyalty points
+        try {
+            require_once __DIR__ . '/../../config/loyalty.php';
+            if (function_exists('loyalty_void_order')) {
+                loyalty_void_order($this->db, $orderId, $userId);
+            }
+        } catch (Throwable $lx) {}
 
-            // 7. Sync cancellation to free_orders if it was an online order
-            try {
-                $this->execSql(
-                    "UPDATE free_orders SET order_status = 'cancelled', payment_status = 'cancelled' WHERE pre_order_no = ?",
-                    [$order['order_number']]
-                );
-            } catch (Throwable $fx) {}
+        // 7. Sync cancellation to free_orders if it was an online order
+        try {
+            $this->execSql(
+                "UPDATE free_orders SET order_status = 'cancelled', payment_status = 'cancelled' WHERE pre_order_no = ?",
+                [$order['order_number']]
+            );
+        } catch (Throwable $fx) {}
 
-            // 8. Audit log
+        // 8. Audit log
+        try {
             Audit::log('void_order', 'orders', $orderId, [
                 'order_number' => $order['order_number'],
                 'grand_total'  => $order['grand_total'],
@@ -169,12 +188,7 @@ class CorrectionModel extends Model
                 'status'  => 'voided',
                 'reason'  => $reason,
             ]);
-
-            $this->db->commit();
-        } catch (Throwable $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
+        } catch (Throwable $e) {}
     }
 
     /**
