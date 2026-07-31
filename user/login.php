@@ -37,7 +37,7 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     $prize = $_SESSION['pending_event_reward'];
     unset($_SESSION['pending_event_reward']);
     $lockName = 'lumero_event_claim_' . $memberId;
-    $pdo->exec("SELECT GET_LOCK('$lockName', 5)");
+    $pdo->query("SELECT GET_LOCK('$lockName', 5)")->closeCursor();
     
     try {
         $stmt = $pdo->prepare("SELECT status FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go') ORDER BY id DESC LIMIT 1");
@@ -68,7 +68,7 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
             return ' Kupon hadiah berhasil diklaim: ' . mem_e($prize['name']) . '!';
         }
     } finally {
-        $pdo->exec("SELECT RELEASE_LOCK('$lockName')");
+        $pdo->query("SELECT RELEASE_LOCK('$lockName')")->closeCursor();
     }
 }
 list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; if($flashErr!=='') $err=$flashErr;
