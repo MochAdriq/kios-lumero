@@ -217,14 +217,17 @@ class CorrectionModel extends Model
                     );
                 }
 
-                // Log inventory movement as correction
+                // Log inventory movement as correction (using correct schema: qty_in/qty_out)
                 $this->execSql(
-                    "INSERT INTO inventory_movements (outlet_id, raw_material_id, movement_type, qty, unit_cost, total_cost, reference_type, reference_id, notes, created_by, created_at)
-                     VALUES (?, ?, 'correction_in', ?, ?, ?, 'order_void', ?, ?, ?, ?)",
+                    "INSERT INTO inventory_movements (outlet_id, raw_material_id, movement_type, movement_date, business_date, qty_in, qty_out, unit_cost, total_cost, stock_after, reference_type, reference_id, notes, created_by, created_at)
+                     VALUES (?, ?, 'adjustment_in', ?, ?, ?, 0, ?, ?, ?, 'order_void', ?, ?, ?, ?)",
                     [
-                        $outletId, $rmId, $qtyToReturn,
+                        $outletId, $rmId,
+                        now(), date('Y-m-d'),
+                        $qtyToReturn,
                         (float)$rm['average_cost'],
                         $qtyToReturn * (float)$rm['average_cost'],
+                        $newStock,
                         (int)$order['id'],
                         'Pengembalian stok dari void order #' . ($order['order_number'] ?? $order['id']),
                         $userId, now()
