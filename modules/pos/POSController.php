@@ -39,6 +39,7 @@ class POSController extends Controller
                 'is_change_owed' => !empty($_POST['is_change_owed']) ? 1 : 0,
                 'member_id' => !empty($_POST['member_id']) ? (int)$_POST['member_id'] : null,
                 'customer_phone' => !empty($_POST['customer_phone']) ? trim((string)$_POST['customer_phone']) : null,
+                'skip_print_receipt' => !empty($_POST['skip_print_receipt']) ? 1 : 0,
             ]);
 
             $_SESSION['flash_success'] = 'Transaksi berhasil: '.$result['order_number'].' total '.rupiah($result['grand_total']);

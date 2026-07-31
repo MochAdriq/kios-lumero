@@ -638,7 +638,13 @@
         if (data.success && data.qris_url) {
           showQrisModal(data.qris_url, data.qris_string, data.order_number, data.grand_total, data.receipt_url, data.order_id);
         } else if (data.success && data.receipt_url) {
-          showReceiptPopupModal(data.receipt_url, data.order_number, data.order_id);
+          const skipCb = document.getElementById('skipPrintReceipt');
+          if (skipCb && skipCb.checked) {
+            alert('Transaksi Berhasil: ' + data.order_number);
+            if (typeof resetPosCartAfterOrder === 'function') resetPosCartAfterOrder();
+          } else {
+            showReceiptPopupModal(data.receipt_url, data.order_number, data.order_id);
+          }
         } else {
           alert('Gagal memproses transaksi: ' + (data.message || 'Error tidak diketahui'));
         }
