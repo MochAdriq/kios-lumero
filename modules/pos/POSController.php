@@ -126,7 +126,7 @@ class POSController extends Controller
         $totalProfit = 0;
         $validOrders = 0;
         foreach ($orders as $o) {
-            if (!in_array($o['order_status'], ['cancelled', 'void', 'draft'], true)) {
+            if (!in_array($o['order_status'], ['cancelled', 'voided', 'draft'], true)) {
                 $totalRevenue += (float)$o['grand_total'];
                 $totalProfit += (float)$o['gross_profit'];
                 $validOrders++;
