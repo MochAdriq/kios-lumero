@@ -642,10 +642,6 @@
           if (skipCb && skipCb.checked) {
             const pm = document.getElementById('paymentMethod');
             const isCash = !pm || pm.value === 'cash';
-            if (isCash) {
-              // Open drawer using RawBT base64 (ESC/POS \x1B\x70\x00\x19\x64)
-              window.location.href = 'rawbt:base64,G3AAGWQ=';
-            }
             const toastEl = document.createElement('div');
             toastEl.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;font-weight:700;font-size:15px;padding:12px 28px;border-radius:50px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.18);';
             toastEl.textContent = '✅ Transaksi Berhasil: ' + data.order_number;

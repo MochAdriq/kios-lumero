@@ -76,8 +76,6 @@ if (!function_exists('build_receipt_text')) {
         // Footer
         $lines[] = $center('Terima kasih');
         $lines[] = $center('Selamat menikmati');
-        $lines[] = '';
-        $lines[] = '';
         
         return $lines;
     }
@@ -144,7 +142,7 @@ if (!function_exists('build_rawbt_base64')) {
             $data .= $esc . 'a' . chr(0); // left
         }
 
-        $data .= "\n\n\n";
+        $data .= "\n"; // Just one newline before cut
         $data .= $gs . 'V' . chr(0); // cut
         
         return base64_encode($data);
