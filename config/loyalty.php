@@ -348,7 +348,9 @@ function loyalty_ensure_tables(PDO $pdo): void {
 
 function loyalty_settings(PDO $pdo): array {
     loyalty_ensure_tables($pdo);
-    $row=$pdo->query("SELECT * FROM loyalty_settings WHERE id=1 LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    $st=$pdo->query("SELECT * FROM loyalty_settings WHERE id=1 LIMIT 1"); 
+    $row=$st->fetch(PDO::FETCH_ASSOC);
+    $st->closeCursor();
     if(!$row) $row=['earn_amount'=>1000,'earn_point'=>1,'redeem_point_value'=>500,'minimum_redeem_points'=>10,'maximum_redeem_percent'=>100,'claim_expiry_days'=>14,'profile_bonus_points'=>2,'is_active'=>1];
     foreach(['earn_amount','earn_point','redeem_point_value','minimum_redeem_points','maximum_redeem_percent','claim_expiry_days','profile_bonus_points','is_active'] as $k) $row[$k]=(int)($row[$k] ?? 0);
     if($row['earn_amount']<=0) $row['earn_amount']=1000;
@@ -370,6 +372,7 @@ function loyalty_find_member_by_phone(PDO $pdo, string $phone) {
     $st = $pdo->prepare("SELECT * FROM members WHERE phone=? OR phone=? OR REPLACE(REPLACE(phone,'-',''),' ','')=? LIMIT 1");
     $st->execute([$p, $phone, $p]);
     $row = $st->fetch(PDO::FETCH_ASSOC);
+    $st->closeCursor();
     if ($row) return $row;
 
     if (strlen($p) >= 9) {
@@ -377,13 +380,18 @@ function loyalty_find_member_by_phone(PDO $pdo, string $phone) {
         $st = $pdo->prepare("SELECT * FROM members WHERE REPLACE(REPLACE(phone,'-',''),' ','') LIKE ? LIMIT 1");
         $st->execute(['%' . $tail]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
+        $st->closeCursor();
         if ($row) return $row;
     }
     return false;
 }
 function loyalty_member_by_id(PDO $pdo, int $id) {
     loyalty_ensure_tables($pdo);
-    $st=$pdo->prepare("SELECT * FROM members WHERE id=? LIMIT 1"); $st->execute([$id]); return $st->fetch(PDO::FETCH_ASSOC);
+    $st=$pdo->prepare("SELECT * FROM members WHERE id=? LIMIT 1"); 
+    $st->execute([$id]); 
+    $row=$st->fetch(PDO::FETCH_ASSOC);
+    $st->closeCursor();
+    return $row;
 }
 function loyalty_create_member(PDO $pdo, string $phone, string $name='', string $pin='', $createdBy=null): array {
     loyalty_ensure_tables($pdo);
