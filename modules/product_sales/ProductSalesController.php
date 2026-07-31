@@ -49,7 +49,7 @@ class ProductSalesController extends Controller
         }
         
         // Fetch categories for filter dropdown
-        $categories = $db->query("SELECT id, name FROM categories WHERE type = 'product' ORDER BY name ASC")->fetchAll();
+        $categories = $db->query("SELECT id, name FROM product_categories ORDER BY name ASC")->fetchAll();
 
         $this->view('product_sales/index', [
             'pageTitle' => 'Penjualan Produk',
