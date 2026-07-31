@@ -106,7 +106,7 @@
             </thead>
             <tbody>
                 <?php foreach ($orders as $o): ?>
-                <tr data-total="<?= $o['grand_total'] ?>" data-profit="<?= $o['gross_profit'] ?? 0 ?>" data-status="<?= htmlspecialchars($o['order_status'] ?? '') ?>">
+                <tr data-total="<?= $o['grand_total'] ?>" data-profit="<?= $o['gross_profit'] ?? 0 ?>" data-status="<?= htmlspecialchars($o['order_status'] ?? '') ?>" data-pay-status="<?= htmlspecialchars($o['payment_status'] ?? '') ?>">
                     <td class="text-center">
                         <input class="form-check-input order-cb" type="checkbox" value="<?= $o['id'] ?>">
                     </td>
@@ -307,10 +307,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     var total = parseFloat($(node).attr('data-total')) || 0;
                     var profit = parseFloat($(node).attr('data-profit')) || 0;
 
-                    // Only count if not cancelled or voided (read from data-status attribute for reliability)
+                    // Only count if not cancelled, voided, or refunded (read from data-status attribute for reliability)
                     var rowNode = this.node();
                     var trStatus = $(rowNode).attr('data-status') || '';
-                    if (trStatus !== 'cancelled' && trStatus !== 'voided') {
+                    var trPayStatus = $(rowNode).attr('data-pay-status') || '';
+                    if (trStatus !== 'cancelled' && trStatus !== 'voided' && trPayStatus !== 'refunded') {
                         totalOrders++;
                         totalRevenue += total;
                         totalProfit += profit;
