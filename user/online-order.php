@@ -1217,7 +1217,7 @@ simInitTheme();
 
 <div class="fo-floating-actions">
   <button type="button" class="fo-float-btn ai" onclick="toggleAiPanel()">✨ Dengarkan Saran AI</button>
-  <a class="fo-float-btn wa" href="https://wa.me/6285794532040?text=Halo%20D%27Celup%20Pasekon%2C%20saya%20ingin%20bertanya%20tentang%20online%20order" target="_blank">💬 Hubungi Outlet</a>
+  <a class="fo-float-btn wa" href="https://wa.me/6285794532040?text=Halo%20D%27Celup%20Pasekon%2C%20saya%20ingin%20bertanya%20tentang%20online%20order" target="_blank" style="display:none !important;">💬 Hubungi Outlet</a>
 </div>
 
 <div class="fo-ai-nudge" id="aiNudgeBubble">
