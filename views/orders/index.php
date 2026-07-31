@@ -148,7 +148,9 @@
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?php if (($o['order_status'] ?? '') === 'pending'): ?>
+                        <?php if (($o['order_status'] ?? '') === 'voided'): ?>
+                            <span class="badge bg-dark text-white px-2 py-1">Dibatalkan</span>
+                        <?php elseif (($o['order_status'] ?? '') === 'pending'): ?>
                             <span class="badge bg-danger text-white px-2 py-1">Antre</span>
                         <?php elseif (($o['order_status'] ?? '') === 'preparing'): ?>
                             <span class="badge bg-warning text-dark px-2 py-1">Dimasak</span>
@@ -305,8 +307,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     var total = parseFloat($(node).attr('data-total')) || 0;
                     var profit = parseFloat($(node).attr('data-profit')) || 0;
 
-                    // Only count if not cancelled
-                    if (orderStatus !== 'cancelled') {
+                    // Only count if not cancelled or voided (read from data-status attribute for reliability)
+                    var rowNode = this.node();
+                    var trStatus = $(rowNode).attr('data-status') || '';
+                    if (trStatus !== 'cancelled' && trStatus !== 'voided') {
                         totalOrders++;
                         totalRevenue += total;
                         totalProfit += profit;
