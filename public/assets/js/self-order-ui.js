@@ -127,7 +127,7 @@
     </button>`;
   }
   function productCard(item) {
-    const disabled = Number(item.price || 0) <= 0 || Number(item.ready_stock || 0) <= 0;
+    const disabled = Number(item.price || 0) <= 0;
     return optionCard({
       cls: 'choose-variant',
       attrs: `data-id="${Number(item.variant_id)}"`,
@@ -157,7 +157,7 @@
       const matched = items.filter(i => meta(i).part === p.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = false;
         out.push({ ...p, count, disabled });
       }
     });
@@ -168,8 +168,8 @@
     const originalItems = items.filter(i => meta(i).style === 'original');
     const sauceItems = items.filter(i => meta(i).style === 'sauce');
     const arr = [];
-    if (originalItems.length) arr.push({ key: 'original', label: 'Original', img: assets.original, sub: 'Tanpa saus tambahan', disabled: originalItems.every(i => Number(i.ready_stock || 0) <= 0) });
-    if (sauceItems.length) arr.push({ key: 'sauce', label: 'Plus Saus', img: assets.sauce, sub: 'Pilih saus favorit', disabled: sauceItems.every(i => Number(i.ready_stock || 0) <= 0) });
+    if (originalItems.length) arr.push({ key: 'original', label: 'Original', img: assets.original, sub: 'Tanpa saus tambahan', disabled: false });
+    if (sauceItems.length) arr.push({ key: 'sauce', label: 'Plus Saus', img: assets.sauce, sub: 'Pilih saus favorit', disabled: false });
     return arr;
   }
   function availableSauces() {
@@ -179,7 +179,7 @@
       const matched = items.filter(i => meta(i).sauce === s.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = false;
         arr.push({ ...s, count, disabled });
       }
     });
@@ -191,8 +191,8 @@
     const no = items.find(i => meta(i).rice === 0) || items.find(i => meta(i).rice === null);
     const yes = items.find(i => meta(i).rice === 1);
     const opts = [];
-    if (no) opts.push({ key: 0, label: 'Tanpa Nasi', img: assets.rice_no, item: no, sub: Number(no.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Item langsung masuk keranjang', disabled: Number(no.ready_stock || 0) <= 0 });
-    if (yes) opts.push({ key: 1, label: 'Plus Nasi', img: assets.rice_yes, item: yes, sub: Number(yes.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Item langsung masuk keranjang', disabled: Number(yes.ready_stock || 0) <= 0 });
+    if (no) opts.push({ key: 0, label: 'Tanpa Nasi', img: assets.rice_no, item: no, sub: Number(no.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Item langsung masuk keranjang', disabled: Number(no.price || 0) <= 0 });
+    if (yes) opts.push({ key: 1, label: 'Plus Nasi', img: assets.rice_yes, item: yes, sub: Number(yes.ready_stock || 0) <= 0 ? 'Bahan Habis' : 'Item langsung masuk keranjang', disabled: Number(yes.price || 0) <= 0 });
     return opts;
   }
   function renderChicken() {
@@ -242,7 +242,7 @@
       const matched = items.filter(i => meta(i).iceBase === b.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = false;
         out.push({ ...b, count, disabled });
       }
     });
@@ -255,7 +255,7 @@
       const matched = items.filter(i => meta(i).icePack === p.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = false;
         let itemRef = count === 1 ? matched[0] : null;
         out.push({ ...p, count, disabled, item: itemRef });
       }
@@ -269,7 +269,7 @@
       const matched = items.filter(i => meta(i).iceTopping === t.key);
       const count = matched.length;
       if (count > 0) {
-        const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0);
+        const disabled = false;
         let itemRef = count === 1 ? matched[0] : null;
         out.push({ ...t, count, disabled, item: itemRef });
       }
