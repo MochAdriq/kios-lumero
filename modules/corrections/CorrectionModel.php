@@ -146,7 +146,23 @@ class CorrectionModel extends Model
                 }
             }
 
-            // 6. Audit log
+            // 6. Undo loyalty points
+            try {
+                require_once __DIR__ . '/../../config/loyalty.php';
+                if (function_exists('loyalty_void_order')) {
+                    loyalty_void_order($this->db, $orderId, $userId);
+                }
+            } catch (Throwable $lx) {}
+
+            // 7. Sync cancellation to free_orders if it was an online order
+            try {
+                $this->execSql(
+                    "UPDATE free_orders SET order_status = 'cancelled', payment_status = 'cancelled' WHERE pre_order_no = ?",
+                    [$order['order_number']]
+                );
+            } catch (Throwable $fx) {}
+
+            // 8. Audit log
             Audit::log('void_order', 'orders', $orderId, [
                 'order_number' => $order['order_number'],
                 'grand_total'  => $order['grand_total'],
