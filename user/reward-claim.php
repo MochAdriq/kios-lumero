@@ -80,6 +80,8 @@ if ($claim['status'] === 'PENDING' && strtotime($claim['expired_at']) < time()) 
     <style>
         :root { --red: #c41230; --ink: #0f0e0d; --cream: #fbf9f5; }
         body { background: var(--ink); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; padding: 40px 20px; margin: 0; }
+        .alert { background: #e6fcf5; border: 1px solid #20c997; color: #0ca678; padding: 16px; border-radius: 12px; margin: 0 auto 24px; max-width: 400px; text-align: left; font-size: 14px; line-height: 1.5; font-weight: 600; }
+        .alert-error { background: #fff5f5; border: 1px solid #ff8787; color: #c92a2a; }
         .ticket {
             background: #fff; color: var(--ink);
             max-width: 400px; margin: 0 auto;
@@ -134,6 +136,13 @@ if ($claim['status'] === 'PENDING' && strtotime($claim['expired_at']) < time()) 
     </script>
 </head>
 <body>
+    <?php list($flashMsg, $flashErr) = mem_take_flash(); ?>
+    <?php if ($flashMsg !== ''): ?>
+        <div class="alert"><?= $flashMsg ?></div>
+    <?php endif; ?>
+    <?php if ($flashErr !== ''): ?>
+        <div class="alert alert-error">⚠️ <?= $flashErr ?></div>
+    <?php endif; ?>
     <h2 style="margin-bottom: 30px; color: #ffc72c;">Grand Opening Kalibunder</h2>
     
     <div class="ticket">
