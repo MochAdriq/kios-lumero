@@ -642,6 +642,10 @@
           if (skipCb && skipCb.checked) {
             const pm = document.getElementById('paymentMethod');
             const isCash = !pm || pm.value === 'cash';
+            if (isCash) {
+              // Open drawer using RawBT base64 (ESC/POS \x1B\x70\x00\x19\x64)
+              window.location.href = 'rawbt:base64,G3AAGWQ=';
+            }
             const toastEl = document.createElement('div');
             toastEl.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;font-weight:700;font-size:15px;padding:12px 28px;border-radius:50px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.18);';
             toastEl.textContent = '✅ Transaksi Berhasil: ' + data.order_number;
@@ -697,8 +701,12 @@
       bsModal.show();
 
       if (currentPrintOrderId) {
-        // PC Agent is the primary printer
-        startPrintPolling(currentPrintOrderId);
+        // AUTO-PRINT ANDROID:
+        setTimeout(() => {
+          if (typeof window.printRawBT === 'function') {
+            window.printRawBT();
+          }
+        }, 800);
       }
     }
   };
@@ -817,6 +825,27 @@
       }
       alert('Gagal mengirim ulang perintah cetak.');
     });
+  };
+
+  window.printRawBT = function () {
+    if (!currentPrintOrderId) return;
+    
+    // Fallback indicator
+    const orderBadge = document.getElementById('posReceiptOrderNo');
+    const origText = orderBadge ? orderBadge.textContent : '';
+    if (orderBadge) orderBadge.textContent = 'Mencetak...';
+
+    fetch(appUrl + '/api/print/rawbt.php?id=' + currentPrintOrderId)
+      .then(r => r.json())
+      .then(d => {
+        if (orderBadge) orderBadge.textContent = origText;
+        if (d.success && d.rawbt_url) {
+          window.location.href = d.rawbt_url;
+        }
+      })
+      .catch(e => {
+        if (orderBadge) orderBadge.textContent = origText;
+      });
   };
 
   window.printSimReceipt = function () {
