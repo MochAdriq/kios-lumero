@@ -32,7 +32,10 @@
 <div class="soft-card">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div><h5 class="card-title-sim">Semua Transaksi</h5></div>
-        <a href="<?= url('/pos') ?>" class="btn btn-sim">Buka POS</a>
+        <div class="d-flex gap-2">
+            <a href="<?= url('/corrections') ?>" class="btn btn-outline-danger btn-sm"><?= sim_icon('ti-x', 'me-1') ?>Koreksi & Void</a>
+            <a href="<?= url('/pos') ?>" class="btn btn-sim btn-sm">Buka POS</a>
+        </div>
     </div>
 
     <div class="row g-2 mb-3 align-items-end">

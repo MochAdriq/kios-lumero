@@ -49,8 +49,7 @@ class CorrectionModel extends Model
             LEFT JOIN payments p ON p.order_id = o.id
             LEFT JOIN users u ON u.id = o.cashier_id
             WHERE o.outlet_id = ?
-              AND o.order_status IN ('completed', 'paid')
-              AND o.order_status != 'voided'
+              AND o.order_status NOT IN ('voided', 'cancelled')
             ORDER BY o.created_at DESC
             LIMIT {$limit}
         ", [$outletId]);
