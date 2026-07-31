@@ -36,29 +36,36 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     if (empty($_SESSION['pending_event_reward'])) return '';
     $prize = $_SESSION['pending_event_reward'];
     unset($_SESSION['pending_event_reward']);
-    $stmt = $pdo->prepare("SELECT status FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go') ORDER BY id DESC LIMIT 1");
-    $stmt->execute([$memberId]);
-    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        if ($row['status'] === 'PENDING') {
-            return ' 🚨 Maaf, Anda belum menukarkan kupon sebelumnya! Yuk, selesaikan dulu penukaran hadiah Anda di Outlet Lumero Kalibunder sebelum berburu kupon baru.';
-        } elseif (in_array($row['status'], ['CLAIMED', 'AUTO_CLAIMED'], true)) {
-            return ' 🚨 Sistem mendeteksi Anda sudah pernah mendapatkan hadiah undian ini. Terima kasih partisipasinya dan berikan kesempatan bagi yang lain ya! 😉';
-        } else {
-            return ' 🚨 Kesempatan undian ini hanya berlaku satu kali untuk setiap akun.';
-        }
-    }
+    $lockName = 'lumero_event_claim_' . $memberId;
+    $pdo->exec("SELECT GET_LOCK('$lockName', 5)");
     
-    if (($prize['prize_type'] ?? 'product') === 'points') {
-        $pts = (int)($prize['points_amount'] ?? 0);
-        if ($pts > 0) {
-            loyalty_add_points($pdo, $memberId, $pts, 'event_win', 'Memenangkan undian: ' . $prize['name']);
+    try {
+        $stmt = $pdo->prepare("SELECT status FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go') ORDER BY id DESC LIMIT 1");
+        $stmt->execute([$memberId]);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if ($row['status'] === 'PENDING') {
+                return ' 🚨 Maaf, Anda belum menukarkan kupon sebelumnya! Yuk, selesaikan dulu penukaran hadiah Anda di Outlet Lumero Kalibunder sebelum berburu kupon baru.';
+            } elseif (in_array($row['status'], ['CLAIMED', 'AUTO_CLAIMED'], true)) {
+                return ' 🚨 Sistem mendeteksi Anda sudah pernah mendapatkan hadiah undian ini. Terima kasih partisipasinya dan berikan kesempatan bagi yang lain ya! 😉';
+            } else {
+                return ' 🚨 Kesempatan undian ini hanya berlaku satu kali untuk setiap akun.';
+            }
         }
-        $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, status, expired_at) VALUES (?, ?, 'AUTO', 'AUTO_CLAIMED', NOW())")->execute([$memberId, (int)$prize['id']]);
-        return ' Selamat! Saldo Anda otomatis bertambah ' . $pts . ' Poin dari undian!';
-    } else {
-        $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
-        $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
-        return ' Kupon hadiah berhasil diklaim: ' . mem_e($prize['name']) . '!';
+        
+        if (($prize['prize_type'] ?? 'product') === 'points') {
+            $pts = (int)($prize['points_amount'] ?? 0);
+            if ($pts > 0) {
+                loyalty_add_points($pdo, $memberId, $pts, 'event_win', 'Memenangkan undian: ' . $prize['name']);
+            }
+            $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, status, expired_at) VALUES (?, ?, 'AUTO', 'AUTO_CLAIMED', NOW())")->execute([$memberId, (int)$prize['id']]);
+            return ' Selamat! Saldo Anda otomatis bertambah ' . $pts . ' Poin dari undian!';
+        } else {
+            $qr = 'KAL-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
+            $pdo->prepare("INSERT INTO reward_claims (user_id, prize_id, qr_code, expired_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))")->execute([$memberId, (int)$prize['id'], $qr]);
+            return ' Kupon hadiah berhasil diklaim: ' . mem_e($prize['name']) . '!';
+        }
+    } finally {
+        $pdo->exec("SELECT RELEASE_LOCK('$lockName')");
     }
 }
 list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; if($flashErr!=='') $err=$flashErr;

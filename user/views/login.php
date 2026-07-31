@@ -173,3 +173,24 @@ body { margin:0; padding:0; min-height: 100vh; font-family: Inter, system-ui, -a
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"], button:not([type="button"])');
+        if (btn) {
+            if (btn.hasAttribute('data-submitting')) {
+                e.preventDefault();
+                return;
+            }
+            btn.setAttribute('data-submitting', 'true');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" style="display:inline-block; width:1rem; height:1rem; vertical-align:-0.125em; border:0.2em solid currentColor; border-right-color:transparent; border-radius:50%; animation:spinner-border .75s linear infinite;"></span> Memproses...';
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+            // Disable button slightly after to allow form data to be submitted
+            setTimeout(() => { btn.disabled = true; }, 10);
+        }
+    });
+});
+</script>
