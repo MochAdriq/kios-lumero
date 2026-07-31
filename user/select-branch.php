@@ -272,16 +272,18 @@ function renderBranchCards(userLat, userLng) {
         }
         
         const nameLower = o.name.toLowerCase();
-        const isKalibunder = nameLower.includes('kalibunder');
-        const isPasekon = nameLower.includes('pasekon');
-        const isOnlineAllowed = isKalibunder || isPasekon;
+        const isKalibunder = nameLower.includes('kalibunder') || nameLower.includes('klb');
+        const isOnlineAllowed = isKalibunder;
         
         let borderStyle = isClosest ? 'border: 2px solid #FF2D55; box-shadow: 0 16px 42px rgba(255,45,85,0.3);' : '';
         if (!o.is_open) {
             borderStyle = 'opacity:0.85; border-color:rgba(239,68,68,0.3);';
         }
         
-        const btnText = o.is_open ? 'Pilih Cabang Ini &rarr;' : `Tutup (${o.open_time || '10:00'}-${o.close_time || '21:00'})`;
+        let btnText = o.is_open ? 'Pilih Cabang Ini &rarr;' : `Tutup (${o.open_time || '10:00'}-${o.close_time || '21:00'})`;
+        if (o.is_open && !isOnlineAllowed) {
+            btnText = 'Segera Hadir';
+        }
         
         let btnStyle = '';
         if (!o.is_open) {
@@ -325,7 +327,7 @@ function selectBranchItem(outletId, isOpen, outletName, openTime, closeTime, isO
         return;
     }
     if (!isOnlineAllowed) {
-        alert(`Mohon maaf, toko ini tidak menyediakan online order. Silakan pilih cabang Kalibunder atau Pasekon.`);
+        alert(`Mohon maaf, toko ini belum melayani online order. Silakan pilih cabang Kalibunder.`);
         return;
     }
     window.location.href = 'online-order.php?outlet_id=' + outletId;
