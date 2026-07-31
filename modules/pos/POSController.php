@@ -192,8 +192,11 @@ class POSController extends Controller
         $placeholders = str_repeat('?,', count($orderIds) - 1) . '?';
         
         try {
-            // Update POS Orders
-            $st = $pdo->prepare("UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id IN ($placeholders)");
+            // Update POS Orders — EXCLUDE voided, cancelled, or refunded orders
+            $st = $pdo->prepare("UPDATE orders SET order_status = ?, updated_at = NOW() 
+                WHERE id IN ($placeholders)
+                  AND order_status NOT IN ('voided', 'cancelled')
+                  AND payment_status != 'refunded'");
             $params = array_merge([$actionType], $orderIds);
             $st->execute($params);
             

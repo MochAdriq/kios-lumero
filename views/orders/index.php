@@ -108,7 +108,10 @@
                 <?php foreach ($orders as $o): ?>
                 <tr data-total="<?= $o['grand_total'] ?>" data-profit="<?= $o['gross_profit'] ?? 0 ?>" data-status="<?= htmlspecialchars($o['order_status'] ?? '') ?>" data-pay-status="<?= htmlspecialchars($o['payment_status'] ?? '') ?>">
                     <td class="text-center">
-                        <input class="form-check-input order-cb" type="checkbox" value="<?= $o['id'] ?>">
+                        <?php 
+                    $isVoidedRow = in_array($o['order_status'] ?? '', ['voided','cancelled']) || ($o['payment_status'] ?? '') === 'refunded';
+                    ?>
+                    <input class="form-check-input order-cb" type="checkbox" value="<?= $o['id'] ?>"<?= $isVoidedRow ? ' disabled title="Order ini sudah dibatalkan"' : '' ?>>
                     </td>
                     <td>
                         <div class="fw-bold fs-6 text-dark"><?= htmlspecialchars($o['customer_name'] ?? ('Guest '.$o['order_number'])) ?></div>
@@ -362,6 +365,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (selected.length === 0) {
                     alert('Pilih setidaknya satu pesanan!');
+                    return;
+                }
+
+                // Safety: filter out any voided/refunded rows that might have been selected
+                var safeSelected = [];
+                selected.forEach(function(id) {
+                    var row = table.$('.order-cb[value="' + id + '"]').closest('tr');
+                    var rowStatus = row.attr('data-status') || '';
+                    var rowPayStatus = row.attr('data-pay-status') || '';
+                    if (rowStatus !== 'voided' && rowStatus !== 'cancelled' && rowPayStatus !== 'refunded') {
+                        safeSelected.push(id);
+                    }
+                });
+                selected = safeSelected;
+
+                if (selected.length === 0) {
+                    alert('Semua pesanan yang dipilih sudah dibatalkan / di-void.');
                     return;
                 }
 
