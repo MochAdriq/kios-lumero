@@ -61,7 +61,7 @@
     { key: 'teriyaki', label: 'Teriyaki', img: assets.teriyaki, match: ['teriyaki'] },
     { key: 'sadis_mozzarella', label: 'Geprek Mozzarella', img: assets.sauce, match: ['smashed chili extra mozzarella', 'geprek extra mozzarella'] },
     { key: 'sadis_mentai', label: 'Geprek Mentai', img: assets.sauce, match: ['smashed chili extra mentai', 'geprek extra mentai'] },
-    { key: 'sadis', label: 'Sadis / Geprek', img: assets.sadis, match: ['sadis', 'geprek', 'pedas', 'smashed chili'] },
+    { key: 'sadis', label: 'Geprek', img: assets.sadis, match: ['sadis', 'geprek', 'pedas', 'smashed chili'] },
     { key: 'bbq', label: 'Italian Barbeque', img: assets.bbq, match: ['bbq', 'barbeque', 'italian barbeque', 'bbq spicy'] },
     { key: 'mentai', label: 'Mentai / Mayo', img: assets.mentai, match: ['mentai', 'mayo', 'mayonnaise'] },
     { key: 'picante', label: 'Italian Picante', img: assets.sauce, match: ['picante'] },
@@ -105,7 +105,7 @@
   function renderFlow() {
     const cat = currentCat();
     if (!flowBar) return;
-        if (isIceCreamCat(cat)) {
+    if (isIceCreamCat(cat)) {
       const steps = [['base', 'Rasa Base'], ['pack', 'Pilih Wadah'], ['topping', 'Pilih Topping']];
       const idx = stepIndex();
       flowBar.innerHTML = '<div class="k2-flow">' + steps.map((s, i) => `<span class="${i === idx ? 'active' : (i < idx ? 'done' : '')}">${esc(s[1])}</span>`).join('') + '</div>';
@@ -316,7 +316,7 @@
     if (!cat) return;
     if (isIceCreamCat(cat)) renderIceCream(); else if (isChickenCat(cat)) renderChicken(); else renderSimple(cat);
   }
-    function goBack() {
+  function goBack() {
     if (isIceCreamCat(currentCat())) {
       if (state.step === 'topping') { state.step = 'pack'; state.iceTopping = null; }
       else if (state.step === 'pack') { state.step = 'base'; state.icePack = null; state.iceBase = null; }
@@ -454,14 +454,14 @@
     if (btn.classList.contains('choose-style')) { state.style = btn.dataset.style; state.step = state.style === 'sauce' ? 'sauce' : 'rice'; renderMain(); return; }
     if (btn.classList.contains('choose-sauce')) { state.sauce = btn.dataset.sauce; state.step = 'rice'; renderMain(); return; }
     if (btn.classList.contains('choose-rice')) { addVariantById(btn.dataset.variant); state = { ...state, step: 'parts', part: null, style: null, sauce: null, rice: null }; renderMain(); return; }
-    
+
     if (btn.classList.contains('choose-ice-base')) { state.iceBase = btn.dataset.base; state.step = 'pack'; renderMain(); return; }
     if (btn.classList.contains('choose-ice-pack')) { state.icePack = btn.dataset.pack; state.step = 'topping'; renderMain(); return; }
-    if (btn.classList.contains('choose-ice-final')) { 
-      addVariantById(btn.dataset.variant); 
-      state = { ...state, step: 'base', iceBase: null, icePack: null, iceTopping: null }; 
-      renderMain(); 
-      return; 
+    if (btn.classList.contains('choose-ice-final')) {
+      addVariantById(btn.dataset.variant);
+      state = { ...state, step: 'base', iceBase: null, icePack: null, iceTopping: null };
+      renderMain();
+      return;
     }
     if (btn.classList.contains('choose-variant')) { addVariantById(btn.dataset.id); return; }
   });
@@ -501,11 +501,11 @@
     e.preventDefault();
     cart = window.cart || cart || [];
     if (!cart.length) {
-        alert('Keranjang masih kosong (dari JS checkoutForm).'); try { if(typeof foPlay==='function') foPlay('foVoiceEmptyCart'); } catch(err){}
-        return false;
+      alert('Keranjang masih kosong (dari JS checkoutForm).'); try { if (typeof foPlay === 'function') foPlay('foVoiceEmptyCart'); } catch (err) { }
+      return false;
     }
     if (typeof openCheckout === 'function') {
-        openCheckout(false);
+      openCheckout(false);
     }
     return false;
   });
@@ -579,9 +579,9 @@
     const modalEl = document.getElementById('simPosReceiptModal');
     const frame = document.getElementById('simReceiptFrame');
     const orderBadge = document.getElementById('posReceiptOrderNo');
-    
+
     if (orderBadge && orderNo) orderBadge.textContent = orderNo;
-    
+
     currentPrintOrderId = orderId;
     if (frame && receiptUrl) {
       const embedUrl = receiptUrl + (receiptUrl.includes('?') ? '&' : '?') + 'embed=1';
@@ -604,7 +604,7 @@
             if (lastPart && !isNaN(lastPart)) {
               currentPrintOrderId = parseInt(lastPart);
             }
-          } catch(e) {}
+          } catch (e) { }
         }
         frame.contentWindow.focus();
         frame.contentWindow.print();

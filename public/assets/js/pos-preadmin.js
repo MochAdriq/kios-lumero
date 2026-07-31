@@ -57,7 +57,7 @@
     { key: 'lada_hitam', label: 'Black Pepper', img: assets.lada_hitam, match: ['lada hitam', 'black pepper', 'blackpepper'] },
     { key: 'garlic', label: 'Garlic / Bawang', img: assets.garlic, match: ['garlic', 'bawang', 'sicilian'] },
     { key: 'teriyaki', label: 'Teriyaki', img: assets.teriyaki, match: ['teriyaki'] },
-    { key: 'sadis', label: 'Sadis', img: assets.sadis, match: ['sadis', 'geprek', 'pedas', 'smashed chili'] },
+    { key: 'sadis', label: 'Geprek', img: assets.sadis, match: ['sadis', 'geprek', 'pedas', 'smashed chili'] },
     { key: 'bbq', label: 'Italian Barbeque', img: assets.bbq, match: ['bbq', 'barbeque', 'italian barbeque', 'bbq spicy'] },
     { key: 'mentai', label: 'Mentai', img: assets.mentai, match: ['mentai', 'mayo', 'mayonnaise'] },
     { key: 'picante', label: 'Italian Picante', img: assets.sauce, match: ['picante'] },
@@ -230,7 +230,7 @@
       const opts = matchingRiceOptions();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih nasi lalu masuk keranjang';
       productGrid.innerHTML = opts.length
-        ? opts.map(o => optionCard({ cls: 'choose-rice', attrs: `data-rice="${o.key}" data-variant="${Number(o.item.variant_id)}"`, img: o.img, label: o.label, sub: o.sub, price: money(o.item.price), disabled: o.disabled, warn: o.warn })).join('')
+        ? opts.map(o => optionCard({ cls: 'choose-rice', attrs: `data-rice="${o.key}" data-variant="${Number(o.item.variant_id)}"`, img: o.img, label: o.label, sub: o.sub, price: money(o.item.price), disabled: o.disabled })).join('')
         : '<div class="sim-empty-panel">Varian final belum cocok. Gunakan pencarian produk atau cek master produk.</div>';
       if (!opts.length) {
         const fallback = chickenItems().filter(i => meta(i).part === state.part && meta(i).style === state.style && (state.style !== 'sauce' || meta(i).sauce === state.sauce));
@@ -248,7 +248,7 @@
       if (count > 0) {
         const disabled = matched.every(i => Number(i.ready_stock || 0) <= 0) && matched.every(i => Number(i.price || 0) <= 0);
         const warn = !disabled && matched.every(i => Number(i.ready_stock || 0) <= 0);
-        out.push({ ...b, count, disabled, warn });
+        out.push({ ...b, count, disabled });
       }
     });
     return out;
@@ -292,7 +292,7 @@
       const bases = availableIceBases();
       if (visibleProductInfo) visibleProductInfo.textContent = ' | pilih rasa dasar';
       productGrid.innerHTML = bases.length
-        ? bases.map(b => optionCard({ cls: 'choose-ice-base', attrs: `data-base="${b.key}"`, img: b.img, label: b.label, sub: b.warn ? 'Stok Habis — Override' : (b.disabled ? 'Tidak Tersedia' : `${b.count} varian tersedia`), disabled: b.disabled, warn: b.warn })).join('')
+        ? bases.map(b => optionCard({ cls: 'choose-ice-base', attrs: `data-base="${b.key}"`, img: b.img, label: b.label, sub: b.disabled ? 'Bahan Habis' : `${b.count} varian tersedia`, disabled: b.disabled })).join('')
         : '<div class="sim-empty-panel">Belum ada varian es krim.</div>';
       return;
     }
@@ -303,7 +303,7 @@
         let isFinal = p.key === 'cone'; // cone has no toppings in our structure
         let attrs = `data-pack="${p.key}"`;
         if (isFinal && p.item) attrs += ` data-variant="${Number(p.item.variant_id)}"`;
-        return optionCard({ cls: isFinal ? 'choose-ice-final' : 'choose-ice-pack', attrs: attrs, img: p.img, label: p.label, sub: p.warn ? 'Stok Habis — Override' : (p.disabled ? 'Tidak Tersedia' : (isFinal ? 'Klik untuk tambah ke keranjang' : 'Lanjut pilih topping')), price: isFinal ? money(p.item?.price) : '', disabled: p.disabled, warn: p.warn });
+        return optionCard({ cls: isFinal ? 'choose-ice-final' : 'choose-ice-pack', attrs: attrs, img: p.img, label: p.label, sub: p.disabled ? 'Bahan Habis' : (isFinal ? 'Klik untuk tambah ke keranjang' : 'Lanjut pilih topping'), price: isFinal ? money(p.item?.price) : '', disabled: p.disabled });
       }).join('');
       return;
     }
@@ -313,7 +313,7 @@
       productGrid.innerHTML = toppings.map(t => {
         let attrs = `data-topping="${t.key}"`;
         if (t.item) attrs += ` data-variant="${Number(t.item.variant_id)}"`;
-        return optionCard({ cls: 'choose-ice-final', attrs: attrs, img: t.img, label: t.label, sub: t.warn ? 'Stok Habis — Override' : (t.disabled ? 'Tidak Tersedia' : 'Klik untuk tambah ke keranjang'), price: money(t.item?.price), disabled: t.disabled, warn: t.warn });
+        return optionCard({ cls: 'choose-ice-final', attrs: attrs, img: t.img, label: t.label, sub: t.disabled ? 'Bahan Habis' : 'Klik untuk tambah ke keranjang', price: money(t.item?.price), disabled: t.disabled });
       }).join('');
       return;
     }
@@ -370,19 +370,7 @@
     if (subtotalText) subtotalText.textContent = money(subtotal);
     if (totalText) totalText.textContent = money(total);
     if (taxPreview) taxPreview.textContent = money(tax);
-    const changeAmount = Math.max(0, Number(paidAmount?.value || 0) - total);
-    if (changeText) changeText.textContent = money(changeAmount);
-    
-    const changeWrap = document.getElementById('changeOwedWrap');
-    const changeOwed = document.getElementById('isChangeOwed');
-    if (changeWrap) {
-        if (changeAmount > 0) {
-            changeWrap.style.display = 'flex';
-        } else {
-            changeWrap.style.display = 'none';
-            if (changeOwed) changeOwed.checked = false;
-        }
-    }
+    if (changeText) changeText.textContent = money(Math.max(0, Number(paidAmount?.value || 0) - total));
     if (itemCount) itemCount.textContent = totalQty;
     if (cartJson) cartJson.value = JSON.stringify(cart.map(i => ({ variant_id: i.variant_id, qty: i.qty })));
     const ic2 = document.querySelector('#itemCount2'); if (ic2) ic2.textContent = totalQty;
@@ -650,21 +638,7 @@
         if (data.success && data.qris_url) {
           showQrisModal(data.qris_url, data.qris_string, data.order_number, data.grand_total, data.receipt_url, data.order_id);
         } else if (data.success && data.receipt_url) {
-          const skipPrint = document.getElementById('skipPrintReceipt') && document.getElementById('skipPrintReceipt').checked;
-          if (skipPrint) {
-            // Show alert then reload/reset
-            const alertHtml = `<div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
-                                 <div class="toast align-items-center text-bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
-                                   <div class="d-flex">
-                                     <div class="toast-body fw-bold">Transaksi ${data.order_number} Berhasil!</div>
-                                   </div>
-                                 </div>
-                               </div>`;
-            document.body.insertAdjacentHTML('beforeend', alertHtml);
-            setTimeout(() => window.location.reload(), 1500);
-          } else {
-            showReceiptPopupModal(data.receipt_url, data.order_number, data.order_id);
-          }
+          showReceiptPopupModal(data.receipt_url, data.order_number, data.order_id);
         } else {
           alert('Gagal memproses transaksi: ' + (data.message || 'Error tidak diketahui'));
         }
