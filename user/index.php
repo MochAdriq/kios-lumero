@@ -55,13 +55,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'spin_
             throw new Exception("Batas harian tercapai. Perangkat ini sudah memutar maksimal 3 kali hari ini.");
         }
 
+        $memberId = (int)($_SESSION['member_id'] ?? 0);
+        if ($memberId > 0) {
+            $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM reward_claims WHERE user_id = ? AND prize_id IN (SELECT id FROM event_prizes WHERE event_id = 'kalibunder_go')");
+            $stmtCheck->execute([$memberId]);
+            $hasClaimed = (int)$stmtCheck->fetchColumn();
+            $stmtCheck->closeCursor();
+            if ($hasClaimed > 0) {
+                throw new Exception("Sistem mendeteksi Anda sudah pernah mendapatkan hadiah undian ini. Beri kesempatan untuk yang lain ya! 😉");
+            }
+        }
+
         require_once __DIR__ . '/../helpers/RouletteHelper.php';
         $prize = RouletteHelper::spinWheel($pdo, 'kalibunder_go');
 
         // Log spin
         $pdo->prepare("INSERT INTO event_spin_logs (ip_address, prize_id) VALUES (?, ?)")->execute([$ip, $prize['id']]);
 
-        $memberId = (int)($_SESSION['member_id'] ?? 0);
         if ($memberId > 0) {
             // User is already logged in, claim immediately
             if (($prize['prize_type'] ?? 'product') === 'points') {
