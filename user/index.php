@@ -1144,7 +1144,11 @@ if ($claimCode !== '' && $claimCheck['valid'] === true) {
     <div style="display:flex; align-items:center; gap:10px;">
         <button class="pwa-install-btn btn-nav" style="display: none; cursor: pointer; background: #FF6B00; border: none; color: white; padding: 6px 12px; border-radius: 99px; font-weight: 600; font-size: 13px;" onclick="installPWA()">Install App</button>
         <div class="nav-badge">Traktiran Eksklusif</div>
-        <a href="<?= url('/user/login.php') ?>?source=organic" class="btn-nav">Login</a>
+        <?php if (isset($_SESSION['member_id']) && $_SESSION['member_id'] > 0): ?>
+            <a href="<?= url('/user/dashboard.php') ?>" class="btn-nav">Dashboard</a>
+        <?php else: ?>
+            <a href="<?= url('/user/login.php') ?>?source=organic" class="btn-nav">Login</a>
+        <?php endif; ?>
     </div>
 </nav>
 
