@@ -135,7 +135,7 @@ class ExecutiveModel extends Model
     public function financeSummary(string $from, string $to): array
     {
         $out = $this->outletId();
-        // Prefer daily_closing_reports (DCC native)
+        // Prefer daily_closing_reports (DCC native) ONLY if it has data
         if ($this->tableExists('daily_closing_reports')) {
             $r = $this->one("SELECT
                 COALESCE(SUM(total_revenue),0) gross_sales,
@@ -145,9 +145,15 @@ class ExecutiveModel extends Model
                 COALESCE(SUM(net_profit),0) net_profit,
                 COALESCE(SUM(total_transactions),0) paid_orders
                 FROM daily_closing_reports WHERE outlet_id=? AND business_date BETWEEN ? AND ?", [$out, $from, $to]);
-            if ($r) {
-                foreach (['gross_sales','hpp','gross_profit','expenses','net_profit','paid_orders'] as $k) $r[$k] = (float)($r[$k] ?? 0);
-                return $r;
+            if ($r && $r['paid_orders'] > 0) {
+                // Verify if it covers the whole range, or if we should just trust it.
+                // Actually, if they want LIVE data for today, daily_closing_reports won't have it!
+                // So let's always use the fallback if 'to' is today or greater!
+                $isLive = (strtotime($to) >= strtotime(date('Y-m-d')));
+                if (!$isLive) {
+                    foreach (['gross_sales','hpp','gross_profit','expenses','net_profit','paid_orders'] as $k) $r[$k] = (float)($r[$k] ?? 0);
+                    return $r;
+                }
             }
         }
         // Fallback to orders table
@@ -170,7 +176,11 @@ class ExecutiveModel extends Model
         $out = $this->outletId();
         if ($this->tableExists('daily_closing_reports')) {
             $rows = $this->safeAll("SELECT business_date `date`, COALESCE(total_transactions,0) orders, COALESCE(total_revenue,0) sales, COALESCE(total_hpp,0) hpp, COALESCE(total_expense,0) expenses, COALESCE(net_profit,0) net_profit FROM daily_closing_reports WHERE outlet_id=? AND business_date BETWEEN ? AND ? ORDER BY business_date", [$out, $from, $to]);
-            if ($rows) return array_map(function($r) { foreach ($r as $k => $v) $r[$k] = $k === 'date' ? $v : (float)$v; return $r; }, $rows);
+            $isLive = (strtotime($to) >= strtotime(date('Y-m-d')));
+            // Only use if we have full coverage or it's not a live query
+            if ($rows && count($rows) > 0 && !$isLive) {
+                return array_map(function($r) { foreach ($r as $k => $v) $r[$k] = $k === 'date' ? $v : (float)$v; return $r; }, $rows);
+            }
         }
         // Fallback: iterate dates
         $rows = [];
@@ -187,7 +197,8 @@ class ExecutiveModel extends Model
     public function activeDays(string $from, string $to): int
     {
         $out = $this->outletId();
-        if ($this->tableExists('daily_closing_reports')) {
+        $isLive = (strtotime($to) >= strtotime(date('Y-m-d')));
+        if ($this->tableExists('daily_closing_reports') && !$isLive) {
             $n = (int)($this->scalar("SELECT COUNT(*) FROM daily_closing_reports WHERE outlet_id=? AND business_date BETWEEN ? AND ? AND total_transactions > 0", [$out, $from, $to]) ?? 0);
             if ($n > 0) return $n;
         }
