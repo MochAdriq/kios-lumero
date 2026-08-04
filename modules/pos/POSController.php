@@ -130,9 +130,11 @@ class POSController extends Controller
             $isVoided = in_array($o['order_status'], ['cancelled', 'voided', 'draft'], true)
                      || ($o['payment_status'] ?? '') === 'refunded';
             if (!$isVoided) {
-                $totalRevenue += (float)$o['grand_total'];
-                $totalProfit += (float)$o['gross_profit'];
                 $validOrders++;
+                if (($o['payment_status'] ?? '') === 'paid') {
+                    $totalRevenue += (float)$o['grand_total'];
+                    $totalProfit += (float)$o['gross_profit'];
+                }
             }
         }
         

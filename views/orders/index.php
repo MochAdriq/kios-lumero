@@ -14,7 +14,7 @@
     <div class="col-md-4">
         <div class="card bg-success text-white rounded-4 border-0 shadow-sm h-100">
             <div class="card-body">
-                <h6 class="card-subtitle mb-2 opacity-75">Total Pendapatan</h6>
+                <h6 class="card-subtitle mb-2 opacity-75">Total Pendapatan (Lunas)</h6>
                 <h3 class="card-title mb-0 fw-bold" id="summary_total_revenue"><?= rupiah($summary['total_revenue'] ?? 0) ?></h3>
             </div>
         </div>
@@ -22,7 +22,7 @@
     <div class="col-md-4">
         <div class="card bg-info text-white rounded-4 border-0 shadow-sm h-100">
             <div class="card-body">
-                <h6 class="card-subtitle mb-2 opacity-75">Total Profit Kasar</h6>
+                <h6 class="card-subtitle mb-2 opacity-75">Total Profit Kasar (Lunas)</h6>
                 <h3 class="card-title mb-0 fw-bold" id="summary_total_profit"><?= rupiah($summary['total_profit'] ?? 0) ?></h3>
             </div>
         </div>
@@ -316,8 +316,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     var trPayStatus = $(rowNode).attr('data-pay-status') || '';
                     if (trStatus !== 'cancelled' && trStatus !== 'voided' && trPayStatus !== 'refunded') {
                         totalOrders++;
-                        totalRevenue += total;
-                        totalProfit += profit;
+                        if (trPayStatus === 'paid') {
+                            totalRevenue += total;
+                            totalProfit += profit;
+                        }
                     }
                 });
 
