@@ -10,9 +10,9 @@ class CorrectionController extends Controller
 
         $this->view('corrections/index', [
             'pageTitle'    => 'Koreksi & Void',
-            'orders'       => $model->voidableOrders($outletId),
+            'orders'       => $model->voidableOrders($outletId, 500),
             'materials'    => $model->rawMaterials(),
-            'corrections'  => $model->recentCorrections(50),
+            'corrections'  => $model->recentCorrections(500),
         ]);
     }
 
