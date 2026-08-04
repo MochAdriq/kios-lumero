@@ -155,6 +155,7 @@ $router->post('/vendors', [VendorController::class,'store']);
 $router->get('/reports/daily', [ReportController::class,'daily']);
 $router->post('/reports/daily/generate', [ReportController::class,'generateDaily']);
 $router->get('/reports/financial', [ReportController::class,'financial']);
+$router->get('/reports/financial/export', [ReportController::class,'exportFinancialCSV']);
 $router->get('/product-sales', [ProductSalesController::class,'index']);
 $router->get('/executive', [ExecutiveController::class,'index']);
 $router->get('/executive/print', [ExecutiveController::class,'printReport']);

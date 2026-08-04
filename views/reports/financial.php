@@ -701,6 +701,201 @@
             .sign-space {
                 height: 36px
             }
+                width: 100%
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+
+            .panel {
+                padding: 12px;
+                border-radius: 21px
+            }
+
+            .actions {
+                width: 100%
+            }
+
+            .actions .btn {
+                width: 100%
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 8mm
+            }
+
+            body {
+                background: #fff;
+                color: #111;
+                font-size: 8.5pt
+            }
+
+            .wrap {
+                max-width: none;
+                padding: 0
+            }
+
+            .no-print {
+                display: none !important
+            }
+
+            .top {
+                background: #fff !important;
+                color: #111;
+                border: 1px solid #999;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 9px;
+                margin-bottom: 7px
+            }
+
+            .logo {
+                width: 44px;
+                height: 44px;
+                border-color: #aaa
+            }
+
+            .logo img {
+                width: 39px;
+                height: 39px
+            }
+
+            .top h1 {
+                font-size: 20px
+            }
+
+            .top p {
+                color: #444;
+                margin-top: 4px;
+                font-size: 9px
+            }
+
+            .cards {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 4px;
+                margin-bottom: 7px
+            }
+
+            .card {
+                border: 1px solid #bbb;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 7px;
+                break-inside: avoid
+            }
+
+            .card:before {
+                display: none
+            }
+
+            .card small {
+                font-size: 7px
+            }
+
+            .card b {
+                font-size: 13px;
+                margin-top: 3px
+            }
+
+            .card .sub {
+                font-size: 7.5px;
+                margin-top: 3px
+            }
+
+            .panel {
+                border: 0;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 0;
+                overflow: visible
+            }
+
+            .panel-head {
+                margin-bottom: 5px
+            }
+
+            .panel h2 {
+                font-size: 14px
+            }
+
+            .panel .desc {
+                font-size: 8px
+            }
+
+            .badges {
+                display: none
+            }
+
+            .table-wrap {
+                overflow: visible;
+                border: 0;
+                border-radius: 0
+            }
+
+            table {
+                min-width: 0;
+                font-size: 7.5px;
+                border-collapse: collapse
+            }
+
+            th {
+                position: static;
+                background: #eee !important;
+                color: #111;
+                font-size: 6.8px;
+                padding: 4px;
+                border: 1px solid #aaa
+            }
+
+            td {
+                padding: 4px;
+                border: 1px solid #bbb
+            }
+
+            tbody tr.row-profit,
+            tbody tr.row-loss {
+                background: #fff !important
+            }
+
+            tfoot td {
+                background: #eee !important;
+                border: 1px solid #999
+            }
+
+            .status {
+                padding: 2px 4px;
+                font-size: 6.5px;
+                border: 1px solid #bbb;
+                background: #fff !important;
+                color: #111 !important
+            }
+
+            .warning {
+                font-size: 6px
+            }
+
+            .formula {
+                font-size: 7.5px;
+                padding: 5px;
+                border-radius: 0
+            }
+
+            .footer-print {
+                display: block;
+                font-size: 8px
+            }
+
+            .sign-grid {
+                margin-top: 15px
+            }
+
+            .sign-space {
+                height: 36px
+            }
         }
 </style>
 <div class="wrap">
@@ -710,6 +905,7 @@
             <label>Dari Tanggal<input type="date" name="from" value="<?= htmlspecialchars($from) ?>"></label>
             <label>Sampai Tanggal<input type="date" name="to" value="<?= htmlspecialchars($to) ?>"></label>
             <button class="btn primary" type="submit">Tampilkan Periode</button>
+            <a class="btn white" style="background:#159447;color:#fff;border:none;" href="<?= url('/reports/financial/export?from=' . urlencode($from) . '&to=' . urlencode($to)) ?>">Export Excel (CSV)</a>
             <a class="btn white" href="#">Hari Ini</a>
             <a class="btn white" href="#">7 Hari</a>
             <a class="btn white" href="#">Bulan Ini</a>
