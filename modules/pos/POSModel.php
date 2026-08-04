@@ -65,8 +65,18 @@ class POSModel extends Model
 
     public function nextOrderNumber(): string
     {
-        $max = (int)$this->db->query("SELECT COALESCE(MAX(CAST(SUBSTRING(order_number,4) AS UNSIGNED)),1999) FROM orders WHERE order_number REGEXP '^DCK[0-9]+$'")->fetchColumn();
-        return 'DCK' . max(2000, $max + 1);
+        $outletId = $this->outletId();
+        $code = $this->db->query("SELECT outlet_code FROM outlets WHERE id = " . (int)$outletId)->fetchColumn();
+        $prefix = $code ? strtoupper(trim($code)) : 'ORD';
+        $len = strlen($prefix) + 1;
+        $max = (int)$this->db->query("
+            SELECT COALESCE(MAX(CAST(SUBSTRING(order_number, {$len}) AS UNSIGNED)), 2000) 
+            FROM orders 
+            WHERE outlet_id = " . (int)$outletId . " 
+              AND order_number LIKE '{$prefix}%'
+        ")->fetchColumn();
+        
+        return $prefix . max(2001, $max + 1);
     }
 
     public function createOrder(array $payload): array
