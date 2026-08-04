@@ -632,9 +632,6 @@ function printOrderRawBT(orderId, btn) {
             });
         });
 
-        // Reload page when KDS modal is closed to refresh statuses
-        $('#kdsModal').on('hidden.bs.modal', function () {
-            location.reload();
-        });
+        // Removed location.reload() on modal close based on user feedback
     });
 </script>
