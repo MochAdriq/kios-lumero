@@ -246,13 +246,14 @@ function current_outlet_id(): int
     if (isset($_GET['outlet_id']) && (int)$_GET['outlet_id'] > 0) {
         return (int)$_GET['outlet_id'];
     }
-    if (isset($_SESSION['lumero_selected_outlet_id']) && (int)$_SESSION['lumero_selected_outlet_id'] > 0) {
-        return (int)$_SESSION['lumero_selected_outlet_id'];
-    }
 
     $branchOutletId = (int)(branch_context()['outlet_id'] ?? 0);
     if ($branchOutletId > 0) {
         return $branchOutletId;
+    }
+
+    if (isset($_SESSION['lumero_selected_outlet_id']) && (int)$_SESSION['lumero_selected_outlet_id'] > 0) {
+        return (int)$_SESSION['lumero_selected_outlet_id'];
     }
 
     $user = Auth::user() ?? null;
