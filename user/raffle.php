@@ -27,7 +27,7 @@ if (!function_exists('mem_e')) {
     function mem_e($v){ return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8'); }
     function mem_money($n){ return function_exists('rupiah') ? rupiah((int)$n) : 'Rp'.number_format((int)$n,0,',','.'); }
     function mem_profile_percent(array $m): int{ $fields=['name','email','gender','birth_date','address']; $filled=0; foreach($fields as $f){ if(trim((string)($m[$f] ?? ''))!=='') $filled++; } return (int)round($filled/max(1,count($fields))*100); }
-// function loyalty_mask_phone removed because it is in config/loyalty.php
+}
 
 $page = 'raffle';
 $profilePercent = mem_profile_percent($member);

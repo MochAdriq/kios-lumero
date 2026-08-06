@@ -17,8 +17,7 @@ class RaffleController extends Controller
 
         $batches = $this->raffleModel->getBatches();
         
-        $this->view('layouts/app', [
-            'content' => 'raffle/index',
+        $this->view('raffle/index', [
             'title' => 'Manajemen Undian',
             'batches' => $batches
         ]);
@@ -62,8 +61,7 @@ class RaffleController extends Controller
         $prizes = $this->raffleModel->getPrizesByBatch($id);
         $stats = $this->raffleModel->getTicketStatsByBatch($id);
 
-        $this->view('layouts/app', [
-            'content' => 'raffle/detail',
+        $this->view('raffle/detail', [
             'title' => 'Detail Undian: ' . htmlspecialchars($batch['name']),
             'batch' => $batch,
             'prizes' => $prizes,
