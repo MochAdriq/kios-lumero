@@ -7,199 +7,224 @@ require_once __DIR__ . '/../config/loyalty.php';
 $pdo = Database::connection();
 $memberId = (int)($_SESSION['member_id'] ?? 0);
 
+// --- Redirect if not logged in ---
 if ($memberId <= 0) {
-    redirect('/user/login.php?source=raffle');
+    header('Location: login.php?source=raffle');
     exit;
 }
 
-// Fetch member data
+// --- Fetch member ---
 $stmt = $pdo->prepare("SELECT * FROM loyalty_members WHERE id = ?");
 $stmt->execute([$memberId]);
 $member = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$member) {
-    redirect('/user/login.php?source=raffle');
+    header('Location: login.php?source=raffle');
     exit;
 }
 
-// Helper functions for layout
+// --- Helper functions (same as dashboard.php) ---
 if (!function_exists('mem_e')) {
-    function mem_e($v){ return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8'); }
+    function mem_e($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+}
+if (!function_exists('mem_money')) {
     function mem_money($n){ return function_exists('rupiah') ? rupiah((int)$n) : 'Rp'.number_format((int)$n,0,',','.'); }
-    function mem_profile_percent(array $m): int{ $fields=['name','email','gender','birth_date','address']; $filled=0; foreach($fields as $f){ if(trim((string)($m[$f] ?? ''))!=='') $filled++; } return (int)round($filled/max(1,count($fields))*100); }
+}
+if (!function_exists('mem_profile_percent')) {
+    function mem_profile_percent(array $m): int {
+        $fields = ['name','email','gender','birth_date','address'];
+        $filled = 0;
+        foreach ($fields as $f) { if (trim((string)($m[$f] ?? '')) !== '') $filled++; }
+        return (int)round($filled / max(1, count($fields)) * 100);
+    }
+}
+if (!function_exists('mem_csrf')) {
+    function mem_csrf(){ if(empty($_SESSION['member_csrf'])) $_SESSION['member_csrf']=bin2hex(random_bytes(16)); return $_SESSION['member_csrf']; }
 }
 
-$page = 'raffle';
+// --- Variables expected by layout.php ---
+$page          = 'raffle'; // no active tab in nav
 $profilePercent = mem_profile_percent($member);
-$msg = '';
-$err = '';
+$msg           = '';
+$err           = '';
 
-// Fetch ACTIVE batch
-$stmtBatch = $pdo->query("SELECT * FROM raffle_batches WHERE status = 'active' ORDER BY end_date ASC LIMIT 1");
-$activeBatch = $stmtBatch->fetch(PDO::FETCH_ASSOC);
+// --- Check raffle tables exist (safe fallback) ---
+$activeBatch = null;
+$prizes      = [];
+$myTickets   = [];
 
-$prizes = [];
-$myTickets = [];
-$message = '';
-$error = '';
+try {
+    $stmtBatch = $pdo->query("SELECT * FROM raffle_batches WHERE status = 'active' ORDER BY end_date ASC LIMIT 1");
+    $activeBatch = $stmtBatch->fetch(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    // Table might not exist yet — silently ignore
+    $activeBatch = null;
+}
 
 if ($activeBatch) {
     $batchId = (int)$activeBatch['id'];
-    
-    // Fetch prizes
-    $stmtPrizes = $pdo->prepare("SELECT * FROM raffle_prizes WHERE batch_id = ? ORDER BY id ASC");
-    $stmtPrizes->execute([$batchId]);
-    $prizes = $stmtPrizes->fetchAll(PDO::FETCH_ASSOC);
 
-    // Process Exchange (POST)
+    // --- Handle POST: exchange points for tickets ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qty'])) {
-        $qty = (int)$_POST['qty'];
-        if ($qty > 0) {
-            $cost = $qty * 10;
-            if ($member['points_balance'] >= $cost) {
-                try {
-                    $pdo->beginTransaction();
-                    
-                    // Deduct points
-                    loyalty_deduct_points($pdo, $memberId, $cost, 'raffle_ticket', "Tukar $qty Tiket Undian ({$activeBatch['name']})");
-                    
-                    // Generate Tickets
-                    $stmtInsert = $pdo->prepare("INSERT INTO raffle_tickets (ticket_code, batch_id, member_id) VALUES (?, ?, ?)");
-                    for ($i = 0; $i < $qty; $i++) {
-                        $code = 'UND-' . date('ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 5));
-                        $stmtInsert->execute([$code, $batchId, $memberId]);
-                    }
-                    
-                    $pdo->commit();
-                    $message = "Berhasil menukar $cost poin menjadi $qty Tiket Undian! Semoga beruntung!";
-                    
-                    // Refresh member points
-                    $stmt->execute([$memberId]);
-                    $member = $stmt->fetch(PDO::FETCH_ASSOC);
-                } catch (Exception $e) {
-                    $pdo->rollBack();
-                    $error = "Terjadi kesalahan saat memproses tiket. Silakan coba lagi.";
+        $qty  = max(0, (int)$_POST['qty']);
+        $cost = $qty * 10;
+
+        if ($qty > 0 && $member['points_balance'] >= $cost) {
+            try {
+                $pdo->beginTransaction();
+                loyalty_deduct_points($pdo, $memberId, $cost, 'raffle_ticket', "Tukar {$qty} Tiket Undian ({$activeBatch['name']})");
+                $stmtIns = $pdo->prepare("INSERT INTO raffle_tickets (ticket_code, batch_id, member_id) VALUES (?, ?, ?)");
+                for ($i = 0; $i < $qty; $i++) {
+                    $code = 'UND-' . date('ymd') . '-' . strtoupper(substr(md5(uniqid('', true)), 0, 5));
+                    $stmtIns->execute([$code, $batchId, $memberId]);
                 }
-            } else {
-                $error = "Poin Anda tidak cukup. Butuh $cost poin untuk $qty tiket.";
+                $pdo->commit();
+                $msg = "Berhasil menukar {$cost} poin menjadi {$qty} Tiket Undian! Semoga beruntung! 🎉";
+                // Refresh member data
+                $stmt->execute([$memberId]);
+                $member = $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                $err = "Terjadi kesalahan saat memproses tiket. Silakan coba lagi.";
             }
+        } elseif ($qty <= 0) {
+            $err = "Jumlah tiket tidak valid.";
+        } else {
+            $err = "Poin Anda tidak cukup. Butuh {$cost} poin untuk {$qty} tiket.";
         }
     }
 
-    // Fetch my tickets
-    $stmtTickets = $pdo->prepare("SELECT ticket_code, created_at FROM raffle_tickets WHERE batch_id = ? AND member_id = ? ORDER BY created_at DESC");
-    $stmtTickets->execute([$batchId, $memberId]);
-    $myTickets = $stmtTickets->fetchAll(PDO::FETCH_ASSOC);
+    // --- Fetch prizes ---
+    try {
+        $stmtPrizes = $pdo->prepare("SELECT * FROM raffle_prizes WHERE batch_id = ? ORDER BY id ASC");
+        $stmtPrizes->execute([$batchId]);
+        $prizes = $stmtPrizes->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) { $prizes = []; }
+
+    // --- Fetch my tickets ---
+    try {
+        $stmtTickets = $pdo->prepare("SELECT ticket_code, created_at FROM raffle_tickets WHERE batch_id = ? AND member_id = ? ORDER BY created_at DESC");
+        $stmtTickets->execute([$batchId, $memberId]);
+        $myTickets = $stmtTickets->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) { $myTickets = []; }
 }
 
+// --- Inline raffle content rendered into $content for layout ---
+ob_start();
 ?>
-<?php ob_start(); ?>
 
-<div class="header-section text-center py-4 text-white" style="background: linear-gradient(135deg, #FF6B00 0%, #D40000 100%); border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; margin-top: -20px; padding-top: 40px !important;">
-    <h2 class="fw-bold mb-1">Undian Spesial</h2>
-    <p class="mb-0 opacity-75">Tukar poin Anda dan raih hadiah impian!</p>
+<?php if ($msg): ?>
+    <div class="alert" style="background:#f0fdf4;border:1.5px solid #bbf7d0;color:#15803d;border-radius:16px;padding:16px 20px;margin-bottom:20px;font-weight:600;"><?= mem_e($msg) ?></div>
+<?php endif; ?>
+<?php if ($err): ?>
+    <div class="alert" style="background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;border-radius:16px;padding:16px 20px;margin-bottom:20px;font-weight:600;"><?= mem_e($err) ?></div>
+<?php endif; ?>
+
+<style>
+.raffle-hero { background: linear-gradient(135deg, #FF6B00 0%, #c41230 100%); border-radius: 24px; padding: 28px 24px; color: #fff; text-align: center; margin-bottom: 24px; }
+.raffle-hero h2 { font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; }
+.raffle-hero p { opacity: .8; margin: 0; font-size: .9rem; }
+.prize-card { border-radius: 16px; overflow: hidden; border: 1.5px solid #f3f4f6; background: #fff; text-align: center; }
+.prize-card img { width: 100%; height: 120px; object-fit: cover; }
+.prize-card .prize-img-placeholder { height: 120px; display: flex; align-items: center; justify-content: center; background: #f9fafb; color: #94a3b8; font-size: 2rem; }
+.prize-card .prize-name { padding: 10px; font-weight: 700; font-size: .85rem; }
+.exchange-card { background: linear-gradient(135deg, #fff9f5, #fff); border: 2px solid #FFE5D0; border-radius: 24px; padding: 28px 24px; text-align: center; margin-bottom: 24px; }
+.exchange-card .points-num { font-size: 3rem; font-weight: 900; color: #c41230; line-height: 1; }
+.ticket-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #f3f4f6; }
+.ticket-item:last-child { border-bottom: none; }
+.ticket-code { font-family: monospace; font-size: 1.1rem; font-weight: 800; color: #1e293b; letter-spacing: .06em; }
+.ticket-time { font-size: .78rem; color: #94a3b8; }
+.btn-exchange { display: block; width: 100%; padding: 14px; border-radius: 99px; font-weight: 700; font-size: 1rem; border: none; cursor: pointer; transition: all .2s; margin-bottom: 10px; }
+.btn-exchange:last-child { margin-bottom: 0; }
+.btn-exchange-1 { background: #f3f4f6; color: #374151; }
+.btn-exchange-1:hover { background: #e5e7eb; }
+.btn-exchange-5 { background: #c41230; color: #fff; }
+.btn-exchange-5:hover { background: #a50f27; }
+.btn-exchange-10 { background: linear-gradient(135deg, #FF6B00, #c41230); color: #fff; }
+.btn-exchange-10:hover { opacity: .9; }
+.btn-exchange:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+</style>
+
+<div class="raffle-hero">
+    <h2>🎫 Undian Spesial</h2>
+    <p>Tukar poin Anda dan raih hadiah impian!</p>
 </div>
 
-<div class="container py-4">
-    <?php if ($message): ?>
-        <div class="alert alert-success fw-bold text-center"><?= htmlspecialchars($message) ?></div>
-    <?php endif; ?>
-    <?php if ($error): ?>
-        <div class="alert alert-danger fw-bold text-center"><?= htmlspecialchars($error) ?></div>
+<?php if (!$activeBatch): ?>
+
+    <div style="background:#fff;border-radius:20px;padding:40px 24px;text-align:center;border:1.5px solid #f3f4f6;">
+        <div style="font-size:3rem;margin-bottom:16px;">🎯</div>
+        <h4 style="font-weight:700;color:#0f172a;margin-bottom:8px;">Belum Ada Event Aktif</h4>
+        <p style="color:#64748b;margin-bottom:24px;font-size:.9rem;">Saat ini belum ada periode undian yang berlangsung.<br>Terus kumpulkan poin dan nantikan event berikutnya!</p>
+        <a href="dashboard.php" style="background:#c41230;color:#fff;padding:12px 28px;border-radius:99px;text-decoration:none;font-weight:700;font-size:.9rem;">Kembali ke Dashboard</a>
+    </div>
+
+<?php else: ?>
+
+    <!-- Event info -->
+    <div style="background:#fff;border-radius:20px;padding:18px 20px;border:1.5px solid #e5e7eb;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <span style="font-size:.75rem;font-weight:700;color:#FF6B00;text-transform:uppercase;letter-spacing:.05em;">SEDANG BERLANGSUNG</span>
+            <div style="font-weight:800;color:#0f172a;font-size:1.05rem;"><?= mem_e($activeBatch['name']) ?></div>
+        </div>
+        <div style="text-align:right;font-size:.78rem;color:#64748b;">
+            Tutup:<br><strong><?= date('d M Y', strtotime($activeBatch['end_date'])) ?></strong>
+        </div>
+    </div>
+
+    <?php if (!empty($prizes)): ?>
+    <!-- Prizes -->
+    <h5 style="font-weight:800;margin-bottom:12px;color:#0f172a;">🎁 Hadiah</h5>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;">
+        <?php foreach ($prizes as $p): ?>
+        <div class="prize-card">
+            <?php if (!empty($p['image_url'])): ?>
+                <img src="../public/assets/<?= mem_e($p['image_url']) ?>" alt="<?= mem_e($p['name']) ?>">
+            <?php else: ?>
+                <div class="prize-img-placeholder">🎁</div>
+            <?php endif; ?>
+            <div class="prize-name"><?= mem_e($p['name']) ?></div>
+        </div>
+        <?php endforeach; ?>
+    </div>
     <?php endif; ?>
 
-    <?php if (!$activeBatch): ?>
-        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
-            <h4 class="text-muted mb-3">Tidak Ada Event Undian</h4>
-            <p>Saat ini belum ada periode undian yang aktif. Terus kumpulkan poin Anda dan nantikan event berikutnya!</p>
-            <div>
-                <a href="<?= url('/user/dashboard.php') ?>" class="btn btn-primary rounded-pill px-4">Kembali ke Dashboard</a>
-            </div>
+    <!-- Exchange form -->
+    <div class="exchange-card">
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:4px;">Saldo Poin Anda</p>
+        <div class="points-num"><?= number_format((int)$member['points_balance']) ?></div>
+        <p style="color:#64748b;font-size:.8rem;margin-top:4px;margin-bottom:20px;">poin tersisa</p>
+        <p style="font-weight:700;color:#0f172a;font-size:.9rem;margin-bottom:16px;">10 Poin = 1 Tiket Undian</p>
+        <form method="POST" onsubmit="return confirm('Poin yang sudah ditukar tidak dapat dikembalikan. Lanjutkan?')">
+            <?php $bal = (int)$member['points_balance']; ?>
+            <button type="submit" name="qty" value="1"  class="btn-exchange btn-exchange-1"  <?= $bal < 10  ? 'disabled' : '' ?>>Tukar 1 Tiket &nbsp;(10 Pts)</button>
+            <button type="submit" name="qty" value="5"  class="btn-exchange btn-exchange-5"  <?= $bal < 50  ? 'disabled' : '' ?>>Tukar 5 Tiket &nbsp;(50 Pts)</button>
+            <button type="submit" name="qty" value="10" class="btn-exchange btn-exchange-10" <?= $bal < 100 ? 'disabled' : '' ?>>Tukar 10 Tiket (100 Pts)</button>
+        </form>
+    </div>
+
+    <!-- My tickets -->
+    <h5 style="font-weight:800;margin-bottom:12px;color:#0f172a;">🎫 Tiket Saya (<?= count($myTickets) ?>)</h5>
+    <?php if (empty($myTickets)): ?>
+        <div style="background:#f9fafb;border-radius:16px;padding:28px;text-align:center;color:#64748b;font-size:.9rem;border:1.5px solid #f3f4f6;">
+            Anda belum punya tiket di periode ini.<br>Tukar poin di atas untuk mendapatkan tiket!
         </div>
     <?php else: ?>
-        
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body text-center p-4">
-                <div class="badge bg-warning text-dark mb-2 px-3 py-2 rounded-pill fw-bold">SEDANG BERLANGSUNG</div>
-                <h4 class="fw-bold text-primary mb-1"><?= htmlspecialchars($activeBatch['name']) ?></h4>
-                <p class="text-muted small mb-0">Periode ditutup: <?= date('d F Y', strtotime($activeBatch['end_date'])) ?></p>
-            </div>
-        </div>
-
-        <h5 class="fw-bold mb-3">🎁 Hadiah Utama</h5>
-        <div class="row g-3 mb-4">
-            <?php foreach ($prizes as $p): ?>
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden text-center">
-                    <?php if ($p['image_url']): ?>
-                        <img src="<?= url('/public/assets/' . $p['image_url']) ?>" alt="Prize" class="card-img-top" style="height: 120px; object-fit: cover;">
-                    <?php else: ?>
-                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 120px;">
-                            <span class="text-muted opacity-50">Hadiah</span>
-                        </div>
-                    <?php endif; ?>
-                    <div class="card-body p-2">
-                        <span class="fw-bold fs-6"><?= htmlspecialchars($p['name']) ?></span>
-                    </div>
-                </div>
+        <div style="background:#fff;border-radius:20px;border:1.5px solid #f3f4f6;overflow:hidden;margin-bottom:20px;">
+            <?php foreach ($myTickets as $t): ?>
+            <div class="ticket-item">
+                <span class="ticket-code"><?= mem_e($t['ticket_code']) ?></span>
+                <span class="ticket-time"><?= date('d M, H:i', strtotime($t['created_at'])) ?></span>
             </div>
             <?php endforeach; ?>
-            <?php if (empty($prizes)): ?>
-                <div class="col-12"><p class="text-muted fst-italic">Katalog hadiah sedang disiapkan...</p></div>
-            <?php endif; ?>
         </div>
-
-        <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: #FFF9F5; border: 2px solid #FFE5D0 !important;">
-            <div class="card-body p-4 text-center">
-                <p class="text-muted mb-1">Saldo Poin Anda Saat Ini</p>
-                <h1 class="display-4 fw-black text-primary mb-3"><?= number_format($member['points_balance']) ?> <small class="fs-5">Pts</small></h1>
-                
-                <h6 class="fw-bold mb-3">10 Poin = 1 Tiket Undian</h6>
-                
-                <form method="POST" class="d-flex flex-column gap-2" onsubmit="return confirm('Apakah Anda yakin ingin menukarkan poin dengan tiket ini? Poin yang sudah ditukar tidak dapat dikembalikan.')">
-                    <?php if ($member['points_balance'] >= 10): ?>
-                        <button type="submit" name="qty" value="1" class="btn btn-lg btn-outline-primary fw-bold rounded-pill">Tukar 1 Tiket (10 Pts)</button>
-                    <?php endif; ?>
-                    <?php if ($member['points_balance'] >= 50): ?>
-                        <button type="submit" name="qty" value="5" class="btn btn-lg btn-primary fw-bold rounded-pill">Tukar 5 Tiket (50 Pts)</button>
-                    <?php endif; ?>
-                    <?php if ($member['points_balance'] >= 100): ?>
-                        <button type="submit" name="qty" value="10" class="btn btn-lg btn-danger fw-bold rounded-pill">Tukar 10 Tiket (100 Pts)</button>
-                    <?php endif; ?>
-                    <?php if ($member['points_balance'] < 10): ?>
-                        <button type="button" class="btn btn-lg btn-secondary fw-bold rounded-pill" disabled>Poin Tidak Cukup</button>
-                    <?php endif; ?>
-                </form>
-            </div>
-        </div>
-
-        <h5 class="fw-bold mb-3">🎫 Tiket Saya (<?= count($myTickets) ?>)</h5>
-        <?php if (empty($myTickets)): ?>
-            <div class="alert alert-light border rounded-4 text-center py-4">
-                <span class="text-muted">Anda belum memiliki tiket undian di periode ini.</span>
-            </div>
-        <?php else: ?>
-            <div class="card border-0 shadow-sm rounded-4 mb-5">
-                <div class="list-group list-group-flush rounded-4">
-                    <?php foreach ($myTickets as $t): ?>
-                    <div class="list-group-item py-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-dark font-monospace fs-5"><?= $t['ticket_code'] ?></span>
-                            <small class="text-muted"><?= date('d M H:i', strtotime($t['created_at'])) ?></small>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        <?php endif; ?>
-
     <?php endif; ?>
-</div>
+
+<?php endif; ?>
+
 
 <?php
 $content = ob_get_clean();
-$title = "Kupon Undian - Kios Lumero";
-$msg = $message;
-$err = $error;
 require __DIR__ . '/views/layout.php';
-?>
+
+
