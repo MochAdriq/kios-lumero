@@ -17,7 +17,7 @@ loyalty_ensure_tables($pdo);
 $memberId = (int)($_SESSION['member_id'] ?? 0);
 if ($memberId <= 0) { header('Location: login.php'); exit; }
 
-$stmt = $pdo->prepare("SELECT * FROM loyalty_members WHERE id = ?");
+$stmt = $pdo->prepare("SELECT * FROM members WHERE id = ?");
 $stmt->execute([$memberId]);
 $member = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$member) { header('Location: login.php'); exit; }
