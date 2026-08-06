@@ -1,4 +1,22 @@
 <?php
+// ── Prevent Service Worker from caching this page ────────────────────────────
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+// ── Debug: catch ALL errors and show them ────────────────────────────────────
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+set_exception_handler(function(Throwable $e) {
+    echo '<pre style="background:#fff0f0;padding:20px;border:2px solid red;border-radius:10px;font-size:14px;">';
+    echo '<b>FATAL ERROR:</b> ' . htmlspecialchars($e->getMessage()) . "\n";
+    echo 'File: ' . htmlspecialchars($e->getFile()) . ' Line: ' . $e->getLine() . "\n\n";
+    echo htmlspecialchars($e->getTraceAsString());
+    echo '</pre>';
+    exit;
+});
+
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../helpers/functions.php';
 require_once __DIR__ . '/../core/Database.php';
