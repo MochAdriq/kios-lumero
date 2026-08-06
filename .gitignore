@@ -15,3 +15,8 @@ cache/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Abaikan file gambar hasil upload (Dinamic)
+public/assets/images/event-prizes/prize_*
+public/assets/qris/qris_outlet_*
+public/assets/uploads/products/product_*

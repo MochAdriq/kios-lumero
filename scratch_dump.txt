@@ -1,0 +1,43 @@
+FILES:
+Array
+(
+    [qris_image] => Array
+        (
+            [name] => WhatsApp Image 2026-07-31 at 12.09.34.jpeg
+            [full_path] => WhatsApp Image 2026-07-31 at 12.09.34.jpeg
+            [type] => image/jpeg
+            [tmp_name] => /tmp/phpjsUuGs
+            [error] => 0
+            [size] => 171306
+        )
+
+)
+
+POST:
+Array
+(
+    [_csrf] => 773c44fd1b28ffe08552d5f14bf1d087ec9aa333957e92f53b8071743df46e0d
+    [outlet_name] => Kalibunder
+    [outlet_address] => kalibunder
+    [outlet_phone] => 089567827654
+    [settings] => Array
+        (
+            [qris_payment_method] => manual
+            [service_charge_percent] => 0
+            [printer_enabled] => true
+            [store_whatsapp] => 08569007800
+        )
+
+    [gateway] => Array
+        (
+            [midtrans] => Array
+                (
+                    [client_id] => 
+                    [client_secret] => 
+                    [merchant_id] => 
+                    [mode] => sandbox
+                )
+
+        )
+
+)
