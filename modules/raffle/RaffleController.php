@@ -13,8 +13,7 @@ class RaffleController extends Controller
 
     public function index()
     {
-        Auth::requireLogin();
-        Auth::requireRole(['admin', 'owner', 'superadmin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
 
         $batches = $this->raffleModel->getBatches();
         
@@ -27,8 +26,7 @@ class RaffleController extends Controller
 
     public function saveBatch()
     {
-        Auth::requireLogin();
-        Auth::requireRole(['admin', 'owner', 'superadmin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
 
         $data = [
             'id' => $_POST['id'] ?? null,
@@ -53,8 +51,7 @@ class RaffleController extends Controller
 
     public function detail(int $id)
     {
-        Auth::requireLogin();
-        Auth::requireRole(['admin', 'owner', 'superadmin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
 
         $batch = $this->raffleModel->getBatchById($id);
         if (!$batch) {
@@ -76,8 +73,7 @@ class RaffleController extends Controller
 
     public function savePrize()
     {
-        Auth::requireLogin();
-        Auth::requireRole(['admin', 'owner', 'superadmin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
 
         $batchId = (int)($_POST['batch_id'] ?? 0);
         $data = [
@@ -111,8 +107,7 @@ class RaffleController extends Controller
 
     public function deletePrize()
     {
-        Auth::requireLogin();
-        Auth::requireRole(['admin', 'owner', 'superadmin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
         
         $id = (int)($_POST['id'] ?? 0);
         $batchId = (int)($_POST['batch_id'] ?? 0);
@@ -127,13 +122,11 @@ class RaffleController extends Controller
 
     public function drawWinner()
     {
-        Auth::requireLogin();
-        Auth::requireRole(['admin', 'owner', 'superadmin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
 
-        // Check if user is owner/superadmin for security? Or just let admin do it?
-        // Usually, only high level roles should draw. Let's assume Owner/Superadmin.
-        $userRole = Auth::user()['role'] ?? 'admin';
-        if (!in_array($userRole, ['owner', 'superadmin'])) {
+        // Check if user is owner/superadmin for security
+        $userRole = Auth::role();
+        if (!in_array($userRole, ['super_admin'])) {
             flash('error', 'Hanya Owner atau Superadmin yang dapat melakukan pengundian.');
             redirect('/raffle/' . (int)($_POST['batch_id'] ?? 0));
         }
