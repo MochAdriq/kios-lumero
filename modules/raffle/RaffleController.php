@@ -3,7 +3,7 @@ require_once __DIR__ . '/RaffleModel.php';
 
 class RaffleController extends Controller
 {
-    private $raffleModel;
+    private RaffleModel $raffleModel;
 
     public function __construct()
     {
@@ -14,12 +14,10 @@ class RaffleController extends Controller
     public function index()
     {
         Auth::requireRoles(['super_admin', 'administrator']);
-
         $batches = $this->raffleModel->getBatches();
-        
         $this->view('raffle/index', [
-            'title' => 'Manajemen Undian',
-            'batches' => $batches
+            'pageTitle' => 'Manajemen Undian',
+            'batches'   => $batches,
         ]);
     }
 
@@ -28,24 +26,22 @@ class RaffleController extends Controller
         Auth::requireRoles(['super_admin', 'administrator']);
 
         $data = [
-            'id' => $_POST['id'] ?? null,
+            'id' => !empty($_POST['id']) ? (int)$_POST['id'] : null,
             'name' => trim($_POST['name'] ?? ''),
             'start_date' => trim($_POST['start_date'] ?? ''),
             'end_date' => trim($_POST['end_date'] ?? ''),
-            'status' => $_POST['status'] ?? 'draft'
+            'status' => in_array($_POST['status'] ?? '', ['draft','active','completed']) ? $_POST['status'] : 'draft'
         ];
 
         if (empty($data['name']) || empty($data['start_date']) || empty($data['end_date'])) {
             flash('error', 'Semua kolom wajib diisi!');
-            redirect('/raffle');
+            $this->redirect('/raffle');
+            return;
         }
 
-        if ($this->raffleModel->saveBatch($data)) {
-            flash('success', 'Batch undian berhasil disimpan.');
-        } else {
-            flash('error', 'Gagal menyimpan batch.');
-        }
-        redirect('/raffle');
+        $ok = $this->raffleModel->saveBatch($data);
+        flash($ok ? 'success' : 'error', $ok ? 'Batch undian berhasil disimpan.' : 'Gagal menyimpan batch.');
+        $this->redirect('/raffle');
     }
 
     public function detail(int $id)
@@ -55,14 +51,15 @@ class RaffleController extends Controller
         $batch = $this->raffleModel->getBatchById($id);
         if (!$batch) {
             flash('error', 'Batch tidak ditemukan.');
-            redirect('/raffle');
+            $this->redirect('/raffle');
+            return;
         }
 
         $prizes = $this->raffleModel->getPrizesByBatch($id);
         $stats = $this->raffleModel->getTicketStatsByBatch($id);
 
         $this->view('raffle/detail', [
-            'title' => 'Detail Undian: ' . htmlspecialchars($batch['name']),
+            'pageTitle' => 'Detail Undian: ' . htmlspecialchars($batch['name']),
             'batch' => $batch,
             'prizes' => $prizes,
             'stats' => $stats
@@ -95,12 +92,9 @@ class RaffleController extends Controller
             }
         }
 
-        if ($this->raffleModel->savePrize($data)) {
-            flash('success', 'Hadiah berhasil disimpan.');
-        } else {
-            flash('error', 'Gagal menyimpan hadiah.');
-        }
-        redirect('/raffle/' . $batchId);
+        $ok = $this->raffleModel->savePrize($data);
+        flash($ok ? 'success' : 'error', $ok ? 'Hadiah berhasil disimpan.' : 'Gagal menyimpan hadiah.');
+        $this->redirect('/raffle/' . $batchId);
     }
 
     public function deletePrize()
@@ -110,35 +104,20 @@ class RaffleController extends Controller
         $id = (int)($_POST['id'] ?? 0);
         $batchId = (int)($_POST['batch_id'] ?? 0);
 
-        if ($this->raffleModel->deletePrize($id)) {
-            flash('success', 'Hadiah berhasil dihapus.');
-        } else {
-            flash('error', 'Gagal menghapus hadiah.');
-        }
-        redirect('/raffle/' . $batchId);
+        $ok = $this->raffleModel->deletePrize($id);
+        flash($ok ? 'success' : 'error', $ok ? 'Hadiah berhasil dihapus.' : 'Gagal menghapus hadiah.');
+        $this->redirect('/raffle/' . $batchId);
     }
 
     public function drawWinner()
     {
-        Auth::requireRoles(['super_admin', 'administrator']);
-
-        // Check if user is owner/superadmin for security
-        $userRole = Auth::role();
-        if (!in_array($userRole, ['super_admin'])) {
-            flash('error', 'Hanya Owner atau Superadmin yang dapat melakukan pengundian.');
-            redirect('/raffle/' . (int)($_POST['batch_id'] ?? 0));
-        }
+        Auth::requireRoles(['super_admin']);
 
         $prizeId = (int)($_POST['prize_id'] ?? 0);
         $batchId = (int)($_POST['batch_id'] ?? 0);
 
         $result = $this->raffleModel->drawWinner($prizeId, $batchId);
-
-        if ($result['success']) {
-            flash('success', $result['message']);
-        } else {
-            flash('error', $result['message']);
-        }
-        redirect('/raffle/' . $batchId);
+        flash($result['success'] ? 'success' : 'error', $result['message']);
+        $this->redirect('/raffle/' . $batchId);
     }
 }
