@@ -108,6 +108,16 @@ if (class_exists('LoyaltyController')) {
     $router->post('/loyalty/eventSettings/savePercentages', [LoyaltyController::class, 'saveEventPercentages']);
     $router->post('/loyalty/eventSettings/deletePrize', [LoyaltyController::class, 'deleteEventPrize']);
 }
+
+if (class_exists('RaffleController')) {
+    $router->get('/raffle', [RaffleController::class, 'index']);
+    $router->post('/raffle/save-batch', [RaffleController::class, 'saveBatch']);
+    $router->get('/raffle/{id}', [RaffleController::class, 'detail']);
+    $router->post('/raffle/save-prize', [RaffleController::class, 'savePrize']);
+    $router->post('/raffle/delete-prize', [RaffleController::class, 'deletePrize']);
+    $router->post('/raffle/draw-winner', [RaffleController::class, 'drawWinner']);
+}
+
 $memberHandler = function() {
     require __DIR__ . '/../user/index.php';
 };
