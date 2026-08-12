@@ -431,7 +431,7 @@ function svgImg(): string {
         <tr>
           <td>
             <?php if ($p['image_url']): ?>
-              <img class="prize-thumb" src="<?= url('/public/assets/' . $p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
+              <img class="prize-thumb" src="<?= asset($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
             <?php else: ?>
               <div class="prize-thumb-placeholder"><?= svgImg() ?></div>
             <?php endif ?>
