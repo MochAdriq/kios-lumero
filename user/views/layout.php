@@ -382,7 +382,7 @@ textarea.form-input { min-height: 88px; resize: vertical; }
     <a class="nav-tab <?=$page==='profil'?'active':''?>" href="?page=profil">Dashboard</a>
     <a class="nav-tab <?=$page==='riwayat'?'active':''?>" href="?page=riwayat">Aktivitas</a>
     <a class="nav-tab <?=$page==='penukaran'?'active':''?>" href="?page=penukaran">Tukar Poin</a>
-    <a class="nav-tab" href="raffle.php">Event Undian</a>
+    <a class="nav-tab <?=$page==='raffle'?'active':''?>" href="raffle.php">Event Undian</a>
     <a class="nav-tab" href="redemption-history.php">Riwayat Hadiah</a>
     <a class="nav-tab" href="online-order.php">Order Online</a>
   </nav>
@@ -431,6 +431,8 @@ textarea.form-input { min-height: 88px; resize: vertical; }
       <?php require __DIR__ . "/riwayat.php"; ?>
   <?php elseif($page==="penukaran"): ?>
       <?php require __DIR__ . "/penukaran.php"; ?>
+  <?php elseif($page==="raffle"): ?>
+      <?php require __DIR__ . "/raffle-content.php"; ?>
   <?php endif; ?>
 </main>
 
