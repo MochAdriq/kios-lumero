@@ -8,7 +8,12 @@ class RaffleController extends Controller
     public function __construct()
     {
         $this->raffleModel = new RaffleModel();
-        $this->raffleModel->ensureTables();
+        try {
+            $this->raffleModel->ensureTables();
+        } catch (Throwable $e) {
+            // Tabel mungkin sudah ada atau ada constraint issue — lanjutkan saja
+            error_log('[RaffleController] ensureTables warning: ' . $e->getMessage());
+        }
     }
 
     public function index()

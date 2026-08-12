@@ -4,34 +4,46 @@ class RaffleModel extends Model
 {
     public function ensureTables(): void
     {
-        $this->db->exec("CREATE TABLE IF NOT EXISTS raffle_batches (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(150) NOT NULL,
-            start_date DATETIME NOT NULL,
-            end_date DATETIME NOT NULL,
-            status ENUM('draft','active','completed') NOT NULL DEFAULT 'draft',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        try {
+            $this->db->exec("CREATE TABLE IF NOT EXISTS raffle_batches (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(150) NOT NULL,
+                start_date DATETIME NOT NULL,
+                end_date DATETIME NOT NULL,
+                status ENUM('draft','active','completed') NOT NULL DEFAULT 'draft',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        } catch (Throwable $e) {
+            error_log('[Raffle] raffle_batches table: ' . $e->getMessage());
+        }
 
-        $this->db->exec("CREATE TABLE IF NOT EXISTS raffle_prizes (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            batch_id INT NOT NULL,
-            name VARCHAR(150) NOT NULL,
-            image_url VARCHAR(255) DEFAULT NULL,
-            winner_ticket_id INT DEFAULT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (batch_id) REFERENCES raffle_batches(id) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        try {
+            $this->db->exec("CREATE TABLE IF NOT EXISTS raffle_prizes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                batch_id INT NOT NULL,
+                name VARCHAR(150) NOT NULL,
+                image_url VARCHAR(255) DEFAULT NULL,
+                winner_ticket_id INT DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (batch_id) REFERENCES raffle_batches(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        } catch (Throwable $e) {
+            error_log('[Raffle] raffle_prizes table: ' . $e->getMessage());
+        }
 
-        $this->db->exec("CREATE TABLE IF NOT EXISTS raffle_tickets (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            ticket_code VARCHAR(40) NOT NULL,
-            batch_id INT NOT NULL,
-            member_id INT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY uniq_raffle_ticket_code (ticket_code),
-            FOREIGN KEY (batch_id) REFERENCES raffle_batches(id) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        try {
+            $this->db->exec("CREATE TABLE IF NOT EXISTS raffle_tickets (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                ticket_code VARCHAR(40) NOT NULL,
+                batch_id INT NOT NULL,
+                member_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uniq_raffle_ticket_code (ticket_code),
+                FOREIGN KEY (batch_id) REFERENCES raffle_batches(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        } catch (Throwable $e) {
+            error_log('[Raffle] raffle_tickets table: ' . $e->getMessage());
+        }
     }
 
     public function getBatches(): array
