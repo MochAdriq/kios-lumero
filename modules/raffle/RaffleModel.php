@@ -72,7 +72,7 @@ class RaffleModel extends Model
             $st = $this->db->prepare("SELECT p.*, t.ticket_code, m.name as winner_name, m.phone as winner_phone 
                                       FROM raffle_prizes p 
                                       LEFT JOIN raffle_tickets t ON p.winner_ticket_id = t.id 
-                                      LEFT JOIN loyalty_members m ON t.member_id = m.id 
+                                      LEFT JOIN members m ON t.member_id = m.id 
                                       WHERE p.batch_id = ? ORDER BY p.id ASC");
             $st->execute([$batchId]);
             return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -114,10 +114,26 @@ class RaffleModel extends Model
         } catch (Throwable $e) { return ['total_tickets' => 0, 'total_participants' => 0]; }
     }
 
+    public function getTicketsByBatch(int $batchId, int $limit = 200): array
+    {
+        try {
+            $st = $this->db->prepare(
+                "SELECT rt.ticket_code, m.name as member_name
+                 FROM raffle_tickets rt
+                 JOIN members m ON m.id = rt.member_id
+                 WHERE rt.batch_id = ?
+                 ORDER BY rt.id ASC
+                 LIMIT ?"
+            );
+            $st->execute([$batchId, $limit]);
+            return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Throwable $e) { return []; }
+    }
+
     public function drawWinner(int $prizeId, int $batchId): array
     {
         try {
-            // Check if prize already has a winner
+            // Cek apakah hadiah sudah punya pemenang
             $stCheck = $this->db->prepare("SELECT winner_ticket_id FROM raffle_prizes WHERE id = ?");
             $stCheck->execute([$prizeId]);
             $currentWinner = $stCheck->fetchColumn();
@@ -125,8 +141,7 @@ class RaffleModel extends Model
                 return ['success' => false, 'message' => 'Hadiah ini sudah memiliki pemenang!'];
             }
 
-            // Get a random ticket that hasn't won anything in this batch yet (assuming 1 prize per ticket, but a member can win multiple times if they have multiple tickets)
-            // Wait, to spread it out, let's make it 1 prize per MEMBER per batch.
+            // Pilih tiket acak (1 hadiah per member per batch)
             $sql = "SELECT id FROM raffle_tickets 
                     WHERE batch_id = ? 
                     AND member_id NOT IN (
@@ -135,7 +150,7 @@ class RaffleModel extends Model
                         WHERE p2.batch_id = ? AND p2.winner_ticket_id IS NOT NULL
                     )
                     ORDER BY RAND() LIMIT 1";
-            
+
             $stPick = $this->db->prepare($sql);
             $stPick->execute([$batchId, $batchId]);
             $winningTicketId = $stPick->fetchColumn();
@@ -144,11 +159,27 @@ class RaffleModel extends Model
                 return ['success' => false, 'message' => 'Tidak ada tiket yang valid atau semua peserta sudah menang!'];
             }
 
-            // Assign winner
+            // Simpan pemenang
             $stUpdate = $this->db->prepare("UPDATE raffle_prizes SET winner_ticket_id = ? WHERE id = ?");
             $stUpdate->execute([$winningTicketId, $prizeId]);
 
-            return ['success' => true, 'message' => 'Pemenang berhasil diacak!'];
+            // Ambil detail pemenang untuk respons AJAX
+            $stWinner = $this->db->prepare(
+                "SELECT m.name as winner_name, m.phone as winner_phone, t.ticket_code
+                 FROM raffle_tickets t
+                 JOIN members m ON m.id = t.member_id
+                 WHERE t.id = ?"
+            );
+            $stWinner->execute([$winningTicketId]);
+            $wd = $stWinner->fetch(PDO::FETCH_ASSOC);
+
+            return [
+                'success'      => true,
+                'message'      => 'Pemenang berhasil diacak!',
+                'winner_name'  => $wd['winner_name']  ?? 'Pemenang',
+                'winner_phone' => $wd['winner_phone'] ?? '',
+                'ticket_code'  => $wd['ticket_code']  ?? '',
+            ];
         } catch (Throwable $e) {
             return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         }

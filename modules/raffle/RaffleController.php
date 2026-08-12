@@ -55,14 +55,16 @@ class RaffleController extends Controller
             return;
         }
 
-        $prizes = $this->raffleModel->getPrizesByBatch($id);
-        $stats = $this->raffleModel->getTicketStatsByBatch($id);
+        $prizes  = $this->raffleModel->getPrizesByBatch($id);
+        $stats   = $this->raffleModel->getTicketStatsByBatch($id);
+        $tickets = $this->raffleModel->getTicketsByBatch($id);
 
         $this->view('raffle/detail', [
             'pageTitle' => 'Detail Undian: ' . htmlspecialchars($batch['name']),
-            'batch' => $batch,
-            'prizes' => $prizes,
-            'stats' => $stats
+            'batch'     => $batch,
+            'prizes'    => $prizes,
+            'stats'     => $stats,
+            'tickets'   => $tickets,
         ]);
     }
 
@@ -115,8 +117,16 @@ class RaffleController extends Controller
 
         $prizeId = (int)($_POST['prize_id'] ?? 0);
         $batchId = (int)($_POST['batch_id'] ?? 0);
+        $isAjax  = !empty($_POST['_ajax']);
 
         $result = $this->raffleModel->drawWinner($prizeId, $batchId);
+
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($result);
+            exit;
+        }
+
         flash($result['success'] ? 'success' : 'error', $result['message']);
         $this->redirect('/raffle/' . $batchId);
     }
