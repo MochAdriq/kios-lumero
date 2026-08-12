@@ -375,13 +375,13 @@ textarea.form-input { min-height: 88px; resize: vertical; }
     </div>
     <div class="topbar-actions">
       <span class="topbar-user"><?=mem_e(explode(' ', $member['name'] ?: 'Member')[0])?></span>
-      <a class="topbar-logout" href="?logout=1">Keluar</a>
+      <a class="topbar-logout" href="dashboard.php?logout=1">Keluar</a>
     </div>
   </div>
   <nav class="nav-tabs" id="navTabs">
-    <a class="nav-tab <?=$page==='profil'?'active':''?>" href="?page=profil">Dashboard</a>
-    <a class="nav-tab <?=$page==='riwayat'?'active':''?>" href="?page=riwayat">Aktivitas</a>
-    <a class="nav-tab <?=$page==='penukaran'?'active':''?>" href="?page=penukaran">Tukar Poin</a>
+    <a class="nav-tab <?=$page==='profil'?'active':''?>" href="dashboard.php?page=profil">Dashboard</a>
+    <a class="nav-tab <?=$page==='riwayat'?'active':''?>" href="dashboard.php?page=riwayat">Aktivitas</a>
+    <a class="nav-tab <?=$page==='penukaran'?'active':''?>" href="dashboard.php?page=penukaran">Tukar Poin</a>
     <a class="nav-tab <?=$page==='raffle'?'active':''?>" href="raffle.php">Event Undian</a>
     <a class="nav-tab" href="redemption-history.php">Riwayat Hadiah</a>
     <a class="nav-tab" href="online-order.php">Order Online</a>
@@ -418,9 +418,9 @@ textarea.form-input { min-height: 88px; resize: vertical; }
       </div>
     </div>
     <div class="vip-cta">
-      <a href="?page=penukaran" class="btn-vip btn-vip-gold">Tukar Poin</a>
+      <a href="dashboard.php?page=penukaran" class="btn-vip btn-vip-gold">Tukar Poin</a>
       <a href="raffle.php" class="btn-vip" style="background:var(--red); color:#fff; border-color:var(--red);">Event Undian</a>
-      <a href="?page=riwayat" class="btn-vip btn-vip-ghost">Lihat Aktivitas</a>
+      <a href="dashboard.php?page=riwayat" class="btn-vip btn-vip-ghost">Lihat Aktivitas</a>
     </div>
   </section>
 
