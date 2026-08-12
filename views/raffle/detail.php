@@ -166,6 +166,23 @@
   50% { opacity: 0.5; transform: scale(0.95); }
   100% { opacity: 1; transform: scale(1); }
 }
+.spotlight {
+  position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,0) 0%, rgba(245,158,11,0.06) 10%, rgba(255,255,255,0) 20%);
+  animation: rotateSpotlight 10s linear infinite; pointer-events: none; z-index: -1;
+}
+@keyframes rotateSpotlight { 100% { transform: rotate(360deg); } }
+.giant-countdown {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 220px; font-weight: 900; color: #fff; z-index: 9999;
+  text-shadow: 0 0 80px rgba(245,158,11,0.8); opacity: 0; pointer-events: none;
+}
+@keyframes popIn { 
+  0% { transform: scale(0.3); opacity: 0; } 
+  30% { transform: scale(1.1); opacity: 1; } 
+  80% { transform: scale(1); opacity: 1; } 
+  100% { transform: scale(0.9); opacity: 0; } 
+}
 .roll-strip {
   display: flex; flex-direction: column;
   will-change: transform;
@@ -515,9 +532,13 @@ function svgImg(): string {
 
 <!-- ─── Rolling Overlay ───────────────────────────────────────── -->
 <div id="rollOverlay" class="roll-overlay" hidden>
-  <div class="roll-panel" id="rollPanel">
+  <div id="giantCountdown" class="giant-countdown"></div>
+  <div class="roll-panel" id="rollPanel" style="position:relative; overflow:hidden;">
+    <div class="spotlight"></div>
+    <div class="spotlight" style="animation-direction: reverse; animation-duration: 15s; opacity: 0.5;"></div>
+    
     <!-- Phase 1: Idle & Rolling -->
-    <div id="rollPhase">
+    <div id="rollPhase" style="position:relative; z-index:1; transition: opacity 0.5s;">
       <div class="roll-eyebrow">Pengundian Berlangsung</div>
       
       <div id="rollPrizeImgWrap" style="text-align:center; margin-bottom: 24px; display:none;">
@@ -535,6 +556,10 @@ function svgImg(): string {
       </div>
       
       <div class="roll-status" id="rollStatus">Tekan tombol di bawah atau tombol Spasi</div>
+      
+      <div id="rollParticipantCount" style="color:#4ade80; font-weight:800; margin-bottom: 15px; font-size:15px; letter-spacing:0.05em; text-transform:uppercase; text-shadow: 0 0 10px rgba(74,222,128,0.3);">
+         <?= number_format(count($tickets), 0, ',', '.') ?> Tiket Siap Diundi
+      </div>
       
       <button id="btnStartRoll" class="btn-start-roll">Mulai Pengundian</button>
       
@@ -625,13 +650,58 @@ document.getElementById('prizeModal').addEventListener('click', function(e) {
 /* ── Rolling animation ─────────────────────────────────────── */
 let currentPrizeId, currentBatchId;
 let rollDone = false;
+let isRollingStarted = false;
+let teaserInterval, heartbeatInterval, rollMachineSound;
+
+// Synth Audio Helper for sound effects without needing MP3 files
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep(freq, type, duration, vol=0.1) {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+function playWinnerSound() {
+    playBeep(440, 'triangle', 0.2, 0.2); 
+    setTimeout(() => playBeep(554, 'triangle', 0.2, 0.2), 150);
+    setTimeout(() => playBeep(659, 'triangle', 0.8, 0.2), 300);
+}
+
+function startTeaser() {
+    clearInterval(teaserInterval);
+    const strip = document.getElementById('rollStrip');
+    teaserInterval = setInterval(() => {
+        if (!isRollingStarted && Math.random() > 0.6) {
+            strip.innerHTML = `<div class="roll-item" style="color:rgba(255,255,255,0.15); font-size:24px; font-weight:normal;">${TICKET_POOL[Math.floor(Math.random()*TICKET_POOL.length)]}</div>`;
+            setTimeout(() => {
+                if(!isRollingStarted) strip.innerHTML = '<div class="roll-item" style="color:rgba(255,255,255,0.4)">[ SIAP DIUNDI ]</div>';
+            }, 80);
+        }
+    }, 1500);
+}
+
+function startHeartbeat() {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(() => {
+        if (!isRollingStarted) {
+            playBeep(60, 'sine', 0.4, 0.2);
+            setTimeout(() => playBeep(60, 'sine', 0.4, 0.1), 250);
+        }
+    }, 1200);
+}
 
 function prepareRoll(prizeId, batchId, prizeName, prizeImgUrl) {
     currentPrizeId = prizeId;
     currentBatchId = batchId;
     rollDone = false;
+    isRollingStarted = false;
     
     document.getElementById('rollPhase').style.display   = '';
+    document.getElementById('rollPhase').style.opacity   = '1';
     document.getElementById('winnerReveal').classList.remove('visible');
     document.getElementById('rollPrizeName').textContent = prizeName;
     document.getElementById('rollStatus').innerHTML      = '<span style="animation: pulse 1.5s infinite;">Tekan tombol di bawah atau tombol SPASI di keyboard</span>';
@@ -653,26 +723,55 @@ function prepareRoll(prizeId, batchId, prizeName, prizeImgUrl) {
     
     document.getElementById('rollOverlay').removeAttribute('hidden');
     document.body.style.overflow = 'hidden';
+    
+    // User interacted with "Kocok Undian", we can resume audio context
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    startTeaser();
+    startHeartbeat();
 }
 
 document.getElementById('btnStartRoll').addEventListener('click', function() {
     this.style.display = 'none';
-    document.getElementById('rollDots').style.display = 'flex';
-    document.getElementById('rollStatus').textContent = 'Mengumpulkan seluruh tiket peserta...';
+    isRollingStarted = true;
+    clearInterval(teaserInterval);
+    clearInterval(heartbeatInterval);
     
-    setTimeout(() => {
-        document.getElementById('rollStatus').textContent = 'Memasukkan tiket ke dalam mesin acak...';
-    }, 1800);
+    // Dim background for countdown
+    document.getElementById('rollPhase').style.opacity = '0.15';
     
-    setTimeout(() => {
-        document.getElementById('rollStatus').textContent = 'Mengacak secara acak! Siap-siap...';
-    }, 3800);
-
-    setTimeout(() => {
-        document.getElementById('rollStatus').textContent = 'Mencari kandidat pemenang...';
-    }, 5500);
-
-    startActualRoll();
+    const cdEl = document.getElementById('giantCountdown');
+    let count = 3;
+    
+    function tickCountdown() {
+        if (count > 0) {
+            cdEl.textContent = count;
+            cdEl.style.animation = 'none';
+            void cdEl.offsetWidth;
+            cdEl.style.animation = 'popIn 1s ease-out forwards';
+            playBeep(400, 'square', 0.2, 0.1);
+            count--;
+            setTimeout(tickCountdown, 1000);
+        } else {
+            cdEl.textContent = 'GO!';
+            cdEl.style.animation = 'none';
+            void cdEl.offsetWidth;
+            cdEl.style.animation = 'popIn 1s ease-out forwards';
+            playBeep(800, 'square', 0.4, 0.15);
+            
+            setTimeout(() => {
+                document.getElementById('rollPhase').style.opacity = '1';
+                document.getElementById('rollDots').style.display = 'flex';
+                document.getElementById('rollStatus').textContent = 'Mengumpulkan seluruh tiket peserta...';
+                
+                setTimeout(() => { document.getElementById('rollStatus').textContent = 'Memasukkan tiket ke dalam mesin acak...'; }, 1800);
+                setTimeout(() => { document.getElementById('rollStatus').textContent = 'Mengacak secara acak! Siap-siap...'; }, 3800);
+                setTimeout(() => { document.getElementById('rollStatus').textContent = 'Mencari kandidat pemenang...'; }, 5500);
+                
+                startActualRoll();
+            }, 600);
+        }
+    }
+    tickCountdown();
 });
 
 // Spacebar shortcut
@@ -687,6 +786,10 @@ document.addEventListener('keydown', function(e) {
 });
 
 function startActualRoll() {
+    rollMachineSound = setInterval(() => {
+        playBeep(150 + Math.random()*200, 'sawtooth', 0.05, 0.03);
+    }, 60);
+
     const strip = document.getElementById('rollStrip');
     const pool = TICKET_POOL.length ? TICKET_POOL : ['UND-1234', 'UND-5678', 'UND-9999'];
     
@@ -732,6 +835,17 @@ function startActualRoll() {
 }
 
 function revealWinnerSmooth(data, pool) {
+    clearInterval(rollMachineSound);
+    
+    let slowInterval = 60;
+    let slowTimer;
+    function playSlowDown() {
+        playBeep(200, 'sine', 0.1, 0.04);
+        slowInterval *= 1.35;
+        if(slowInterval < 800) slowTimer = setTimeout(playSlowDown, slowInterval);
+    }
+    playSlowDown();
+
     const strip = document.getElementById('rollStrip');
     const finalCode = data.ticket_code || pool[Math.floor(Math.random() * pool.length)];
     
@@ -756,6 +870,7 @@ function revealWinnerSmooth(data, pool) {
     strip.style.transform = `translateY(-${itemsCount * 100}px)`;
     
     setTimeout(() => {
+        playWinnerSound();
         showWinnerCard(data);
     }, 4100); 
 }
@@ -770,6 +885,9 @@ function showWinnerCard(data) {
 }
 
 function closeRoll() {
+    clearInterval(teaserInterval);
+    clearInterval(heartbeatInterval);
+    clearInterval(rollMachineSound);
     document.getElementById('rollOverlay').setAttribute('hidden', '');
     document.body.style.overflow = '';
     stopConfetti();
