@@ -161,21 +161,46 @@
   background: rgba(255,255,255,0.04);
   border: 2px solid rgba(255,255,255,0.1);
 }
-.roll-display {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Courier New', monospace;
-  font-size: 28px; font-weight: 900; color: #fff;
-  letter-spacing: 0.05em;
+.roll-strip {
+  display: flex; flex-direction: column;
+  will-change: transform;
 }
-.roll-display.fast  { transition: none; }
-.roll-display.slow  { transition: opacity 0.3s; }
+.roll-strip.spinning {
+  animation: spinSlot 0.25s linear infinite;
+  filter: blur(1px);
+}
+@keyframes spinSlot {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(calc(-100% + 100px)); }
+}
+.roll-strip.stopping {
+  transition: transform 3.8s cubic-bezier(0.12, 0.85, 0.2, 1);
+}
+.roll-item {
+  height: 100px; display: flex; align-items: center; justify-content: center;
+  font-family: 'Courier New', monospace; font-size: 32px; font-weight: 900;
+  color: #fff; letter-spacing: 0.05em; flex-shrink: 0;
+}
+.roll-item.winner-item { color: #f59e0b; font-size: 38px; text-shadow: 0 0 20px rgba(245,158,11,0.5); }
 .roll-mask {
   position: absolute; left: 0; right: 0;
   height: 38px; pointer-events: none; z-index: 2;
 }
 .roll-mask-top    { top: 0;    background: linear-gradient(to bottom, rgba(4,4,12,0.9), transparent); }
 .roll-mask-bottom { bottom: 0; background: linear-gradient(to top,   rgba(4,4,12,0.9), transparent); }
+
+.btn-start-roll {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 16px 48px; border-radius: 16px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff; font-size: 16px; font-weight: 900; letter-spacing: 0.08em;
+  border: none; cursor: pointer;
+  box-shadow: 0 8px 32px rgba(22, 163, 74, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-transform: uppercase; margin-bottom: 20px;
+}
+.btn-start-roll:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(22, 163, 74, 0.45); }
+.btn-start-roll:active { transform: translateY(1px); }
 
 .roll-status {
   font-size: 13px; font-weight: 700;
@@ -468,7 +493,7 @@ function svgImg(): string {
                 </div>
                 <?php if ($batch['status'] === 'completed'): ?>
                 <button class="btn-draw"
-                        onclick="startRoll(<?= (int)$p['id'] ?>, <?= (int)$batch['id'] ?>, '<?= htmlspecialchars(addslashes($p['name'])) ?>')">
+                        onclick="prepareRoll(<?= (int)$p['id'] ?>, <?= (int)$batch['id'] ?>, '<?= htmlspecialchars(addslashes($p['name'])) ?>')">
                   <?= svgDice() ?> Kocok Undian
                 </button>
                 <?php endif ?>
@@ -486,17 +511,24 @@ function svgImg(): string {
 <!-- ─── Rolling Overlay ───────────────────────────────────────── -->
 <div id="rollOverlay" class="roll-overlay" hidden>
   <div class="roll-panel" id="rollPanel">
-    <!-- Phase 1: Rolling -->
+    <!-- Phase 1: Idle & Rolling -->
     <div id="rollPhase">
       <div class="roll-eyebrow">Pengundian Berlangsung</div>
       <div class="roll-heading" id="rollPrizeName"></div>
+      
       <div class="roll-machine">
         <div class="roll-mask roll-mask-top"></div>
-        <div class="roll-display" id="rollDisplay">—</div>
+        <div class="roll-strip" id="rollStrip">
+          <div class="roll-item">[ SIAP DIUNDI ]</div>
+        </div>
         <div class="roll-mask roll-mask-bottom"></div>
       </div>
-      <div class="roll-status" id="rollStatus">Mengacak tiket...</div>
-      <div class="roll-dots">
+      
+      <div class="roll-status" id="rollStatus">Tekan tombol di bawah atau tombol Spasi</div>
+      
+      <button id="btnStartRoll" class="btn-start-roll">Mulai Pengundian</button>
+      
+      <div class="roll-dots" id="rollDots" style="display:none;">
         <div class="roll-dot"></div>
         <div class="roll-dot"></div>
         <div class="roll-dot"></div>
@@ -581,41 +613,65 @@ document.getElementById('prizeModal').addEventListener('click', function(e) {
 });
 
 /* ── Rolling animation ─────────────────────────────────────── */
-let rollTimer   = null;
-let rollSlowing = false;
-let rollDone    = false;
+let currentPrizeId, currentBatchId;
+let rollDone = false;
 
-function startRoll(prizeId, batchId, prizeName) {
-    // Reset state
-    rollDone    = false;
-    rollSlowing = false;
+function prepareRoll(prizeId, batchId, prizeName) {
+    currentPrizeId = prizeId;
+    currentBatchId = batchId;
+    rollDone = false;
+    
     document.getElementById('rollPhase').style.display   = '';
     document.getElementById('winnerReveal').classList.remove('visible');
     document.getElementById('rollPrizeName').textContent = prizeName;
-    document.getElementById('rollStatus').textContent    = 'Mengacak tiket...';
+    document.getElementById('rollStatus').textContent    = 'Tekan tombol di bawah atau tombol Spasi di keyboard';
+    
+    const strip = document.getElementById('rollStrip');
+    strip.className = 'roll-strip'; 
+    strip.style.transform = '';
+    strip.innerHTML = '<div class="roll-item" style="color:rgba(255,255,255,0.4)">[ SIAP DIUNDI ]</div>';
+    
+    document.getElementById('btnStartRoll').style.display = 'inline-flex';
+    document.getElementById('rollDots').style.display = 'none';
+    
     document.getElementById('rollOverlay').removeAttribute('hidden');
     document.body.style.overflow = 'hidden';
+}
 
-    const display = document.getElementById('rollDisplay');
-    const pool    = TICKET_POOL.length ? TICKET_POOL : ['UND-??????'];
-    let idx = 0;
-    let speed = 80;
+document.getElementById('btnStartRoll').addEventListener('click', function() {
+    this.style.display = 'none';
+    document.getElementById('rollDots').style.display = 'flex';
+    document.getElementById('rollStatus').textContent = 'Mengacak ribuan tiket peserta...';
+    startActualRoll();
+});
 
-    function tick() {
-        idx = (idx + 1) % pool.length;
-        display.textContent = pool[idx];
-
-        if (!rollDone) {
-            rollTimer = setTimeout(tick, speed);
+// Spacebar shortcut
+document.addEventListener('keydown', function(e) {
+    if (e.code === 'Space' && !document.getElementById('rollOverlay').hasAttribute('hidden')) {
+        const btn = document.getElementById('btnStartRoll');
+        if (btn.style.display !== 'none') {
+            e.preventDefault();
+            btn.click();
         }
     }
-    tick();
+});
 
-    // AJAX draw request (fire immediately, min 3s animation)
+function startActualRoll() {
+    const strip = document.getElementById('rollStrip');
+    const pool = TICKET_POOL.length ? TICKET_POOL : ['UND-1234', 'UND-5678', 'UND-9999'];
+    
+    // Create spinning strip
+    let html = '';
+    for (let i = 0; i < 30; i++) {
+        html += `<div class="roll-item">${pool[Math.floor(Math.random() * pool.length)]}</div>`;
+    }
+    strip.innerHTML = html;
+    strip.className = 'roll-strip spinning';
+    
     const startTime = Date.now();
     const formData  = new FormData();
-    formData.append('prize_id', prizeId);
-    formData.append('batch_id', batchId);
+    formData.append('prize_id', currentPrizeId);
+    formData.append('batch_id', currentBatchId);
     formData.append('_ajax',    '1');
 
     fetch('<?= url('/raffle/draw-winner') ?>', {
@@ -625,55 +681,53 @@ function startRoll(prizeId, batchId, prizeName) {
     .then(r => r.json())
     .then(data => {
         const elapsed = Date.now() - startTime;
-        const delay   = Math.max(0, 3000 - elapsed);
+        const delay   = Math.max(0, 3500 - elapsed); // spin for at least 3.5s
 
         setTimeout(() => {
             if (!data.success) {
-                clearTimeout(rollTimer);
-                rollDone = true;
+                strip.className = 'roll-strip';
+                strip.innerHTML = '<div class="roll-item" style="color:#ef4444;">[ ERROR ]</div>';
                 document.getElementById('rollStatus').textContent = data.message || 'Gagal mengundi.';
                 setTimeout(closeRoll, 3000);
                 return;
             }
-            revealWinner(data, pool);
+            revealWinnerSmooth(data, pool);
         }, delay);
     })
     .catch(() => {
-        clearTimeout(rollTimer);
-        rollDone = true;
+        strip.className = 'roll-strip';
         document.getElementById('rollStatus').textContent = 'Terjadi kesalahan jaringan.';
         setTimeout(closeRoll, 3000);
     });
 }
 
-function revealWinner(data, pool) {
-    // Slow-down phase: gradually lengthen interval
-    rollDone = true;
-    clearTimeout(rollTimer);
-
-    const display = document.getElementById('rollDisplay');
+function revealWinnerSmooth(data, pool) {
+    const strip = document.getElementById('rollStrip');
     const finalCode = data.ticket_code || pool[Math.floor(Math.random() * pool.length)];
-    let slowPool = [...pool];
-    let slowIdx  = 0;
-    let speed    = 80;
-    let steps    = 0;
-    const maxSteps = 20;
-
-    function slowTick() {
-        slowIdx = (slowIdx + 1) % slowPool.length;
-        display.textContent = slowPool[slowIdx];
-        steps++;
-        speed = 80 + Math.pow(steps / maxSteps, 2) * 620;
-        if (steps < maxSteps) {
-            setTimeout(slowTick, speed);
-        } else {
-            // Land on winner ticket code
-            display.textContent = finalCode;
-            setTimeout(() => showWinnerCard(data), 500);
-        }
+    
+    strip.className = 'roll-strip';
+    
+    let html = '';
+    const itemsCount = 40;
+    for (let i = 0; i < itemsCount; i++) {
+        html += `<div class="roll-item" style="color:rgba(255,255,255,0.7)">${pool[Math.floor(Math.random() * pool.length)]}</div>`;
     }
+    html += `<div class="roll-item winner-item">${finalCode}</div>`;
+    strip.innerHTML = html;
+    
+    strip.style.transform = `translateY(0px)`;
     document.getElementById('rollStatus').textContent = 'Menemukan pemenang...';
-    slowTick();
+    
+    // trigger reflow
+    void strip.offsetWidth; 
+    
+    // transition down
+    strip.className = 'roll-strip stopping';
+    strip.style.transform = `translateY(-${itemsCount * 100}px)`;
+    
+    setTimeout(() => {
+        showWinnerCard(data);
+    }, 4100); 
 }
 
 function showWinnerCard(data) {
@@ -686,7 +740,6 @@ function showWinnerCard(data) {
 }
 
 function closeRoll() {
-    clearTimeout(rollTimer);
     document.getElementById('rollOverlay').setAttribute('hidden', '');
     document.body.style.overflow = '';
     stopConfetti();
