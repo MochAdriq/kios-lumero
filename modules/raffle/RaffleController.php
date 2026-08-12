@@ -88,19 +88,37 @@ class RaffleController extends Controller
             'name'     => trim($_POST['name'] ?? ''),
         ];
 
-        // Handle image upload if provided
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $tmp = $_FILES['image']['tmp_name'];
             $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
             if (in_array($ext, ['jpg','jpeg','png','webp'])) {
                 $dir = __DIR__ . '/../../public/assets/images/event-prizes/';
-                if (!is_dir($dir)) mkdir($dir, 0777, true);
-                $newFileName = 'raffle_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-                if (move_uploaded_file($tmp, $dir . $newFileName)) {
-                    $data['image_url'] = 'images/event-prizes/' . $newFileName;
+
+                // Pastikan direktori ada
+                if (!is_dir($dir)) {
+                    $mkResult = mkdir($dir, 0755, true);
+                    error_log('[Raffle] mkdir result: ' . ($mkResult ? 'OK' : 'FAIL') . ' | dir: ' . $dir);
                 }
+
+                if (is_dir($dir)) {
+                    $newFileName = 'raffle_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+                    $targetPath  = $dir . $newFileName;
+                    if (move_uploaded_file($tmp, $targetPath)) {
+                        $data['image_url'] = 'images/event-prizes/' . $newFileName;
+                        error_log('[Raffle] upload OK: ' . $targetPath);
+                    } else {
+                        error_log('[Raffle] move_uploaded_file FAIL | tmp=' . $tmp . ' | target=' . $targetPath);
+                    }
+                } else {
+                    error_log('[Raffle] dir tidak ada dan tidak bisa dibuat: ' . $dir);
+                }
+            } else {
+                error_log('[Raffle] ekstensi tidak didukung: ' . $ext);
             }
+        } elseif (isset($_FILES['image'])) {
+            error_log('[Raffle] upload error code: ' . $_FILES['image']['error']);
         }
+
 
         $ok = $this->raffleModel->savePrize($data);
         if ($ok) {
