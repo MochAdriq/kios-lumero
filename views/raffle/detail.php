@@ -161,6 +161,11 @@
   background: rgba(255,255,255,0.04);
   border: 2px solid rgba(255,255,255,0.1);
 }
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
 .roll-strip {
   display: flex; flex-direction: column;
   will-change: transform;
@@ -493,7 +498,7 @@ function svgImg(): string {
                 </div>
                 <?php if ($batch['status'] === 'completed'): ?>
                 <button class="btn-draw"
-                        onclick="prepareRoll(<?= (int)$p['id'] ?>, <?= (int)$batch['id'] ?>, '<?= htmlspecialchars(addslashes($p['name'])) ?>')">
+                        onclick="prepareRoll(<?= (int)$p['id'] ?>, <?= (int)$batch['id'] ?>, '<?= htmlspecialchars(addslashes($p['name'])) ?>', '<?= $p['image_url'] ? asset($p['image_url']) : '' ?>')">
                   <?= svgDice() ?> Kocok Undian
                 </button>
                 <?php endif ?>
@@ -514,6 +519,11 @@ function svgImg(): string {
     <!-- Phase 1: Idle & Rolling -->
     <div id="rollPhase">
       <div class="roll-eyebrow">Pengundian Berlangsung</div>
+      
+      <div id="rollPrizeImgWrap" style="text-align:center; margin-bottom: 24px; display:none;">
+        <img id="rollPrizeImg" src="" alt="Prize" style="width: 130px; height: 130px; object-fit: cover; border-radius: 20px; border: 4px solid rgba(255,255,255,0.15); box-shadow: 0 15px 35px rgba(0,0,0,0.4);">
+      </div>
+
       <div class="roll-heading" id="rollPrizeName"></div>
       
       <div class="roll-machine">
@@ -616,7 +626,7 @@ document.getElementById('prizeModal').addEventListener('click', function(e) {
 let currentPrizeId, currentBatchId;
 let rollDone = false;
 
-function prepareRoll(prizeId, batchId, prizeName) {
+function prepareRoll(prizeId, batchId, prizeName, prizeImgUrl) {
     currentPrizeId = prizeId;
     currentBatchId = batchId;
     rollDone = false;
@@ -624,8 +634,15 @@ function prepareRoll(prizeId, batchId, prizeName) {
     document.getElementById('rollPhase').style.display   = '';
     document.getElementById('winnerReveal').classList.remove('visible');
     document.getElementById('rollPrizeName').textContent = prizeName;
-    document.getElementById('rollStatus').textContent    = 'Tekan tombol di bawah atau tombol Spasi di keyboard';
+    document.getElementById('rollStatus').innerHTML      = '<span style="animation: pulse 1.5s infinite;">Tekan tombol di bawah atau tombol SPASI di keyboard</span>';
     
+    if (prizeImgUrl) {
+        document.getElementById('rollPrizeImg').src = prizeImgUrl;
+        document.getElementById('rollPrizeImgWrap').style.display = 'block';
+    } else {
+        document.getElementById('rollPrizeImgWrap').style.display = 'none';
+    }
+
     const strip = document.getElementById('rollStrip');
     strip.className = 'roll-strip'; 
     strip.style.transform = '';
@@ -641,7 +658,20 @@ function prepareRoll(prizeId, batchId, prizeName) {
 document.getElementById('btnStartRoll').addEventListener('click', function() {
     this.style.display = 'none';
     document.getElementById('rollDots').style.display = 'flex';
-    document.getElementById('rollStatus').textContent = 'Mengacak ribuan tiket peserta...';
+    document.getElementById('rollStatus').textContent = 'Mengumpulkan seluruh tiket peserta...';
+    
+    setTimeout(() => {
+        document.getElementById('rollStatus').textContent = 'Memasukkan tiket ke dalam mesin acak...';
+    }, 1800);
+    
+    setTimeout(() => {
+        document.getElementById('rollStatus').textContent = 'Mengacak secara acak! Siap-siap...';
+    }, 3800);
+
+    setTimeout(() => {
+        document.getElementById('rollStatus').textContent = 'Mencari kandidat pemenang...';
+    }, 5500);
+
     startActualRoll();
 });
 
@@ -681,7 +711,7 @@ function startActualRoll() {
     .then(r => r.json())
     .then(data => {
         const elapsed = Date.now() - startTime;
-        const delay   = Math.max(0, 3500 - elapsed); // spin for at least 3.5s
+        const delay   = Math.max(0, 7000 - elapsed); // spin for at least 7.0s for massive suspense
 
         setTimeout(() => {
             if (!data.success) {
