@@ -147,7 +147,7 @@ class RaffleController extends Controller
 
     public function drawWinner()
     {
-        Auth::requireRoles(['super_admin']);
+        Auth::requireRoles(['super_admin', 'administrator']);
 
         $prizeId = (int)($_POST['prize_id'] ?? 0);
         $batchId = (int)($_POST['batch_id'] ?? 0);
