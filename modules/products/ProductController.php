@@ -132,7 +132,7 @@ class ProductController extends Controller
             
             // Check if SKU already exists for this outlet
             if ($sku !== '') {
-                $existingSku = $prodModel->one("SELECT id FROM product_variants WHERE outlet_id = ? AND sku = ?", [$this->outletId(), $sku]);
+                $existingSku = $prodModel->one("SELECT id FROM product_variants WHERE outlet_id = ? AND sku = ?", [current_outlet_id(), $sku]);
                 if ($existingSku) {
                     throw new Exception("SKU '$sku' sudah digunakan oleh produk lain di cabang ini. Silakan gunakan SKU lain.");
                 }
