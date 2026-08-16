@@ -74,7 +74,7 @@ $paymentQrisImage=trim((string)(function_exists('get_setting')?get_setting('paym
 if($paymentQrisImage==='assets/img/payment/qris-dana.jpeg' || $paymentQrisImage==='public/assets/images/pos-products/payment/qris-dana.jpeg') $paymentQrisImage='';
 
 require_once __DIR__.'/../helpers/MidtransService.php';
-$isMidtransQris = (get_setting('qris_payment_method', 'manual') === 'midtrans') && class_exists('MidtransService') && MidtransService::getServerKey() !== '';
+$isMidtransQris = class_exists('MidtransService') && MidtransService::getServerKey() !== '';
 
 $bankName='BCA';
 $bankAccountName='Sri Kusma Dewi';
