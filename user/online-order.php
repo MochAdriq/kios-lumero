@@ -74,8 +74,10 @@ $paymentQrisImage=trim((string)(function_exists('get_setting')?get_setting('paym
 if($paymentQrisImage==='assets/img/payment/qris-dana.jpeg' || $paymentQrisImage==='public/assets/images/pos-products/payment/qris-dana.jpeg') $paymentQrisImage='';
 
 require_once __DIR__.'/../helpers/MidtransService.php';
-// $isMidtransQris akan ditetapkan setelah $activeOutletId diketahui (lihat bawah)
-$isMidtransQris = false;
+// Resolve outlet ID SEBELUM blok POST agar $isMidtransQris benar saat intercept AJAX
+$_earlyOutletId = (int)($_GET['outlet_id'] ?? $_SESSION['lumero_selected_outlet_id'] ?? 1);
+if ($_earlyOutletId > 0 && class_exists('MidtransService')) MidtransService::setOutletId($_earlyOutletId);
+$isMidtransQris = class_exists('MidtransService') && MidtransService::getServerKey() !== '';
 
 $bankName='BCA';
 $bankAccountName='Sri Kusma Dewi';
@@ -295,9 +297,8 @@ window.SIM_POS_DATA = <?= json_encode(['categories'=>$preparedCategories,'assets
 
 $activeOutletId = (int)($_GET['outlet_id'] ?? $_SESSION['lumero_selected_outlet_id'] ?? current_outlet_id());
 if ($activeOutletId <= 0) $activeOutletId = 1;
-// Inject outlet yang benar ke MidtransService agar tidak fallback ke outlet pusat
+// Pastikan MidtransService sudah menggunakan outlet yang benar (sudah di-set awal, ini hanya sinkronisasi)
 if (class_exists('MidtransService')) MidtransService::setOutletId($activeOutletId);
-$isMidtransQris = class_exists('MidtransService') && MidtransService::getServerKey() !== '';
 $data = function_exists('fo_load_pos_menu_data') ? fo_load_pos_menu_data($pdo, $activeOutletId) : (function_exists('load_menu_data') ? load_menu_data() : ['parts'=>[],'sauces'=>[],'kentang'=>[],'matcha'=>[]]);
 $data['parts']=array_values(array_filter($data['parts'] ?? [], function($p){
   $name=mb_strtolower(trim((string)($p['name'] ?? '')));
