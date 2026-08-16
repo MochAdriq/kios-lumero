@@ -6,7 +6,20 @@
 class MidtransService
 {
     private static ?array $dbConfig = null;
-    
+    private static ?int $forcedOutletId = null;
+
+    /**
+     * Paksa outlet ID tertentu sebelum membaca konfigurasi.
+     * Berguna untuk konteks publik (online-order) yang tidak punya Auth user.
+     */
+    public static function setOutletId(int $outletId): void
+    {
+        if ($outletId > 0 && $outletId !== self::$forcedOutletId) {
+            self::$forcedOutletId = $outletId;
+            self::$dbConfig = null; // reset cache agar dibaca ulang untuk outlet ini
+        }
+    }
+
     private static function getDbConfig(): array
     {
         if (self::$dbConfig !== null) return self::$dbConfig;
@@ -14,7 +27,11 @@ class MidtransService
         try {
             if (class_exists('Database')) {
                 $pdo = Database::connection();
-                $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+                if (self::$forcedOutletId !== null && self::$forcedOutletId > 0) {
+                    $outletId = self::$forcedOutletId;
+                } else {
+                    $outletId = function_exists('current_outlet_id') ? current_outlet_id() : 1;
+                }
                 $stmt = $pdo->prepare("SELECT * FROM payment_gateway_configs WHERE provider = 'midtrans' AND outlet_id = ? AND is_active = 1 LIMIT 1");
                 $stmt->execute([$outletId]);
                 if ($row = $stmt->fetch()) {
