@@ -11,7 +11,7 @@ class ReportModel extends Model
   $payroll=$this->one("SELECT COALESCE(SUM(amount),0) total FROM payroll_expenses WHERE outlet_id=? AND business_date=?",[$outlet,$date]);
   $waste=$this->one("SELECT COALESCE(SUM(total_hpp),0) total FROM daily_product_stock_movements WHERE outlet_id=? AND business_date=? AND movement_type='wastage'",[$outlet,$date]);
   $items=$this->one("SELECT COALESCE(SUM(qty),0) qty FROM order_items oi JOIN orders o ON o.id=oi.order_id WHERE o.outlet_id=? AND o.business_date=? AND o.payment_status='paid'",[$outlet,$date]);
-  $pays=['cash'=>0,'qris'=>0,'debit_credit'=>0,'ewallet'=>0]; foreach($pay as $p){$m=$p['payment_method']; if(in_array($m,['debit','credit'])) $pays['debit_credit']+=(float)$p['total']; elseif(isset($pays[$m])) $pays[$m]+=(float)$p['total'];}
+  $pays=['cash'=>0,'qris'=>0,'debit_credit'=>0,'ewallet'=>0]; foreach($pay as $p){$m=strtolower(trim((string)($p['payment_method']??''))); if(in_array($m,['debit','credit','debit_credit'])) $pays['debit_credit']+=(float)$p['total']; elseif(in_array($m,['ewallet','gopay','shopeepay','dana','ovo'])) $pays['ewallet']+=(float)$p['total']; elseif(isset($pays[$m])) $pays[$m]+=(float)$p['total'];}
   $totalExpense=(float)($exp['total']??0)+(float)($payroll['total']??0)+(float)($waste['total']??0);
   return array_merge($sales,['operational_expense'=>$exp['total']??0,'payroll_expense'=>$payroll['total']??0,'wastage_loss'=>$waste['total']??0,'total_expense'=>$totalExpense,'net_profit'=>(float)($sales['gross_profit']??0)-$totalExpense,'total_items_sold'=>$items['qty']??0],$pays);
  }
