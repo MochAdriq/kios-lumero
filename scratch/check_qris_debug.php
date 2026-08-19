@@ -14,14 +14,11 @@ header('Content-Type: application/json; charset=utf-8');
 try {
     $pdo = Database::connection();
     
-    $date = date('Y-m-d');
-    
-    // Check what is in the payments table for 'paid' orders today
-    $sql = "SELECT p.payment_method, p.status as payment_status, COUNT(*) as count
+    // Check payments status for qris
+    $sql = "SELECT p.id, p.status as payment_status, o.payment_status as order_pay_status, o.order_number 
             FROM payments p 
             JOIN orders o ON o.id = p.order_id 
-            WHERE o.business_date = '2026-08-19' AND o.payment_status = 'paid'
-            GROUP BY p.payment_method, p.status";
+            WHERE o.business_date = '2026-08-19' AND p.payment_method = 'qris'";
             
     $stmt = $pdo->query($sql);
     $results = $stmt->fetchAll();
