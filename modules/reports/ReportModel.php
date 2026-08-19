@@ -6,7 +6,7 @@ class ReportModel extends Model
  {
   $outlet=$this->outletId();
   $sales=$this->one("SELECT COUNT(*) trx, COALESCE(SUM(subtotal),0) gross_sales, COALESCE(SUM(discount_amount),0) discount_total, COALESCE(SUM(subtotal-discount_amount),0) net_sales, COALESCE(SUM(tax_amount),0) tax_total, COALESCE(SUM(service_amount),0) service_total, COALESCE(SUM(grand_total),0) total_revenue, COALESCE(SUM(total_hpp),0) total_hpp, COALESCE(SUM(gross_profit),0) gross_profit FROM orders WHERE outlet_id=? AND business_date=? AND payment_status='paid'",[$outlet,$date]) ?: [];
-  $pay=$this->all("SELECT p.payment_method, COALESCE(SUM(p.amount),0) total FROM payments p JOIN orders o ON o.id=p.order_id WHERE o.outlet_id=? AND o.business_date=? AND p.status='paid' GROUP BY p.payment_method",[$outlet,$date]);
+  $pay=$this->all("SELECT COALESCE(p.payment_method, o.payment_method) AS payment_method, COALESCE(SUM(CASE WHEN p.status='paid' THEN p.amount ELSE o.grand_total END),0) total FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.outlet_id=? AND o.business_date=? AND o.payment_status='paid' GROUP BY COALESCE(p.payment_method, o.payment_method)",[$outlet,$date]);
   $exp=$this->one("SELECT COALESCE(SUM(amount),0) total FROM operational_expenses WHERE outlet_id=? AND business_date=?",[$outlet,$date]);
   $payroll=$this->one("SELECT COALESCE(SUM(amount),0) total FROM payroll_expenses WHERE outlet_id=? AND business_date=?",[$outlet,$date]);
   $waste=$this->one("SELECT COALESCE(SUM(total_hpp),0) total FROM daily_product_stock_movements WHERE outlet_id=? AND business_date=? AND movement_type='wastage'",[$outlet,$date]);
