@@ -134,6 +134,7 @@ if (class_exists('POSController')) {
     $router->post('/orders/update-status', [POSController::class,'updateOrderStatus']);
     $router->post('/orders/bulk-update-status', [POSController::class,'bulkUpdateOrderStatus']);
     $router->post('/orders/update-payment', [POSController::class,'updatePaymentStatus']);
+    $router->post('/orders/bulk-confirm-qris', [POSController::class,'bulkConfirmQris']);
     $router->post('/orders/update-item-fulfillment', [POSController::class,'updateItemFulfillment']);
     $router->get('/payments', [POSController::class,'payments']);
     $router->post('/payments/verify', [POSController::class,'verifyPayment']);

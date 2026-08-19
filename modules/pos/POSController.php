@@ -265,6 +265,52 @@ class POSController extends Controller
         $this->redirect('/orders');
     }
 
+    public function bulkConfirmQris(): void
+    {
+        Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
+        verify_csrf();
+
+        $orderIdsRaw = trim($_POST['order_ids'] ?? '');
+        $orderIds = array_filter(array_map('intval', explode(',', $orderIdsRaw)));
+
+        if (empty($orderIds)) {
+            $_SESSION['flash_error'] = 'Tidak ada pesanan yang dipilih.';
+            $this->redirect('/orders');
+            return;
+        }
+
+        $pdo = Database::connection();
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+
+        // Ambil hanya order yang benar-benar QRIS + unpaid — server-side safety check
+        $stmt = $pdo->prepare("SELECT id FROM orders WHERE id IN ($placeholders) AND payment_status = 'unpaid'");
+        $stmt->execute($orderIds);
+        $validIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($validIds)) {
+            $_SESSION['flash_error'] = 'Tidak ada order QRIS yang belum bayar pada pilihan ini.';
+            $this->redirect('/orders');
+            return;
+        }
+
+        $ph2 = implode(',', array_fill(0, count($validIds), '?'));
+
+        // Update orders
+        $pdo->prepare("UPDATE orders SET payment_status = 'paid', change_owed_amount = 0, updated_at = NOW() WHERE id IN ($ph2)")
+            ->execute($validIds);
+
+        // Update payments
+        $verifiedAt = now();
+        $verifiedBy = Auth::id();
+        foreach ($validIds as $oid) {
+            $pdo->prepare("UPDATE payments SET status = 'paid', verified_by = ?, verified_at = ?, paid_at = COALESCE(paid_at, ?), updated_at = ? WHERE order_id = ? AND status IN ('pending','waiting_verification')")
+                ->execute([$verifiedBy, $verifiedAt, $verifiedAt, $verifiedAt, $oid]);
+        }
+
+        $_SESSION['flash_success'] = count($validIds) . ' pembayaran QRIS berhasil dikonfirmasi.';
+        $this->redirect('/orders');
+    }
+
     public function orderDetails(): void
     {
         header('Content-Type: application/json');

@@ -86,7 +86,18 @@
                 <i class="bi bi-check-all"></i> Selesai
             </button>
         </form>
+
+        <form action="<?= url('/orders/bulk-confirm-qris') ?>" method="post" id="bulkQrisForm" class="d-inline">
+            <?= csrf_field() ?>
+            <input type="hidden" name="order_ids" id="bulkQrisOrderIds" value="">
+            <button type="button" class="btn btn-success btn-sm fw-medium text-white ms-1"
+                    onclick="submitBulkQrisConfirm()"
+                    title="Konfirmasi pembayaran QRIS untuk semua order QRIS yang belum bayar dari pilihan ini">
+                <i class="bi bi-qr-code-scan"></i> Konfirmasi QRIS
+            </button>
+        </form>
     </div>
+
 
     <div class="table-responsive">
         <table class="table align-middle" id="ordersTable">
@@ -412,6 +423,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             };
 
+            window.submitBulkQrisConfirm = function() {
+                var selected = [];
+                // Ambil semua order yang di-check
+                table.$('.order-cb:checked').each(function() {
+                    selected.push($(this).val());
+                });
+
+                if (selected.length === 0) {
+                    alert('Pilih setidaknya satu pesanan!');
+                    return;
+                }
+
+                // Filter: hanya order dengan payment_method=qris & payment_status=unpaid
+                var qrisUnpaid = [];
+                selected.forEach(function(id) {
+                    var row = table.$('.order-cb[value="' + id + '"]').closest('tr');
+                    var payStatus = row.attr('data-pay-status') || '';
+                    // Cek payment_method dari teks badge di kolom Pesanan (huruf kecil)
+                    var payMethodText = row.find('td:eq(3)').text().toLowerCase();
+                    if (payStatus === 'unpaid' && payMethodText.indexOf('qris') !== -1) {
+                        qrisUnpaid.push(id);
+                    }
+                });
+
+                if (qrisUnpaid.length === 0) {
+                    alert('Tidak ada order QRIS yang belum bayar pada pilihan ini.');
+                    return;
+                }
+
+                if (confirm('Konfirmasi pembayaran QRIS untuk ' + qrisUnpaid.length + ' pesanan terpilih?')) {
+                    $('#bulkQrisOrderIds').val(qrisUnpaid.join(','));
+                    $('#bulkQrisForm').submit();
+                }
+            };
+
             function updateBulkActionUI() {
                 var count = table.$('.order-cb:checked').length;
                 $('#bulkSelectedCount').text(count);
@@ -421,6 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     $('#bulkActionsContainer').addClass('d-none');
                 }
             }
+
         };
         document.body.appendChild(dtBsScript);
     };
