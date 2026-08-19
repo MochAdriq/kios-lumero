@@ -251,7 +251,7 @@ class POSController extends Controller
                 ->execute([$orderId]);
 
             // Update tabel payments juga (untuk konsistensi laporan)
-            $pdo->prepare("UPDATE payments SET status = 'paid', verified_by = ?, verified_at = NOW(), paid_at = COALESCE(paid_at, NOW()), updated_at = NOW() WHERE order_id = ? AND status IN ('pending','waiting_verification')")
+            $pdo->prepare("UPDATE payments SET status = 'paid', verified_by = ?, verified_at = NOW(), paid_at = COALESCE(paid_at, NOW()), updated_at = NOW() WHERE order_id = ? AND status != 'paid'")
                 ->execute([Auth::id(), $orderId]);
 
             if ($context === 'qris_manual') {
@@ -303,7 +303,7 @@ class POSController extends Controller
         $verifiedAt = now();
         $verifiedBy = Auth::id();
         foreach ($validIds as $oid) {
-            $pdo->prepare("UPDATE payments SET status = 'paid', verified_by = ?, verified_at = ?, paid_at = COALESCE(paid_at, ?), updated_at = ? WHERE order_id = ? AND status IN ('pending','waiting_verification')")
+            $pdo->prepare("UPDATE payments SET status = 'paid', verified_by = ?, verified_at = ?, paid_at = COALESCE(paid_at, ?), updated_at = ? WHERE order_id = ? AND status != 'paid'")
                 ->execute([$verifiedBy, $verifiedAt, $verifiedAt, $verifiedAt, $oid]);
         }
 
