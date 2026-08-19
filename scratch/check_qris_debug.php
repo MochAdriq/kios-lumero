@@ -18,10 +18,11 @@ try {
     $date = date('Y-m-d'); // or hardcode 2026-08-19
     echo "Date: $date\n";
     
-    $sql = "SELECT p.id, p.order_id, p.payment_method, p.amount, p.status, o.order_number, o.payment_status as order_pay_status, o.payment_method as order_pay_method
+    $sql = "SELECT p.id, p.order_id, p.payment_method, p.amount, p.status, o.order_number, o.payment_status as order_pay_status
             FROM payments p 
             JOIN orders o ON o.id = p.order_id 
-            WHERE o.business_date = '2026-08-19' AND (p.payment_method = 'qris' OR o.payment_method = 'qris')";
+            WHERE o.business_date = '2026-08-19' AND p.payment_method = 'qris'";
+
             
     $stmt = $pdo->query($sql);
     $results = $stmt->fetchAll();
