@@ -176,9 +176,23 @@
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="id" value="<?= $o['id'] ?>">
                                     <input type="hidden" name="status" value="paid">
+                                    <input type="hidden" name="context" value="change">
                                     <button type="submit" class="btn btn-warning btn-sm rounded-pill text-dark" style="font-size:11px;">Lunasi Kembalian</button>
                                 </form>
                             <?php endif; ?>
+
+                            <?php if(($o['payment_status'] ?? '') === 'unpaid' && strtolower($o['payment_method'] ?? '') === 'qris'): ?>
+                                <form action="<?= url('/orders/update-payment') ?>" method="post" class="d-inline" onsubmit="return confirm('Konfirmasi pembayaran QRIS sudah diterima untuk pesanan ini?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                                    <input type="hidden" name="status" value="paid">
+                                    <input type="hidden" name="context" value="qris_manual">
+                                    <button type="submit" class="btn btn-success btn-sm rounded-pill text-white" style="font-size:11px;">
+                                        <i class="bi bi-qr-code-scan me-1"></i>Konfirmasi QRIS
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+
 
                             <?php if(($o['order_status'] ?? '') === 'pending'): ?>
                                 <form action="<?= url('/orders/update-status') ?>" method="post" class="d-inline" onsubmit="return confirm('Tandai pesanan sedang dimasak?');">

@@ -27,6 +27,15 @@ class POSController extends Controller
             if (!is_array($cart)) $cart = [];
             $paymentMethod = $_POST['payment_method'] ?? 'cash';
 
+            // Cek mode QRIS outlet: 'manual' atau 'midtrans'
+            // Hanya gunakan Midtrans jika setting outlet memilih 'midtrans'
+            $qrisMode  = function_exists('get_setting')
+                ? get_setting('qris_payment_method', 'manual')
+                : 'manual';
+            $isMidtransEnabled = class_exists('MidtransService')
+                && MidtransService::getServerKey() !== ''
+                && $qrisMode === 'midtrans';
+
             $result = $this->model->createOrder([
                 'items' => $cart,
                 'payment_method' => $paymentMethod,
@@ -40,6 +49,7 @@ class POSController extends Controller
                 'member_id' => !empty($_POST['member_id']) ? (int)$_POST['member_id'] : null,
                 'customer_phone' => !empty($_POST['customer_phone']) ? trim((string)$_POST['customer_phone']) : null,
                 'skip_print_receipt' => !empty($_POST['skip_print_receipt']) ? 1 : 0,
+                'is_midtrans' => $isMidtransEnabled,
             ]);
 
             $_SESSION['flash_success'] = 'Transaksi berhasil: '.$result['order_number'].' total '.rupiah($result['grand_total']);
@@ -48,7 +58,6 @@ class POSController extends Controller
                 $snapToken = null;
                 $qrisUrl = null;
                 $qrisString = null;
-                $isMidtransEnabled = class_exists('MidtransService') && MidtransService::getServerKey() !== '';
                 if ($paymentMethod !== 'cash' && $isMidtransEnabled) {
                     try {
                         if (in_array($paymentMethod, ['qris', 'ewallet'], true)) {
@@ -70,6 +79,9 @@ class POSController extends Controller
                                 'grand_total' => $result['grand_total'],
                                 'customer_name' => 'Customer ' . $result['order_number'],
                                 'payment_method' => $paymentMethod,
+                                'callbacks' => [
+                                    'finish' => url('/pos')
+                                ]
                             ]);
                             $snapToken = $snapRes['token'] ?? null;
                         }
@@ -227,16 +239,28 @@ class POSController extends Controller
     {
         Auth::requireRoles(['super_admin', 'administrator', 'cashier']);
         verify_csrf();
-        $orderId = (int)($_POST['id'] ?? 0);
-        $status = trim($_POST['status'] ?? '');
+        $orderId  = (int)($_POST['id'] ?? 0);
+        $status   = trim($_POST['status'] ?? '');
+        $context  = trim($_POST['context'] ?? 'change'); // 'change' atau 'qris_manual'
+
         if ($orderId > 0 && in_array($status, ['paid'], true)) {
             $pdo = Database::connection();
-            $st = $pdo->prepare("UPDATE orders SET payment_status = ?, change_owed_amount = 0, updated_at = NOW() WHERE id = ?");
-            $st->execute([$status, $orderId]);
-            
-            $_SESSION['flash_success'] = 'Hutang kembalian pesanan berhasil dilunasi.';
+
+            // Update tabel orders
+            $pdo->prepare("UPDATE orders SET payment_status = 'paid', change_owed_amount = 0, updated_at = NOW() WHERE id = ?")
+                ->execute([$orderId]);
+
+            // Update tabel payments juga (untuk konsistensi laporan)
+            $pdo->prepare("UPDATE payments SET status = 'paid', verified_by = ?, verified_at = NOW(), paid_at = COALESCE(paid_at, NOW()), updated_at = NOW() WHERE order_id = ? AND status IN ('pending','waiting_verification')")
+                ->execute([Auth::id(), $orderId]);
+
+            if ($context === 'qris_manual') {
+                $_SESSION['flash_success'] = 'Pembayaran QRIS berhasil dikonfirmasi.';
+            } else {
+                $_SESSION['flash_success'] = 'Hutang kembalian pesanan berhasil dilunasi.';
+            }
         } else {
-            $_SESSION['flash_error'] = 'Gagal melunasi kembalian.';
+            $_SESSION['flash_error'] = 'Gagal mengkonfirmasi pembayaran.';
         }
         $this->redirect('/orders');
     }
