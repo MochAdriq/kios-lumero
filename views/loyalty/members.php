@@ -2,7 +2,18 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h3 class="fw-bold mb-1"><i class="ti ti-award me-2 text-warning"></i>Data Member & Loyalty Poin</h3>
+                <h3 class="fw-bold mb-1 d-flex align-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="url(#award-grad)" stroke="none" class="me-2">
+                        <defs>
+                            <linearGradient id="award-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#FFD700" />
+                                <stop offset="100%" stop-color="#FF8C00" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M12 15l-4.224 2.816a1 1 0 0 1 -1.542 -.754l-.454 -4.896l-3.87 -3.344a1 1 0 0 1 .581 -1.74l4.98 -.384l1.916 -4.685a1 1 0 0 1 1.867 0l1.915 4.685l4.98 .384a1 1 0 0 1 .582 1.74l-3.87 3.344l-.454 4.896a1 1 0 0 1 -1.542 .754L12 15z" />
+                    </svg>
+                    Data Member & Loyalty Poin
+                </h3>
                 <p class="text-muted mb-0">Kelola pelanggan terdaftar, saldo poin, dan aturan perolehan poin.</p>
             </div>
             <a href="<?= url('/user/index.php', false) ?>" target="_blank" class="btn btn-outline-primary rounded-pill">
@@ -16,12 +27,14 @@
 <ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 shadow-sm d-inline-flex" id="memberTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active rounded-pill px-4 fw-bold" id="tab-member-btn" data-bs-toggle="pill" data-bs-target="#tab-member" type="button" role="tab" aria-selected="true">
-            <i class="ti ti-users me-1"></i> Daftar Member
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path></svg>
+            Daftar Member
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link rounded-pill px-4 fw-bold" id="tab-pengaturan-btn" data-bs-toggle="pill" data-bs-target="#tab-pengaturan" type="button" role="tab" aria-selected="false">
-            <i class="ti ti-settings me-1"></i> Pengaturan Poin
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path></svg>
+            Pengaturan Poin
         </button>
     </li>
 </ul>
@@ -33,15 +46,19 @@
     <div class="tab-pane fade show active" id="tab-member" role="tabpanel" aria-labelledby="tab-member-btn">
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-header bg-white border-0 py-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
-                <h6 class="fw-bold mb-0"><i class="ti ti-users me-1"></i> Daftar Member Terdaftar (<?= count($members) ?>)</h6>
+                <h6 class="fw-bold mb-0 d-flex align-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path></svg>
+                    Daftar Member Terdaftar (<?= count($members) ?>)
+                </h6>
                 <div class="d-flex gap-2 align-items-center">
                     <!-- Tambahan UI: Search Bar -->
                     <div class="input-group input-group-sm shadow-none" style="width: 250px;">
                         <span class="input-group-text bg-light border-0 text-muted"><i class="ti ti-search"></i></span>
                         <input type="search" class="form-control bg-light border-0 shadow-none" placeholder="Cari nama atau no HP...">
                     </div>
-                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalWaTemplates">
-                        <i class="ti ti-brand-whatsapp me-1"></i> Kelola Template WA
+                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalWaTemplates">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="me-1"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                        Kelola Template WA
                     </button>
                 </div>
             </div>
@@ -61,7 +78,9 @@
                             <?php if (empty($members)): ?>
                             <tr>
                                 <td colspan="5" class="text-center py-5 text-muted">
-                                    <div class="mb-2"><i class="ti ti-users-minus fs-1 text-light"></i></div>
+                                    <div class="mb-3 d-flex justify-content-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.953 14.993a4 4 0 1 0 -5.918 -5.922"></path><path d="M3 21v-2a4 4 0 0 1 4 -4h4c.915 0 1.758 .308 2.42 1"></path><path d="M16 3.13a4 4 0 0 1 3.236 7.828"></path><path d="M21 21v-2a4 4 0 0 0 -2.316 -3.738"></path><path d="M3 3l18 18"></path></svg>
+                                    </div>
                                     Belum ada member terdaftar saat ini.
                                 </td>
                             </tr>
@@ -73,7 +92,8 @@
                                     <small class="text-muted"><?= htmlspecialchars($m['phone']) ?></small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold shadow-sm">
+                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#F59E0B" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><circle cx="12" cy="12" r="10"></circle><path d="M12 8l2.5 5.5l-5 0z"></path></svg>
                                         <?= number_format((int)$m['total_points'],0,',','.') ?> Poin
                                     </span>
                                 </td>
