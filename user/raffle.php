@@ -16,7 +16,11 @@ $pdo = Database::connection();
 loyalty_ensure_tables($pdo);
 
 $memberId = (int)($_SESSION['member_id'] ?? 0);
-if ($memberId <= 0) { header('Location: login.php'); exit; }
+if ($memberId <= 0) { 
+    $_SESSION['redirect_after_login'] = 'raffle.php';
+    header('Location: login.php'); 
+    exit; 
+}
 
 // Ambil data member (fungsi helper sama dengan dashboard)
 $member = loyalty_member_by_id($pdo, $memberId);
