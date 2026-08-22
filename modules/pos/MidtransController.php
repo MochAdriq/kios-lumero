@@ -63,7 +63,7 @@ class MidtransController extends Controller
 
         } else {
             // Cari pesanan berdasarkan order_number di tabel orders
-            $stmtOrder = $db->prepare("SELECT id, grand_total FROM orders WHERE order_number=? LIMIT 1");
+            $stmtOrder = $db->prepare("SELECT id, grand_total, payment_status FROM orders WHERE order_number=? LIMIT 1");
             $stmtOrder->execute([$orderNumber]);
             $order = $stmtOrder->fetch(PDO::FETCH_ASSOC);
 
@@ -74,6 +74,13 @@ class MidtransController extends Controller
             }
 
             $orderId = (int)$order['id'];
+
+            // Cegah webhook menggagalkan order yang sudah 'paid' (misal: di-confirm manual oleh kasir)
+            if ($order['payment_status'] === 'paid' && in_array($newStatus, ['failed', 'expired', 'canceled'])) {
+                // Abaikan webhook yang mencoba mendowngrade status yang sudah lunas
+                echo json_encode(['status' => 'ok', 'message' => 'Ignored: Order already paid']);
+                return;
+            }
 
             // Update atau catat ke tabel payments
             $stmtUpdatePay = $db->prepare("UPDATE payments 
@@ -91,7 +98,7 @@ class MidtransController extends Controller
             if ($newStatus === 'paid') {
                 $stmtUpdateOrder = $db->prepare("UPDATE orders SET payment_status='paid', updated_at=? WHERE id=?");
                 $stmtUpdateOrder->execute([now(), $orderId]);
-            } elseif ($newStatus === 'failed') {
+            } elseif ($newStatus === 'failed' || $newStatus === 'expired') {
                 $stmtUpdateOrder = $db->prepare("UPDATE orders SET payment_status='unpaid', updated_at=? WHERE id=?");
                 $stmtUpdateOrder->execute([now(), $orderId]);
             }
