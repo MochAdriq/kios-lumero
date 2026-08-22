@@ -23,10 +23,17 @@ class LoyaltyController extends Controller
             'profile_bonus_points' => 2
         ];
 
+        // Fetch WA Templates
+        $outletId = function_exists('current_outlet_id') ? current_outlet_id() : (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id'));
+        $stmtTemplates = $pdo->prepare("SELECT * FROM wa_templates WHERE outlet_id = ? OR outlet_id = 0 ORDER BY id DESC");
+        $stmtTemplates->execute([$outletId]);
+        $waTemplates = $stmtTemplates->fetchAll(PDO::FETCH_ASSOC);
+
         $this->view('loyalty/members', [
             'pageTitle' => 'Data Member & Poin',
             'members' => $members,
-            'settings' => $settings
+            'settings' => $settings,
+            'waTemplates' => $waTemplates
         ]);
     }
 
@@ -598,6 +605,65 @@ class LoyaltyController extends Controller
         }
 
         header('Location: ' . url('/loyalty/eventSettings'));
+        exit;
+    }
+
+    public function saveWaTemplate()
+    {
+        Auth::requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/loyalty/members'));
+            exit;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $title = trim($_POST['title'] ?? '');
+        $message = trim($_POST['message'] ?? '');
+        $outletId = function_exists('current_outlet_id') ? current_outlet_id() : (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id'));
+        
+        $pdo = Database::connection();
+        
+        try {
+            if ($title === '') throw new Exception('Judul template tidak boleh kosong.');
+            if ($message === '') throw new Exception('Isi pesan tidak boleh kosong.');
+            
+            if ($id > 0) {
+                $stmt = $pdo->prepare("UPDATE wa_templates SET title=?, message=? WHERE id=? AND outlet_id=?");
+                $stmt->execute([$title, $message, $id, $outletId]);
+                $_SESSION['flash_success'] = 'Template WA berhasil diperbarui.';
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO wa_templates (outlet_id, title, message) VALUES (?, ?, ?)");
+                $stmt->execute([$outletId, $title, $message]);
+                $_SESSION['flash_success'] = 'Template WA baru berhasil ditambahkan.';
+            }
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+        }
+
+        header('Location: ' . url('/loyalty/members'));
+        exit;
+    }
+
+    public function deleteWaTemplate()
+    {
+        Auth::requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/loyalty/members'));
+            exit;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $outletId = function_exists('current_outlet_id') ? current_outlet_id() : (int)(Auth::user()['outlet_id'] ?? app_config('default_outlet_id'));
+        $pdo = Database::connection();
+
+        try {
+            $pdo->prepare("DELETE FROM wa_templates WHERE id = ? AND outlet_id = ?")->execute([$id, $outletId]);
+            $_SESSION['flash_success'] = 'Template WA berhasil dihapus.';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = 'Gagal menghapus template: ' . $e->getMessage();
+        }
+
+        header('Location: ' . url('/loyalty/members'));
         exit;
     }
 }

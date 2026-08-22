@@ -107,6 +107,10 @@ if (class_exists('LoyaltyController')) {
     $router->post('/loyalty/eventSettings/savePrize', [LoyaltyController::class, 'saveEventPrize']);
     $router->post('/loyalty/eventSettings/savePercentages', [LoyaltyController::class, 'saveEventPercentages']);
     $router->post('/loyalty/eventSettings/deletePrize', [LoyaltyController::class, 'deleteEventPrize']);
+    
+    // WA Templates Routes
+    $router->post('/loyalty/wa-templates/save', [LoyaltyController::class, 'saveWaTemplate']);
+    $router->post('/loyalty/wa-templates/delete', [LoyaltyController::class, 'deleteWaTemplate']);
 }
 
 if (class_exists('RaffleController')) {

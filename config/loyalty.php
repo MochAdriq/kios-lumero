@@ -158,7 +158,16 @@ function loyalty_ensure_tables(PDO $pdo): void {
         KEY idx_member_login_otps_expired (expired_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-
+    $pdo->exec("CREATE TABLE IF NOT EXISTS wa_templates (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        outlet_id INT(11) NOT NULL DEFAULT 0,
+        title VARCHAR(120) NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY(id),
+        KEY idx_wa_templates_outlet (outlet_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Produk reward yang dapat ditukar member dengan point.
     $pdo->exec("CREATE TABLE IF NOT EXISTS point_reward_products (
