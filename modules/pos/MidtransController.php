@@ -22,13 +22,6 @@ class MidtransController extends Controller
             return;
         }
 
-        // Verifikasi Signature SHA512
-        if (!MidtransService::verifySignature($payload)) {
-            http_response_code(403);
-            echo json_encode(['status' => 'error', 'message' => 'Invalid signature']);
-            return;
-        }
-
         $orderIdMidtrans = (string)$payload['order_id'];
         $parts = explode('-', $orderIdMidtrans);
         if (count($parts) >= 3 && in_array($parts[0], ['FO', 'ORD'])) {
@@ -44,35 +37,43 @@ class MidtransController extends Controller
         $newStatus = MidtransService::mapStatus($transactionStatus, $fraudStatus);
 
         $db = Database::connection();
+        $order = null;
+
+        // Cari pesanan berdasarkan order_number untuk mendapatkan outlet_id (jika ada)
+        if (str_starts_with($orderNumber, 'FO-')) {
+            $stmtOrder = $db->prepare("SELECT id, outlet_id FROM free_orders WHERE pre_order_no=? LIMIT 1");
+            $stmtOrder->execute([$orderNumber]);
+            $order = $stmtOrder->fetch(PDO::FETCH_ASSOC);
+        } else {
+            $stmtOrder = $db->prepare("SELECT id, grand_total, payment_status, outlet_id FROM orders WHERE order_number=? LIMIT 1");
+            $stmtOrder->execute([$orderNumber]);
+            $order = $stmtOrder->fetch(PDO::FETCH_ASSOC);
+        }
+
+        if ($order && !empty($order['outlet_id'])) {
+            MidtransService::setOutletId((int)$order['outlet_id']);
+        }
+
+        // Verifikasi Signature SHA512
+        if (!MidtransService::verifySignature($payload)) {
+            http_response_code(403);
+            echo json_encode(['status' => 'error', 'message' => 'Invalid signature']);
+            return;
+        }
+
+        if (!$order) {
+            http_response_code(404);
+            echo json_encode(['status' => 'error', 'message' => 'Order not found']);
+            return;
+        }
 
         // Pisahkan logika antara Online Orders (FO-) dan POS Orders (ORD-)
         if (str_starts_with($orderNumber, 'FO-')) {
-            $stmtOrder = $db->prepare("SELECT id FROM free_orders WHERE pre_order_no=? LIMIT 1");
-            $stmtOrder->execute([$orderNumber]);
-            $order = $stmtOrder->fetch(PDO::FETCH_ASSOC);
-
-            if (!$order) {
-                http_response_code(404);
-                echo json_encode(['status' => 'error', 'message' => 'Online Order not found']);
-                return;
-            }
-
             $paymentStatus = ($newStatus === 'paid') ? 'paid' : 'unpaid';
             $stmtUpdate = $db->prepare("UPDATE free_orders SET payment_status=?, payment_method='qris' WHERE pre_order_no=?");
             $stmtUpdate->execute([$paymentStatus, $orderNumber]);
 
         } else {
-            // Cari pesanan berdasarkan order_number di tabel orders
-            $stmtOrder = $db->prepare("SELECT id, grand_total, payment_status FROM orders WHERE order_number=? LIMIT 1");
-            $stmtOrder->execute([$orderNumber]);
-            $order = $stmtOrder->fetch(PDO::FETCH_ASSOC);
-
-            if (!$order) {
-                http_response_code(404);
-                echo json_encode(['status' => 'error', 'message' => 'Order not found']);
-                return;
-            }
-
             $orderId = (int)$order['id'];
 
             // Cegah webhook menggagalkan order yang sudah 'paid' (misal: di-confirm manual oleh kasir)
