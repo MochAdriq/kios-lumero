@@ -107,7 +107,8 @@
                                     <button type="button" class="btn btn-sm btn-success rounded-pill btn-send-wa me-1" 
                                             data-name="<?= htmlspecialchars($m['name'] ?: 'Pelanggan Setia') ?>" 
                                             data-phone="<?= htmlspecialchars($m['phone']) ?>" 
-                                            data-points="<?= number_format((int)$m['total_points'],0,',','.') ?>">
+                                            data-points="<?= number_format((int)$m['total_points'],0,',','.') ?>"
+                                            data-kupon="<?= (int)($m['total_kupon'] ?? 0) ?>">
                                         <i class="ti ti-brand-whatsapp"></i> WA
                                     </button>
                                     <a href="<?= url('/loyalty/members/detail?id=' . $m['id']) ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3">
@@ -203,7 +204,7 @@
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Isi Pesan</label>
                                 <textarea name="message" id="form-template-message" class="form-control bg-light border-0" rows="5" required placeholder="Halo {nama}, poin kamu ada {poin} loh!"></textarea>
-                                <small class="text-muted" style="font-size:0.75rem;">Variabel tersedia: <code>{nama}</code>, <code>{poin}</code></small>
+                                <small class="text-muted" style="font-size:0.75rem;">Variabel tersedia: <code>{nama}</code>, <code>{poin}</code>, <code>{kupon}</code></small>
                             </div>
                             <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold">Simpan Template</button>
                             <button type="button" class="btn btn-light w-100 rounded-pill mt-2 d-none" id="btn-cancel-edit-template" onclick="resetTemplateForm()">Batal Edit</button>
@@ -291,16 +292,18 @@
 let currentWaPhone = '';
 let currentWaName = '';
 let currentWaPoints = '';
+let currentWaKupon = '';
 
 document.querySelectorAll('.btn-send-wa').forEach(btn => {
     btn.addEventListener('click', function() {
         currentWaName = this.getAttribute('data-name');
         currentWaPhone = this.getAttribute('data-phone');
         currentWaPoints = this.getAttribute('data-points');
+        currentWaKupon = this.getAttribute('data-kupon');
         
         document.getElementById('send-wa-name').textContent = currentWaName;
         document.getElementById('send-wa-phone').textContent = currentWaPhone;
-        document.getElementById('send-wa-points').textContent = currentWaPoints + ' Poin';
+        document.getElementById('send-wa-points').textContent = currentWaPoints + ' Poin | ' + currentWaKupon + ' Kupon';
         
         document.getElementById('select-wa-template').value = '';
         document.getElementById('wa-message-text').value = '';
@@ -312,7 +315,7 @@ document.querySelectorAll('.btn-send-wa').forEach(btn => {
 document.getElementById('select-wa-template').addEventListener('change', function() {
     let val = this.value;
     if (val && val !== 'custom') {
-        let msg = val.replace(/{nama}/g, currentWaName).replace(/{poin}/g, currentWaPoints);
+        let msg = val.replace(/{nama}/g, currentWaName).replace(/{poin}/g, currentWaPoints).replace(/{kupon}/g, currentWaKupon);
         document.getElementById('wa-message-text').value = msg;
     } else {
         document.getElementById('wa-message-text').value = '';

@@ -10,7 +10,21 @@ class LoyaltyController extends Controller
         require_once __DIR__ . '/../../config/loyalty.php';
         loyalty_ensure_tables($pdo);
 
-        $stmt = $pdo->query("SELECT * FROM members ORDER BY total_points DESC, id DESC");
+        // Ambil ID batch undian aktif untuk menghitung jumlah kupon/tiket
+        $batchId = 0;
+        try {
+            $r = $pdo->query("SELECT id FROM raffle_batches WHERE status = 'active' ORDER BY end_date ASC LIMIT 1");
+            if ($activeBatch = $r->fetch(PDO::FETCH_ASSOC)) {
+                $batchId = (int)$activeBatch['id'];
+            }
+        } catch (Throwable $e) {}
+
+        $stmt = $pdo->query("
+            SELECT m.*, 
+                   (SELECT COUNT(*) FROM raffle_tickets t WHERE t.member_id = m.id AND t.batch_id = $batchId) as total_kupon
+            FROM members m 
+            ORDER BY m.total_points DESC, m.id DESC
+        ");
         $members = $stmt->fetchAll();
 
         $settingsStmt = $pdo->query("SELECT * FROM loyalty_settings WHERE id = 1 LIMIT 1");
