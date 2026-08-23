@@ -454,79 +454,86 @@ function svgImg(): string {
       <?= svgPlus() ?> Tambah Hadiah
     </button>
   </div>
-  <div class="table-responsive">
-    <table class="prize-table">
-      <thead>
-        <tr>
-          <th>Gambar</th>
-          <th>Nama Hadiah</th>
-          <th>Status Pemenang</th>
-          <th style="text-align:right">Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php if (empty($prizes)): ?>
-        <tr class="empty-prize-row">
-          <td colspan="4">
-            <div style="color:#94a3b8"><?= svgGift() ?></div>
-            <div class="empty-prize-label">Belum ada hadiah</div>
-            <div class="empty-prize-sub">Tambahkan hadiah untuk periode undian ini</div>
-          </td>
-        </tr>
-        <?php else: ?>
+  <div class="p-4 bg-light border-top">
+    <?php if (empty($prizes)): ?>
+      <div class="text-center py-5">
+        <div style="color:#94a3b8; margin-bottom:10px;"><?= svgGift() ?></div>
+        <div style="font-weight:700; color:#475569; font-size:16px;">Belum ada hadiah</div>
+        <div style="font-size:14px; color:#94a3b8;">Tambahkan hadiah untuk periode undian ini</div>
+      </div>
+    <?php else: ?>
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         <?php foreach ($prizes as $p): ?>
-        <tr>
-          <td>
-            <?php if ($p['image_url']): ?>
-              <img class="prize-thumb" src="<?= asset($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
-            <?php else: ?>
-              <div class="prize-thumb-placeholder"><?= svgImg() ?></div>
-            <?php endif ?>
-          </td>
-          <td class="prize-name-cell"><?= htmlspecialchars($p['name']) ?></td>
-          <td>
-            <?php if ($p['winner_ticket_id']): ?>
-              <div class="winner-badge">
-                <div class="winner-badge-name"><?= htmlspecialchars($p['winner_name'] ?? '-') ?></div>
-                <div class="winner-badge-detail">
-                  <?= htmlspecialchars($p['ticket_code'] ?? '') ?>
-                  <?php if (!empty($p['winner_phone'])): ?>
-                    &bull; <?= htmlspecialchars($p['winner_phone']) ?>
+          <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 position-relative overflow-hidden <?= $p['winner_ticket_id'] ? 'border border-warning bg-warning-subtle' : '' ?>">
+              
+              <?php if (!$p['winner_ticket_id']): ?>
+                <!-- Actions (Edit/Delete) for undrawn prizes -->
+                <div class="position-absolute top-0 end-0 p-2 d-flex gap-1" style="z-index: 10;">
+                  <button class="btn btn-sm btn-light rounded-circle shadow-sm" onclick='openEditModal(<?= json_encode($p) ?>)' title="Edit">
+                    <?= svgEdit() ?>
+                  </button>
+                  <form method="POST" action="<?= url('/raffle/delete-prize') ?>" class="d-inline" onsubmit="return confirm('Hapus hadiah ini?')">
+                    <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                    <input type="hidden" name="batch_id" value="<?= $batch['id'] ?>">
+                    <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" title="Hapus"><?= svgTrash() ?></button>
+                  </form>
+                </div>
+              <?php endif; ?>
+
+              <div class="card-body text-center d-flex flex-column pt-4">
+                <div class="mb-3 mx-auto">
+                  <?php if ($p['image_url']): ?>
+                    <img src="<?= asset($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="rounded-circle object-fit-cover shadow-sm border border-white border-4" style="width:100px; height:100px;">
+                  <?php else: ?>
+                    <div class="rounded-circle shadow-sm border border-white border-4 d-flex align-items-center justify-content-center bg-white mx-auto" style="width:100px; height:100px;">
+                      <?= svgImg() ?>
+                    </div>
+                  <?php endif ?>
+                </div>
+                
+                <h5 class="fw-bold text-dark mb-1"><?= htmlspecialchars($p['name']) ?></h5>
+                
+                <div class="mt-auto pt-4">
+                  <?php if ($p['winner_ticket_id']): ?>
+                    <div class="bg-white rounded-3 p-3 border border-warning shadow-sm">
+                      <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                        <span class="fs-4">🏆</span>
+                        <span class="fw-bold text-success fs-5"><?= htmlspecialchars($p['winner_name'] ?? '-') ?></span>
+                      </div>
+                      <div class="font-monospace text-muted small bg-light py-1 px-2 rounded mb-1">
+                        <?= htmlspecialchars($p['ticket_code'] ?? '') ?>
+                      </div>
+                      <?php if (!empty($p['winner_phone'])): ?>
+                        <div class="text-muted small fw-medium">
+                          <?= htmlspecialchars($p['winner_phone']) ?>
+                        </div>
+                      <?php endif ?>
+                    </div>
+                    
+                    <form method="POST" action="<?= url('/raffle/cancel-winner') ?>" class="mt-3" onsubmit="return confirm('Yakin ingin membatalkan pemenang ini? Hadiah akan dikembalikan ke status Belum Diundi.')">
+                      <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                      <input type="hidden" name="batch_id" value="<?= $batch['id'] ?>">
+                      <button type="submit" class="btn btn-sm btn-outline-danger w-100 rounded-pill fw-bold">Batalkan Pemenang</button>
+                    </form>
+
+                  <?php else: ?>
+                    <div class="badge bg-secondary mb-3 px-3 py-2 rounded-pill">Belum diundi</div>
+                    
+                    <?php if ($batch['status'] === 'completed'): ?>
+                      <button class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center gap-2"
+                              onclick="prepareRoll(<?= (int)$p['id'] ?>, <?= (int)$batch['id'] ?>, '<?= htmlspecialchars(addslashes($p['name'])) ?>', '<?= $p['image_url'] ? asset($p['image_url']) : '' ?>')">
+                        <?= svgDice() ?> Kocok Undian
+                      </button>
+                    <?php endif ?>
                   <?php endif ?>
                 </div>
               </div>
-            <?php else: ?>
-              <span class="no-winner-text">Belum diundi</span>
-            <?php endif ?>
-          </td>
-          <td style="text-align:right">
-            <?php if (!$p['winner_ticket_id']): ?>
-              <div class="action-group">
-                <div style="display:flex;gap:6px;justify-content:flex-end">
-                  <button class="btn-sm-action btn-edit" onclick='openEditModal(<?= json_encode($p) ?>)'>
-                    <?= svgEdit() ?> Edit
-                  </button>
-                  <form method="POST" action="<?= url('/raffle/delete-prize') ?>" class="d-inline"
-                        onsubmit="return confirm('Hapus hadiah ini?')">
-                    <input type="hidden" name="id" value="<?= $p['id'] ?>">
-                    <input type="hidden" name="batch_id" value="<?= $batch['id'] ?>">
-                    <button type="submit" class="btn-sm-action btn-delete"><?= svgTrash() ?> Hapus</button>
-                  </form>
-                </div>
-                <?php if ($batch['status'] === 'completed'): ?>
-                <button class="btn-draw"
-                        onclick="prepareRoll(<?= (int)$p['id'] ?>, <?= (int)$batch['id'] ?>, '<?= htmlspecialchars(addslashes($p['name'])) ?>', '<?= $p['image_url'] ? asset($p['image_url']) : '' ?>')">
-                  <?= svgDice() ?> Kocok Undian
-                </button>
-                <?php endif ?>
-              </div>
-            <?php endif ?>
-          </td>
-        </tr>
+            </div>
+          </div>
         <?php endforeach ?>
-        <?php endif ?>
-      </tbody>
-    </table>
+      </div>
+    <?php endif ?>
   </div>
 </div>
 

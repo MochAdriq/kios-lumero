@@ -168,4 +168,19 @@ class RaffleController extends Controller
         }
         $this->redirect('/raffle/' . $batchId);
     }
+    public function cancelWinner()
+    {
+        Auth::requireRoles(['super_admin', 'administrator']);
+
+        $id      = (int)($_POST['id']       ?? 0);
+        $batchId = (int)($_POST['batch_id'] ?? 0);
+
+        $ok = $this->raffleModel->cancelWinner($id);
+        if ($ok) {
+            $_SESSION['flash_success'] = 'Pemenang berhasil dibatalkan. Hadiah kembali belum diundi.';
+        } else {
+            $_SESSION['flash_error'] = 'Gagal membatalkan pemenang.';
+        }
+        $this->redirect('/raffle/' . $batchId);
+    }
 }

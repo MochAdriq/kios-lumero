@@ -199,4 +199,14 @@ class RaffleModel extends Model
             return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         }
     }
+
+    public function cancelWinner(int $prizeId): bool
+    {
+        try {
+            $st = $this->db->prepare("UPDATE raffle_prizes SET winner_ticket_id = NULL WHERE id = ?");
+            return $st->execute([$prizeId]);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
 }

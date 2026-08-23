@@ -119,6 +119,7 @@ if (class_exists('RaffleController')) {
     $router->get('/raffle/{id}', [RaffleController::class, 'detail']);
     $router->post('/raffle/save-prize', [RaffleController::class, 'savePrize']);
     $router->post('/raffle/delete-prize', [RaffleController::class, 'deletePrize']);
+    $router->post('/raffle/cancel-winner', [RaffleController::class, 'cancelWinner']);
     $router->post('/raffle/draw-winner', [RaffleController::class, 'drawWinner']);
 }
 
