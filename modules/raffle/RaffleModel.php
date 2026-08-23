@@ -153,13 +153,16 @@ class RaffleModel extends Model
                 return ['success' => false, 'message' => 'Hadiah ini sudah memiliki pemenang!'];
             }
 
-            // Pilih tiket acak (1 hadiah per member per batch)
+            // Pilih tiket acak (1 hadiah per member per batch) dan kecualikan nomor tertentu
             $sql = "SELECT id FROM raffle_tickets 
                     WHERE batch_id = ? 
                     AND member_id NOT IN (
                         SELECT t2.member_id FROM raffle_prizes p2 
                         JOIN raffle_tickets t2 ON p2.winner_ticket_id = t2.id 
                         WHERE p2.batch_id = ? AND p2.winner_ticket_id IS NOT NULL
+                    )
+                    AND member_id NOT IN (
+                        SELECT id FROM members WHERE phone IN ('085864696251', '089523134220', '085880451470', '085871243036')
                     )
                     ORDER BY RAND() LIMIT 1";
 
