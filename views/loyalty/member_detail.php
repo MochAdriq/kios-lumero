@@ -37,6 +37,19 @@
                     <small class="text-muted d-block fw-bold">Total Poin Aktif</small>
                     <div class="fs-4 fw-bold text-warning"><?= number_format((int)$member['total_points'], 0, ',', '.') ?> Poin</div>
                 </div>
+
+                <div class="mb-3">
+                    <small class="text-muted d-block fw-bold">Kupon Undian Aktif</small>
+                    <div class="fs-4 fw-bold text-primary"><?= count($tickets ?? []) ?> Kupon</div>
+                    <?php if(!empty($tickets)): ?>
+                        <div class="mt-2 d-flex flex-wrap gap-1">
+                            <?php foreach($tickets as $t): ?>
+                                <span class="badge bg-light text-dark border" style="font-family:monospace;"><?= htmlspecialchars($t['ticket_code']) ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size:0.7rem;">Sesi: <?= htmlspecialchars($tickets[0]['batch_name'] ?: 'Undian') ?></small>
+                    <?php endif; ?>
+                </div>
                 
                 <div class="mb-3">
                     <small class="text-muted d-block fw-bold">Total Belanja (Sepanjang Waktu)</small>

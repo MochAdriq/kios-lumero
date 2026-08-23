@@ -77,11 +77,17 @@ class LoyaltyController extends Controller
         $logStmt = $pdo->prepare("SELECT * FROM member_point_logs WHERE member_id = ? ORDER BY created_at DESC");
         $logStmt->execute([$id]);
         $pointLogs = $logStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Ambil kupon undian aktif (dan join nama batch)
+        $tiketStmt = $pdo->prepare("SELECT t.*, b.name as batch_name FROM raffle_tickets t LEFT JOIN raffle_batches b ON t.batch_id = b.id WHERE t.member_id = ? ORDER BY t.created_at DESC");
+        $tiketStmt->execute([$id]);
+        $tickets = $tiketStmt->fetchAll(PDO::FETCH_ASSOC);
 
         $this->view('loyalty/member_detail', [
             'pageTitle' => 'Detail Member & Riwayat Poin',
             'member' => $member,
-            'pointLogs' => $pointLogs
+            'pointLogs' => $pointLogs,
+            'tickets' => $tickets
         ]);
     }
 

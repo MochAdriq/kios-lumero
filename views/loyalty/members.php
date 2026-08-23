@@ -92,10 +92,18 @@
                                     <small class="text-muted"><?= htmlspecialchars($m['phone']) ?></small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#F59E0B" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><circle cx="12" cy="12" r="10"></circle><path d="M12 8l2.5 5.5l-5 0z"></path></svg>
-                                        <?= number_format((int)$m['total_points'],0,',','.') ?> Poin
-                                    </span>
+                                    <div class="d-flex flex-column align-items-start gap-1">
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#F59E0B" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><circle cx="12" cy="12" r="10"></circle><path d="M12 8l2.5 5.5l-5 0z"></path></svg>
+                                            <?= number_format((int)$m['total_points'],0,',','.') ?> Poin
+                                        </span>
+                                        <?php if(isset($m['total_kupon']) && $m['total_kupon'] > 0): ?>
+                                        <span class="badge bg-primary text-white px-3 py-1 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center" style="font-size:0.75rem;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M15 5l0 2"></path><path d="M15 11l0 2"></path><path d="M15 17l0 2"></path><path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2z"></path></svg>
+                                            <?= (int)$m['total_kupon'] ?> Kupon Undian
+                                        </span>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td class="text-muted fw-medium"><?= rupiah($m['total_spent'] ?? 0) ?></td>
                                 <td>
