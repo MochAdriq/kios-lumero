@@ -10,7 +10,7 @@
   <div class="section-header">
     <div class="section-row">
       <div>
-        <div class="section-title">🎫 Event Undian</div>
+        <div class="section-title"><svg style="width:24px;height:24px;vertical-align:-4px;margin-right:4px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg> Event Undian</div>
         <div class="section-subtitle">Tukar poin, raih hadiah impian! 10 Poin = 1 Tiket</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
@@ -31,7 +31,7 @@
   <?php if (!$activeBatch): ?>
 
     <div class="empty-state">
-      <div class="empty-state-icon">🎯</div>
+      <div class="empty-state-icon"><svg style="width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-target"></use></svg></div>
       <div class="empty-state-title">Belum Ada Event Aktif</div>
       <div class="empty-state-desc">Terus kumpulkan poin dan nantikan event undian berikutnya!</div>
     </div>
@@ -41,7 +41,7 @@
     <?php /* ── Info Event ───────────────────────────────── */ ?>
     <div class="card card-static" style="margin-bottom:24px;border-left:4px solid #f59e0b;border-radius:var(--radius)">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:36px;flex-shrink:0">🎉</div>
+        <div style="flex-shrink:0;color:#f59e0b"><svg style="width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-confetti"></use></svg></div>
         <div>
           <span class="badge badge-gold" style="margin-bottom:6px">Sedang Berlangsung</span>
           <div style="font-size:17px;font-weight:900;color:var(--ink);letter-spacing:-0.02em"><?= htmlspecialchars($activeBatch['name']) ?></div>
@@ -56,7 +56,7 @@
     <?php if (!empty($prizes)): ?>
     <div class="section">
       <div class="section-header">
-        <div class="section-title" style="font-size:18px">🎁 Daftar Hadiah</div>
+        <div class="section-title" style="font-size:18px"><svg style="width:20px;height:20px;vertical-align:-4px;margin-right:4px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-gift"></use></svg> Daftar Hadiah</div>
       </div>
       <div class="grid-auto">
         <?php foreach ($prizes as $p): ?>
@@ -65,7 +65,7 @@
             <?php if (!empty($p['image_url'])): ?>
               <img src="../public/assets/<?= htmlspecialchars($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
             <?php else: ?>
-              <div style="font-size:48px">🎁</div>
+              <div style="color:var(--subtle)"><svg style="width:48px;height:48px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-gift"></use></svg></div>
             <?php endif ?>
           </div>
           <div class="reward-body">
@@ -83,7 +83,7 @@
     <?php /* ── Form Tukar Tiket ─────────────────────────── */ ?>
     <div class="section">
       <div class="section-header">
-        <div class="section-title" style="font-size:18px">🔄 Tukar Poin ke Tiket</div>
+        <div class="section-title" style="font-size:18px"><svg style="width:20px;height:20px;vertical-align:-4px;margin-right:4px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-arrows-exchange"></use></svg> Tukar Poin ke Tiket</div>
         <div class="section-subtitle">Poin yang ditukar tidak dapat dikembalikan</div>
       </div>
       <div class="card card-static">
@@ -91,17 +91,17 @@
           <div class="form-grid">
             <div class="grid-3" style="gap:16px">
               <button type="submit" name="qty" value="1" class="btn btn-outline" <?= $bal < 10  ? 'disabled' : '' ?> style="flex-direction:column;height:80px;gap:4px">
-                <span style="font-size:18px">🎫</span>
+                <span style="color:inherit"><svg style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg></span>
                 <span style="font-size:13px;font-weight:900">1 Tiket</span>
                 <span style="font-size:11px;color:var(--muted);font-weight:700">10 Poin</span>
               </button>
               <button type="submit" name="qty" value="5" class="btn btn-gold" <?= $bal < 50  ? 'disabled' : '' ?> style="flex-direction:column;height:80px;gap:4px">
-                <span style="font-size:18px">🎫🎫</span>
+                <span style="color:inherit;display:flex;gap:2px"><svg style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg><svg style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg></span>
                 <span style="font-size:13px;font-weight:900">5 Tiket</span>
                 <span style="font-size:11px;font-weight:700;opacity:0.8">50 Poin</span>
               </button>
               <button type="submit" name="qty" value="10" class="btn btn-red" <?= $bal < 100 ? 'disabled' : '' ?> style="flex-direction:column;height:80px;gap:4px">
-                <span style="font-size:18px">🎫🎫🎫</span>
+                <span style="color:inherit;display:flex;gap:2px"><svg style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg><svg style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg><svg style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg></span>
                 <span style="font-size:13px;font-weight:900">10 Tiket</span>
                 <span style="font-size:11px;font-weight:700;opacity:0.8">100 Poin</span>
               </button>
@@ -120,13 +120,13 @@
     <div class="section">
       <div class="section-header">
         <div class="section-row">
-          <div class="section-title" style="font-size:18px">🎫 Tiket Saya</div>
+          <div class="section-title" style="font-size:18px"><svg style="width:20px;height:20px;vertical-align:-4px;margin-right:4px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg> Tiket Saya</div>
           <span class="badge"><?= count($myTickets) ?> tiket</span>
         </div>
       </div>
       <?php if (empty($myTickets)): ?>
         <div class="empty-state" style="padding:40px 24px">
-          <div class="empty-state-icon">🎫</div>
+          <div class="empty-state-icon"><svg style="width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg></div>
           <div class="empty-state-title">Belum Ada Tiket</div>
           <div class="empty-state-desc">Tukar poin di atas untuk mendapatkan tiket undian!</div>
         </div>

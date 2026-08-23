@@ -282,12 +282,11 @@ textarea.form-input { min-height: 88px; resize: vertical; }
 }
 .reward-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: #cbd5e1; }
 .reward-img {
-  height: 200px; background: var(--border-light); display: flex; align-items: center;
-  justify-content: center; padding: 24px; position: relative; overflow: hidden;
+  aspect-ratio: 1 / 1; width: 100%; background: var(--border-light); display: flex; align-items: center;
+  justify-content: center; padding: 0; position: relative; overflow: hidden;
 }
 .reward-img img {
-  max-height: 100%; object-fit: contain; transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.08));
+  width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
 }
 .reward-card:hover .reward-img img { transform: scale(1.08); }
 .reward-img-badge {
