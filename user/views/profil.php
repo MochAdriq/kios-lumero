@@ -101,7 +101,18 @@
 
 <!-- Klaim Struk -->
 <section class="section reveal reveal-delay-1">
-  <div class="grid-2">
+  <?php if (!empty($isNewMember)): ?>
+  <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:16px; padding:20px; margin-bottom:24px; display:flex; gap:16px; align-items:flex-start;">
+    <div style="font-size:24px;">⚠️</div>
+    <div>
+      <h4 style="margin:0 0 8px; color:#991b1b; font-size:16px; font-weight:800;">Keamanan Akun (Wajib)</h4>
+      <p style="margin:0; color:#b91c1c; font-size:14px; line-height:1.5;">Anda masih menggunakan Profil Default. Silakan <strong>Ubah Nama Lengkap</strong> dan atur <strong>PIN Baru</strong> Anda sebelum dapat mengakses fitur Loyalty Lumero lainnya (seperti Klaim Struk dan Undian).</p>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <div class="grid-2" <?= !empty($isNewMember) ? 'style="grid-template-columns: 1fr;"' : '' ?>>
+    <?php if (empty($isNewMember)): ?>
     <div class="card card-static">
       <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
         <div style="width:48px; height:48px; border-radius:14px; background:var(--gold-bg); border:1px solid var(--gold-border); display:flex; align-items:center; justify-content:center;">
@@ -125,6 +136,7 @@
         <button class="btn btn-red btn-full">Klaim Poin Sekarang</button>
       </form>
     </div>
+    <?php endif; ?>
 
     <!-- Profil -->
     <div class="card card-static">
@@ -145,7 +157,7 @@
           <input type="hidden" name="csrf" value="<?=mem_e($csrf)?>">
           <input type="hidden" name="action" value="update_profile">
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-input" name="name" value="<?=mem_e($member['name'] ?? '')?>" placeholder="Nama member"></div>
+            <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-input" name="name" value="<?=mem_e($member['name'] ?? '')?>" placeholder="Nama member" <?= !empty($isNewMember) ? 'required' : '' ?>></div>
             <div class="form-group"><label class="form-label">Email</label><input class="form-input" name="email" type="email" value="<?=mem_e($member['email'] ?? '')?>" placeholder="email@contoh.com"></div>
           </div>
           <div class="form-row">
@@ -156,7 +168,16 @@
             <div class="form-group"><label class="form-label">Tanggal Lahir</label><input class="form-input" name="birth_date" type="date" value="<?=mem_e($member['birth_date'] ?? '')?>"></div>
           </div>
           <div class="form-group"><label class="form-label">Alamat Domisili</label><textarea class="form-input" name="address" placeholder="Kota & alamat lengkap"><?=mem_e($member['address'] ?? '')?></textarea></div>
-          <button class="btn btn-red btn-full">Simpan & Ambil Bonus Poin</button>
+          
+          <hr style="border:0; border-top:1px dashed var(--border); margin:24px 0;">
+          
+          <h4 style="font-size:16px; font-weight:800; margin-bottom:16px;">Ganti PIN (Opsional / Wajib jika baru)</h4>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">PIN Baru (Min. 4 Angka)</label><input class="form-input" name="pin" type="password" placeholder="Kosongkan jika tidak ingin ganti" <?= !empty($isNewMember) ? 'required' : '' ?>></div>
+            <div class="form-group"><label class="form-label">Konfirmasi PIN</label><input class="form-input" name="pin_confirm" type="password" placeholder="Ulangi PIN Baru" <?= !empty($isNewMember) ? 'required' : '' ?>></div>
+          </div>
+
+          <button class="btn btn-red btn-full" style="margin-top:12px;">Simpan Profil & PIN</button>
         </form>
 
       <?php else: ?>

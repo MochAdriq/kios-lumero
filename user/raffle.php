@@ -26,6 +26,12 @@ if ($memberId <= 0) {
 $member = loyalty_member_by_id($pdo, $memberId);
 if (!$member) { unset($_SESSION['member_id']); header('Location: login.php'); exit; }
 
+$isNewMember = ($member && trim((string)($member['name'] ?? '')) === 'Member Baru');
+if ($isNewMember) {
+    header('Location: dashboard.php?page=profil');
+    exit;
+}
+
 // Helper functions yang dibutuhkan layout.php
 if (!function_exists('mem_e')) {
     function mem_e($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }

@@ -98,8 +98,18 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
       catch(Throwable $e){ loyalty_activity($pdo,$memberId,$member['phone'],'member_claim_failed',$e->getMessage()); throw $e; }
     }elseif($action==='update_profile'){
       $memberId=mem_current_id(); if($memberId<=0) throw new Exception('Silakan masuk terlebih dahulu.');
+      $curMember = loyalty_member_by_id($pdo, $memberId);
+      $curIsNew = ($curMember && trim((string)($curMember['name'] ?? '')) === 'Member Baru');
+      
       $pin=trim((string)($_POST['pin'] ?? '')); $pin2=trim((string)($_POST['pin_confirm'] ?? ''));
-      $res=loyalty_update_member_profile($pdo,$memberId,['name'=>$_POST['name'] ?? '', 'email'=>$_POST['email'] ?? '', 'gender'=>$_POST['gender'] ?? '', 'birth_date'=>$_POST['birth_date'] ?? '', 'address'=>$_POST['address'] ?? ''],null);
+      $name = trim((string)($_POST['name'] ?? ''));
+      
+      if ($curIsNew) {
+          if ($name === 'Member Baru' || $name === '') throw new Exception('Anda wajib mengganti Nama Lengkap.');
+          if ($pin === '') throw new Exception('Anda wajib mengganti PIN untuk keamanan akun Anda.');
+      }
+      
+      $res=loyalty_update_member_profile($pdo,$memberId,['name'=>$name, 'email'=>$_POST['email'] ?? '', 'gender'=>$_POST['gender'] ?? '', 'birth_date'=>$_POST['birth_date'] ?? '', 'address'=>$_POST['address'] ?? ''],null);
       if($pin!==''){ if(strlen($pin)<4) throw new Exception('PIN minimal 4 digit.'); if($pin!==$pin2) throw new Exception('Konfirmasi PIN belum sama.'); $pdo->prepare("UPDATE members SET pin_hash=?, updated_at=NOW() WHERE id=?")->execute([password_hash($pin,PASSWORD_DEFAULT),$memberId]); loyalty_activity($pdo,$memberId,null,'member_pin_update','Ubah PIN dari halaman member'); }
       $msg=$res['message'] ?? 'Profil member berhasil diperbarui.';
     }elseif($action==='redeem_reward'){
@@ -136,6 +146,11 @@ if(mem_current_id()>0){
 }
 $pendingPhone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $pendingMode=(string)($_SESSION['member_login_mode'] ?? '');
 $profileComplete=$member ? loyalty_profile_is_complete($member) : false; $profilePercent=$member ? mem_profile_percent($member) : 0; $bonusPoints=(int)($settings['profile_bonus_points'] ?? 2); $csrf=mem_csrf();
-$page=(string)($_GET['page'] ?? 'profil'); if(!in_array($page,['profil','riwayat','penukaran'],true)) $page='profil';
+
+$isNewMember = ($member && trim((string)($member['name'] ?? '')) === 'Member Baru');
+$page=(string)($_GET['page'] ?? 'profil'); 
+if(!in_array($page,['profil','riwayat','penukaran'],true)) $page='profil';
+if ($isNewMember) $page = 'profil';
+
 $prefillClaim=(string)($_SESSION['member_prefill_claim'] ?? $incomingClaim);
 require __DIR__ . '/views/layout.php';
