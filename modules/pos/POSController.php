@@ -415,15 +415,35 @@ class POSController extends Controller
             $this->json(['success'=>false, 'message'=>'Nomor HP wajib diisi']);
         }
         $member = $this->model->findMemberByPhone($phone);
+        
+        if (!$member) {
+            try {
+                $pdo = Database::connection();
+                $pinHash = password_hash('1234', PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("INSERT INTO members (name, phone, pin_hash, status, created_at) VALUES ('Member Baru', ?, ?, 'active', NOW())");
+                if ($stmt->execute([$phone, $pinHash])) {
+                    $newId = (int)$pdo->lastInsertId();
+                    $member = [
+                        'id' => $newId,
+                        'name' => 'Member Baru',
+                        'phone' => $phone,
+                        'total_points' => 0
+                    ];
+                }
+            } catch (Throwable $e) {
+                // Biarkan $member tetap null jika terjadi error
+            }
+        }
+
         if ($member) {
             $this->json(['success'=>true, 'found'=>true, 'member'=>[
                 'id' => (int)$member['id'],
-                'name' => (string)($member['name'] ?? 'Member'),
+                'name' => (string)($member['name'] ?? 'Member Baru'),
                 'phone' => (string)($member['phone'] ?? $phone),
                 'points' => (int)($member['total_points'] ?? ($member['points'] ?? ($member['loyalty_points'] ?? 0)))
             ]]);
         } else {
-            $this->json(['success'=>true, 'found'=>false, 'message'=>'Member tidak ditemukan']);
+            $this->json(['success'=>true, 'found'=>false, 'message'=>'Gagal otomatis membuat akun member']);
         }
     }
 }
