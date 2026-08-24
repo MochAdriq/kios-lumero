@@ -28,6 +28,72 @@
     <div class="alert alert-err">⚠️ <?= htmlspecialchars($flashErr) ?></div>
   <?php endif ?>
 
+  <?php /* ── Banner Kemenangan ────────────────────────────── */ ?>
+  <?php if (!empty($myWins)): ?>
+    <div style="
+        margin-bottom: 24px;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 2px solid rgba(245,158,11,0.6);
+        box-shadow: 0 8px 32px rgba(245,158,11,0.15);
+    ">
+      <div style="
+          background: linear-gradient(135deg, #78350f, #92400e);
+          padding: 18px 20px 14px;
+          display: flex; align-items: center; gap: 14px;
+      ">
+        <div style="font-size: 36px; line-height:1; flex-shrink:0; animation: trophySpin 3s ease-in-out infinite;">🏆</div>
+        <div>
+          <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:rgba(255,220,100,.8); margin-bottom:4px;">Selamat!</div>
+          <div style="font-size:17px; font-weight:900; color:#fff; line-height:1.2;">
+            Anda memenangkan <?= count($myWins) > 1 ? count($myWins) . ' hadiah!' : 'hadiah undian!' ?>
+          </div>
+        </div>
+      </div>
+      <div style="background: linear-gradient(180deg, #451a03, #2d1208); padding: 4px 0 8px;">
+        <?php foreach ($myWins as $w): ?>
+        <div style="
+            display:flex; align-items:center; gap:14px;
+            padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+        ">
+          <div style="
+              flex: 0 0 48px; width:48px; height:48px; border-radius:14px;
+              background:rgba(0,0,0,.3); border:1px solid rgba(245,158,11,.3);
+              display:flex; align-items:center; justify-content:center;
+              font-size:22px; overflow:hidden;
+          ">
+            <?php if (!empty($w['image_url'])): ?>
+              <img src="../public/assets/<?= htmlspecialchars($w['image_url'], ENT_QUOTES, 'UTF-8') ?>"
+                   alt="<?= htmlspecialchars($w['prize_name'], ENT_QUOTES, 'UTF-8') ?>"
+                   style="width:100%;height:100%;object-fit:cover;border-radius:14px;">
+            <?php else: ?>🎁<?php endif ?>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(245,158,11,.8);margin-bottom:3px;">
+              <?= htmlspecialchars($w['batch_name'], ENT_QUOTES, 'UTF-8') ?>
+            </div>
+            <div style="font-size:15px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              <?= htmlspecialchars($w['prize_name'], ENT_QUOTES, 'UTF-8') ?>
+            </div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;font-family:'Courier New',monospace;">
+              <?= htmlspecialchars($w['ticket_code'], ENT_QUOTES, 'UTF-8') ?>
+            </div>
+          </div>
+          <div style="flex-shrink:0;font-size:20px;">🎉</div>
+        </div>
+        <?php endforeach ?>
+        <div style="padding:10px 20px 6px;font-size:11px;color:rgba(255,255,255,.4);text-align:center;font-weight:600;">
+          Hubungi kasir Lumero untuk klaim hadiah Anda
+        </div>
+      </div>
+    </div>
+    <style>
+      @keyframes trophySpin {
+        0%,100%{transform:rotate(-8deg) scale(1)} 50%{transform:rotate(8deg) scale(1.1)}
+      }
+    </style>
+  <?php endif ?>
+
   <?php if (!$activeBatch): ?>
 
     <div class="empty-state">

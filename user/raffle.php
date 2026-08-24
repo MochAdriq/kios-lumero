@@ -108,6 +108,23 @@ if ($activeBatch) {
     } catch (Throwable $e) { $myTickets = []; }
 }
 
+// ── Cek apakah member ini pernah menang di batch manapun ─────────────────
+$myWins = [];
+try {
+    $stWins = $pdo->prepare(
+        "SELECT rp.name AS prize_name, rp.image_url,
+                rb.name AS batch_name,
+                rt.ticket_code
+         FROM raffle_prizes rp
+         JOIN raffle_tickets rt ON rt.id = rp.winner_ticket_id
+         JOIN raffle_batches rb ON rb.id = rp.batch_id
+         WHERE rt.member_id = ?
+         ORDER BY rp.id DESC"
+    );
+    $stWins->execute([$memberId]);
+    $myWins = $stWins->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) { $myWins = []; }
+
 // Saldo poin (fallback ke kolom yang tersedia)
 $bal = (int)($member['total_points'] ?? $member['points_balance'] ?? 0);
 
