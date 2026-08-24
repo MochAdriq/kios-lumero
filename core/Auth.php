@@ -14,7 +14,13 @@ class Auth
     public static function id(): ?int { return self::user()['id'] ?? null; }
     public static function role(): ?string { return self::user()['role_code'] ?? null; }
     public static function check(): bool { return !empty($_SESSION['user']); }
-    public static function requireLogin(): void { if (!self::check()) { header('Location: ' . url('/login')); exit; } }
+    public static function requireLogin(): void {
+        if (!self::check()) {
+            $_SESSION['intended_url'] = $_SERVER['REQUEST_URI'] ?? '';
+            header('Location: ' . url('/login'));
+            exit;
+        }
+    }
     public static function can(array $roles): bool { return in_array(self::role(), $roles, true); }
     public static function requireRoles(array $roles): void { self::requireLogin(); if (!self::can($roles)) { http_response_code(403); include __DIR__ . '/../views/errors/403.php'; exit; } }
 

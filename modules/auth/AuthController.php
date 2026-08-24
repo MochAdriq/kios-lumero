@@ -42,6 +42,14 @@ class AuthController extends Controller
 
         Audit::log('login', 'users', (int)$user['id']);
 
+        // Redirect ke intended URL jika ada (misal: user coba akses /raffle/2/show lalu diarahkan ke login)
+        if (!empty($_SESSION['intended_url'])) {
+            $intended = $_SESSION['intended_url'];
+            unset($_SESSION['intended_url']);
+            header('Location: ' . $intended);
+            exit;
+        }
+
         // Redirect logic based on role & branch
         $role = $user['role_code'];
         $branch = branch_context();
