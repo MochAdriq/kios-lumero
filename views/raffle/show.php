@@ -258,7 +258,10 @@ function svgCheck(): string {
              <?= number_format($stats['total_tickets'] ?? 0, 0, ',', '.') ?> Tiket Siap Diundi
           </div>
           
-          <button id="btnStartRoll" class="btn-start-roll">Mulai Pengundian</button>
+          <div class="d-flex flex-column align-items-center">
+            <button id="btnStartRoll" class="btn-start-roll mb-3">Mulai Pengundian</button>
+            <button id="btnCancelRoll" class="btn btn-outline-light rounded-pill px-4" onclick="cancelRoll()" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.6);">Batal & Pilih Ulang</button>
+          </div>
         </div>
 
         <!-- Phase 2: Winner Reveal -->
@@ -353,6 +356,7 @@ function svgCheck(): string {
         strip.innerHTML = '<div class="roll-item" style="color:rgba(255,255,255,0.4)">[ SIAP DIUNDI ]</div>';
         
         document.getElementById('btnStartRoll').style.display = 'inline-flex';
+        document.getElementById('btnCancelRoll').style.display = 'inline-block';
         
         document.getElementById('rollOverlay').removeAttribute('hidden');
         document.body.style.overflow = 'hidden';
@@ -364,6 +368,7 @@ function svgCheck(): string {
 
     document.getElementById('btnStartRoll').addEventListener('click', function() {
         this.style.display = 'none';
+        document.getElementById('btnCancelRoll').style.display = 'none';
         isRollingStarted = true;
         clearInterval(teaserInterval);
         clearInterval(heartbeatInterval);
@@ -508,6 +513,14 @@ function svgCheck(): string {
         document.getElementById('winnerPhone').textContent     = data.winner_phone || '';
         document.getElementById('winnerReveal').classList.add('visible');
         startConfetti();
+    }
+
+    function cancelRoll() {
+        if (isRollingStarted) return;
+        clearInterval(teaserInterval);
+        clearInterval(heartbeatInterval);
+        document.getElementById('rollOverlay').setAttribute('hidden', '');
+        document.body.style.overflow = '';
     }
 
     function closeRoll() {
