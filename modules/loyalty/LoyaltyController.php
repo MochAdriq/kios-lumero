@@ -91,6 +91,34 @@ class LoyaltyController extends Controller
         ]);
     }
 
+    public function loginAsMember()
+    {
+        Auth::requireRoles(['super_admin']);
+        $pdo = Database::connection();
+        
+        $id = (int)($_POST['member_id'] ?? 0);
+        if ($id <= 0) {
+            $_SESSION['flash_error'] = 'Member tidak valid.';
+            header('Location: ' . url('/loyalty/members'));
+            exit;
+        }
+        
+        $stmt = $pdo->prepare("SELECT id FROM members WHERE id = ?");
+        $stmt->execute([$id]);
+        if (!$stmt->fetch()) {
+            $_SESSION['flash_error'] = 'Member tidak ditemukan.';
+            header('Location: ' . url('/loyalty/members'));
+            exit;
+        }
+
+        // Set member session
+        $_SESSION['member_id'] = $id;
+        
+        // Redirect to member dashboard
+        header('Location: ../user/dashboard.php');
+        exit;
+    }
+
     public function rewards()
     {
         Auth::requireLogin();

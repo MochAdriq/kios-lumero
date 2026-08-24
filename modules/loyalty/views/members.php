@@ -73,12 +73,15 @@
                                 <th>Total Poin</th>
                                 <th>Total Belanja</th>
                                 <th>Status</th>
+                                <?php if (Auth::role() === 'super_admin'): ?>
+                                <th class="text-end pe-3">Aksi</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($members)): ?>
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">Belum ada member terdaftar.</td>
+                                <td colspan="5" class="text-center py-4 text-muted">Belum ada member terdaftar.</td>
                             </tr>
                             <?php else: ?>
                             <?php foreach ($members as $m): ?>
@@ -98,6 +101,16 @@
                                         <?= strtoupper($m['status'] ?? 'ACTIVE') ?>
                                     </span>
                                 </td>
+                                <?php if (Auth::role() === 'super_admin'): ?>
+                                <td class="text-end pe-3">
+                                    <form action="<?= url('/loyalty/members/login-as') ?>" method="POST" class="d-inline" target="_blank">
+                                        <input type="hidden" name="member_id" value="<?= $m['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="Login sebagai member ini">
+                                            <i class="ti ti-login"></i> Login As
+                                        </button>
+                                    </form>
+                                </td>
+                                <?php endif; ?>
                             </tr>
                             <?php endforeach; ?>
                             <?php endif; ?>
