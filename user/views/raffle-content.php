@@ -12,6 +12,14 @@
       <div>
         <div class="section-title"><svg style="width:24px;height:24px;vertical-align:-4px;margin-right:4px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="../public/assets/tabler-sprite.svg#tabler-ticket"></use></svg> Event Undian</div>
         <div class="section-subtitle">Tukar poin, raih hadiah impian! 10 Poin = 1 Tiket</div>
+        <button type="button" onclick="document.getElementById('modalHallOfFame').classList.add('show')" style="
+            margin-top:12px; display:inline-flex; align-items:center; gap:6px;
+            background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4);
+            color:#b45309; font-size:12px; font-weight:800; padding:6px 12px;
+            border-radius:99px; cursor:pointer; text-transform:uppercase; letter-spacing:0.04em;
+        ">
+            🏆 Pemenang Sebelumnya
+        </button>
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px">Saldo Poin Anda</div>
@@ -220,3 +228,96 @@
 
   <?php endif ?>
 </div>
+
+<?php /* ── Modal Hall of Fame ────────────────────────────────── */ ?>
+<div id="modalHallOfFame" class="modal-hof">
+  <div class="modal-hof-backdrop" onclick="document.getElementById('modalHallOfFame').classList.remove('show')"></div>
+  <div class="modal-hof-content">
+    <div class="modal-hof-header">
+      <div class="modal-hof-title">🏆 Hall of Fame</div>
+      <button class="modal-hof-close" onclick="document.getElementById('modalHallOfFame').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-hof-body">
+      <?php if (empty($allPastWinners)): ?>
+        <div class="empty-state" style="padding: 40px 20px;">
+          <div class="empty-state-icon">🎯</div>
+          <div class="empty-state-title">Belum Ada Riwayat</div>
+          <div class="empty-state-desc">Belum ada pemenang undian sebelumnya. Anda bisa jadi yang pertama!</div>
+        </div>
+      <?php else: ?>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <?php foreach ($allPastWinners as $w): ?>
+          <div style="
+              display:flex; align-items:center; gap:14px;
+              padding:14px; border-radius:16px;
+              background:rgba(255,255,255,0.8); border:1px solid rgba(245,158,11,0.2);
+              box-shadow:0 4px 12px rgba(0,0,0,0.03);
+          ">
+            <div style="
+                flex:0 0 48px; width:48px; height:48px; border-radius:12px;
+                background:rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.05);
+                display:flex; align-items:center; justify-content:center;
+                font-size:20px; overflow:hidden;
+            ">
+              <?php if (!empty($w['image_url'])): ?>
+                <img src="../public/assets/<?= htmlspecialchars($w['image_url'], ENT_QUOTES, 'UTF-8') ?>" 
+                     style="width:100%;height:100%;object-fit:cover;">
+              <?php else: ?>🎁<?php endif ?>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:11px; font-weight:800; color:#b45309; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">
+                <?= htmlspecialchars($w['batch_name'], ENT_QUOTES, 'UTF-8') ?>
+              </div>
+              <div style="font-size:14px; font-weight:900; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                <?= htmlspecialchars($w['prize_name'], ENT_QUOTES, 'UTF-8') ?>
+              </div>
+              <div style="font-size:13px; font-weight:700; color:var(--text); margin-top:3px;">
+                <?= htmlspecialchars($w['winner_name'], ENT_QUOTES, 'UTF-8') ?> 
+                <span style="color:var(--muted); font-weight:500; font-size:11px; margin-left:4px;">(<?= htmlspecialchars($w['winner_phone_masked'], ENT_QUOTES, 'UTF-8') ?>)</span>
+              </div>
+            </div>
+          </div>
+          <?php endforeach ?>
+        </div>
+      <?php endif ?>
+    </div>
+  </div>
+</div>
+
+<style>
+.modal-hof {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: flex-end; justify-content: center;
+  pointer-events: none; opacity: 0; transition: opacity 0.3s;
+}
+.modal-hof.show { pointer-events: auto; opacity: 1; }
+.modal-hof-backdrop {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+}
+.modal-hof-content {
+  position: relative; width: 100%; max-width: 480px; max-height: 85vh;
+  background: #f8fafc; border-radius: 24px 24px 0 0;
+  display: flex; flex-direction: column;
+  transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.modal-hof.show .modal-hof-content { transform: translateY(0); }
+.modal-hof-header {
+  padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(0,0,0,0.05); background: #fff; border-radius: 24px 24px 0 0;
+}
+.modal-hof-title { font-size: 18px; font-weight: 900; color: var(--ink); }
+.modal-hof-close {
+  width: 32px; height: 32px; border-radius: 16px; border: none;
+  background: rgba(0,0,0,0.05); color: var(--text); font-weight: bold;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.modal-hof-body {
+  padding: 20px 24px 40px; overflow-y: auto; overscroll-behavior: contain;
+}
+@media(min-width:480px) {
+  .modal-hof { align-items: center; }
+  .modal-hof-content { border-radius: 24px; max-height: 80vh; transform: translateY(20px) scale(0.95); }
+  .modal-hof-header { border-radius: 24px 24px 0 0; }
+  .modal-hof.show .modal-hof-content { transform: translateY(0) scale(1); }
+}
+</style>

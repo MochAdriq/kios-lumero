@@ -125,6 +125,24 @@ try {
     $myWins = $stWins->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) { $myWins = []; }
 
+// ── Ambil semua riwayat pemenang (Hall of Fame) ──────────────────────────
+$allPastWinners = [];
+try {
+    $stPast = $pdo->query(
+        "SELECT rp.name AS prize_name, rp.image_url,
+                rb.name AS batch_name,
+                m.name AS winner_name,
+                CONCAT(LEFT(m.phone, 4), '****', RIGHT(m.phone, 4)) AS winner_phone_masked
+         FROM raffle_prizes rp
+         JOIN raffle_tickets rt ON rt.id = rp.winner_ticket_id
+         JOIN members m ON m.id = rt.member_id
+         JOIN raffle_batches rb ON rb.id = rp.batch_id
+         WHERE rb.status = 'completed'
+         ORDER BY rb.end_date DESC, rp.id ASC"
+    );
+    $allPastWinners = $stPast ? $stPast->fetchAll(PDO::FETCH_ASSOC) : [];
+} catch (Throwable $e) { $allPastWinners = []; }
+
 // Saldo poin (fallback ke kolom yang tersedia)
 $bal = (int)($member['total_points'] ?? $member['points_balance'] ?? 0);
 
