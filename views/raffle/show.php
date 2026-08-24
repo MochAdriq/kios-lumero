@@ -1158,7 +1158,7 @@ function startActualRoll() {
         .then(r => r.json())
         .then(data => {
             const elapsed = Date.now() - startTime;
-            const delay   = Math.max(0, 7000 - elapsed);
+            const delay   = Math.max(0, 30000 - elapsed);
             setTimeout(() => {
                 if (!data.success) {
                     strip.className = 'roll-strip';
