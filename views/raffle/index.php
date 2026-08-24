@@ -35,6 +35,9 @@
                     </td>
                     <td>
                         <a href="<?= url('/raffle/' . $b['id']) ?>" class="btn btn-sm btn-info text-white">Detail & Hadiah</a>
+                        <?php if ($b['status'] === 'completed'): ?>
+                            <a href="<?= url('/raffle/' . $b['id'] . '/show') ?>" target="_blank" class="btn btn-sm btn-dark text-warning fw-bold">🎥 Buka Layar Undian</a>
+                        <?php endif; ?>
                         <button class="btn btn-sm btn-outline-secondary" onclick='editBatch(<?= json_encode($b) ?>)'>Edit</button>
                     </td>
                 </tr>

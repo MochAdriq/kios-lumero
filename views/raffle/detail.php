@@ -521,10 +521,9 @@ function svgImg(): string {
                     <div class="badge bg-secondary mb-3 px-3 py-2 rounded-pill">Belum diundi</div>
                     
                     <?php if ($batch['status'] === 'completed'): ?>
-                      <button class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow-sm d-flex justify-content-center align-items-center gap-2"
-                              onclick="prepareRoll(<?= (int)$p['id'] ?>, <?= (int)$batch['id'] ?>, '<?= htmlspecialchars(addslashes($p['name'])) ?>', '<?= $p['image_url'] ? asset($p['image_url']) : '' ?>')">
-                        <?= svgDice() ?> Kocok Undian
-                      </button>
+                      <div class="text-center mt-2">
+                        <small class="text-muted">Gunakan Layar Undian untuk mengundi</small>
+                      </div>
                     <?php endif ?>
                   <?php endif ?>
                 </div>

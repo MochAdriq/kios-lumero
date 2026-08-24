@@ -77,6 +77,34 @@ class RaffleController extends Controller
         ]);
     }
 
+    public function show(int $id)
+    {
+        Auth::requireRoles(['super_admin', 'administrator']);
+
+        $batch = $this->raffleModel->getBatchById($id);
+        if (!$batch) {
+            $_SESSION['flash_error'] = 'Batch tidak ditemukan.';
+            $this->redirect('/raffle');
+            return;
+        }
+
+        if ($batch['status'] !== 'completed') {
+            $_SESSION['flash_error'] = 'Undian ini belum selesai/belum siap diundi.';
+            $this->redirect('/raffle');
+            return;
+        }
+
+        $prizes  = $this->raffleModel->getPrizesByBatch($id);
+        $stats   = $this->raffleModel->getTicketStatsByBatch($id);
+        
+        $this->view('raffle/show', [
+            'pageTitle' => 'Layar Undian: ' . htmlspecialchars($batch['name']),
+            'batch'     => $batch,
+            'prizes'    => $prizes,
+            'stats'     => $stats,
+        ], null);
+    }
+
     public function savePrize()
     {
         Auth::requireRoles(['super_admin', 'administrator']);
