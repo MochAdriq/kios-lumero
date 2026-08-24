@@ -115,7 +115,7 @@ class LoyaltyController extends Controller
         $_SESSION['member_id'] = $id;
         
         // Redirect to member dashboard
-        header('Location: ../user/dashboard.php');
+        header('Location: ' . url('/user/dashboard.php', false));
         exit;
     }
 
