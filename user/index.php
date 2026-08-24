@@ -5,6 +5,39 @@
  */
 $claimUrl = 'login.php';
 $orderUrl = 'online-order.php';
+
+// ── Tarik data pemenang dari batch terbaru yang completed ──────────────
+$raffleWinners = [];
+$raffleBatchName = '';
+try {
+    require_once __DIR__ . '/../helpers/functions.php';
+    require_once __DIR__ . '/../core/Database.php';
+    $pdo = Database::connection();
+
+    // Cari batch completed dengan end_date paling baru
+    $stBatch = $pdo->query(
+        "SELECT id, name FROM raffle_batches WHERE status = 'completed' ORDER BY end_date DESC LIMIT 1"
+    );
+    $latestBatch = $stBatch ? $stBatch->fetch(PDO::FETCH_ASSOC) : null;
+
+    if ($latestBatch) {
+        $raffleBatchName = $latestBatch['name'];
+        $stWin = $pdo->prepare(
+            "SELECT rp.name AS prize_name, rp.image_url,
+                    m.name AS winner_name,
+                    CONCAT(LEFT(m.phone, 4), '****', RIGHT(m.phone, 4)) AS winner_phone_masked
+             FROM raffle_prizes rp
+             JOIN raffle_tickets rt ON rt.id = rp.winner_ticket_id
+             JOIN members m ON m.id = rt.member_id
+             WHERE rp.batch_id = ?
+             ORDER BY rp.id ASC"
+        );
+        $stWin->execute([$latestBatch['id']]);
+        $raffleWinners = $stWin->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (Throwable $e) {
+    $raffleWinners = [];
+}
 ?>
 <!doctype html>
 <html lang="id">
@@ -320,6 +353,129 @@ $orderUrl = 'online-order.php';
             text-align: center;
         }
 
+        /* ── Pemenang Section ── */
+        .winners-section {
+            margin-top: 14px;
+            padding: 20px 16px;
+            border: 1px solid rgba(255, 230, 155, .5);
+            border-radius: 22px;
+            background: linear-gradient(160deg, rgba(92,0,3,.64), rgba(53,0,1,.78));
+            box-shadow: 0 14px 38px rgba(49,0,0,.24);
+            backdrop-filter: blur(11px);
+        }
+        .winners-header {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 16px;
+        }
+        .winners-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            color: #6f1408;
+            background: var(--gold-100);
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+        .winners-batch-name {
+            font-size: 11px;
+            font-weight: 800;
+            color: rgba(255,255,255,.5);
+            margin-top: 4px;
+            letter-spacing: .02em;
+        }
+        .winner-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .winner-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,220,100,.15);
+        }
+        .winner-prize-img {
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: rgba(0,0,0,.3);
+            border: 1px solid rgba(255,200,80,.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            overflow: hidden;
+        }
+        .winner-prize-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            display: block;
+        }
+        .winner-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .winner-prize-name {
+            font-size: 12px;
+            font-weight: 900;
+            color: var(--gold-300);
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .winner-name {
+            font-size: 15px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .winner-phone {
+            font-size: 11px;
+            color: rgba(255,255,255,.5);
+            margin-top: 2px;
+        }
+        .winner-trophy {
+            flex: 0 0 auto;
+            font-size: 22px;
+            animation: trophySway 3s ease-in-out infinite;
+        }
+        @keyframes trophySway {
+            0%, 100% { transform: rotate(-5deg); }
+            50%       { transform: rotate(5deg); }
+        }
+        .winners-empty {
+            text-align: center;
+            padding: 20px 10px;
+            color: rgba(255,255,255,.45);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .winners-empty .empty-icon {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 10px;
+            opacity: .6;
+        }
+
         .sticky-nav {
             position: fixed;
             left: 50%;
@@ -480,6 +636,50 @@ $orderUrl = 'online-order.php';
             <span class="pulse" aria-hidden="true"></span>
             <span id="draw-status">Pengundian tahap pertama akan segera berlangsung.</span>
         </div>
+
+        <!-- ── Pemenang Undian ── -->
+        <section class="winners-section" aria-labelledby="pemenang-title">
+            <div class="winners-header">
+                <div>
+                    <div class="winners-eyebrow">🏆 Pemenang Undian</div>
+                    <?php if ($raffleBatchName): ?>
+                        <div class="winners-batch-name"><?= htmlspecialchars($raffleBatchName, ENT_QUOTES, 'UTF-8') ?></div>
+                    <?php endif ?>
+                </div>
+            </div>
+
+            <?php if (!empty($raffleWinners)): ?>
+                <div class="winner-list">
+                    <?php foreach ($raffleWinners as $w): ?>
+                        <div class="winner-item">
+                            <div class="winner-prize-img">
+                                <?php if (!empty($w['image_url'])): ?>
+                                    <img src="../public/assets/<?= htmlspecialchars($w['image_url'], ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($w['prize_name'], ENT_QUOTES, 'UTF-8') ?>">
+                                <?php else: ?>
+                                    🎁
+                                <?php endif ?>
+                            </div>
+                            <div class="winner-info">
+                                <div class="winner-prize-name"><?= htmlspecialchars($w['prize_name'], ENT_QUOTES, 'UTF-8') ?></div>
+                                <div class="winner-name"><?= htmlspecialchars($w['winner_name'], ENT_QUOTES, 'UTF-8') ?></div>
+                                <div class="winner-phone"><?= htmlspecialchars($w['winner_phone_masked'], ENT_QUOTES, 'UTF-8') ?></div>
+                            </div>
+                            <div class="winner-trophy" aria-hidden="true">🏆</div>
+                        </div>
+                    <?php endforeach ?>
+                </div>
+            <?php elseif ($raffleBatchName): ?>
+                <div class="winners-empty">
+                    <span class="empty-icon">⏳</span>
+                    Pengundian belum dimulai.<br>Nantikan siapa pemenang beruntungnya!
+                </div>
+            <?php else: ?>
+                <div class="winners-empty">
+                    <span class="empty-icon">🎯</span>
+                    Pengundian belum dimulai.<br>Kumpulkan poin untuk ikut serta!
+                </div>
+            <?php endif ?>
+        </section>
 
         <footer>
             Program berlaku sesuai syarat dan ketentuan pada poster. Keputusan pengundian Lumero bersifat final.<br>
