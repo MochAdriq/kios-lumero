@@ -122,6 +122,14 @@
                                     <a href="<?= url('/loyalty/members/detail?id=' . $m['id']) ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                         Detail
                                     </a>
+                                    <?php if (Auth::role() === 'super_admin'): ?>
+                                    <form action="<?= url('/loyalty/members/login-as') ?>" method="POST" class="d-inline ms-1" target="_blank">
+                                        <input type="hidden" name="member_id" value="<?= $m['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-dark rounded-pill px-3" title="Login sebagai member ini">
+                                            <i class="ti ti-login"></i> Login
+                                        </button>
+                                    </form>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
