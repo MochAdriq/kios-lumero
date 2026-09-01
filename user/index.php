@@ -6,6 +6,11 @@
 $claimUrl = 'login.php';
 $orderUrl = 'online-order.php';
 
+if (!empty($_GET['claim'])) {
+    header('Location: dashboard.php?claim=' . urlencode($_GET['claim']));
+    exit;
+}
+
 // ── Tarik data pemenang dari batch terbaru yang completed ──────────────
 $raffleWinners = [];
 $raffleBatchName = '';

@@ -126,7 +126,7 @@ if (!function_exists('build_rawbt_base64')) {
             $data .= "KODE KLAIM POIN\n";
             $data .= $esc . 'E' . chr(1) . $claimCode . $esc . 'E' . chr(0) . "\n\n";
             
-            $qrUrl = url('/user/?claim=' . urlencode($claimCode));
+            $qrUrl = url('/user/dashboard.php?claim=' . urlencode($claimCode));
             
             // ESC/POS QR Code
             $qrLen = strlen($qrUrl) + 3;

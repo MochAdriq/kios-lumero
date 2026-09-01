@@ -41,9 +41,19 @@ list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; i
 if(isset($_GET['logout'])){ unset($_SESSION['member_id']); mem_clear_login_step(); header('Location: index.php'); exit; }
 if(isset($_GET['ulang'])){ mem_clear_login_step(); header('Location: login.php'); exit; }
 $incomingClaim=strtoupper(trim((string)($_GET['claim'] ?? '')));
-if($incomingClaim!=='') $_SESSION['member_prefill_claim']=$incomingClaim;
+if($incomingClaim!=='') {
+    $_SESSION['member_prefill_claim']=$incomingClaim;
+    if (mem_current_id() > 0) {
+        $autoMsg = mem_auto_claim_pending($pdo, mem_current_id());
+        if ($autoMsg !== '') {
+            mem_flash(trim($autoMsg));
+            header('Location: dashboard.php?page=profil');
+            exit;
+        }
+    }
+}
 if (mem_current_id() <= 0 && $_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['login']) && !isset($_GET['ulang'])) {
-    header('Location: index.php' . ($incomingClaim !== '' ? '?claim=' . urlencode($incomingClaim) : ''));
+    header('Location: login.php' . ($incomingClaim !== '' ? '?claim=' . urlencode($incomingClaim) : ''));
     exit;
 }
 if($_SERVER['REQUEST_METHOD']==='POST'){

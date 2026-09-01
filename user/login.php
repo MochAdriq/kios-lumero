@@ -72,6 +72,9 @@ function mem_process_pending_event_reward(PDO $pdo, int $memberId): string{
     }
 }
 list($flashMsg,$flashErr)=mem_take_flash(); if($flashMsg!=='') $msg=$flashMsg; if($flashErr!=='') $err=$flashErr;
+
+$incomingClaim=strtoupper(trim((string)($_GET['claim'] ?? '')));
+if($incomingClaim!=='') $_SESSION['member_prefill_claim']=$incomingClaim;
 if (isset($_GET['source']) && $_GET['source'] === 'event_kalibunder' && !empty($_SESSION['pending_event_reward']) && empty($msg)) {
     $msg = 'Selamat! Anda berkesempatan mendapatkan ' . mem_e($_SESSION['pending_event_reward']['name']) . '. Yuk lengkapi data pengambilan hadiahnya!';
 }
@@ -135,10 +138,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 }
 
 $pendingPhone=loyalty_normalize_phone((string)($_SESSION['member_login_phone'] ?? '')); $pendingMode=(string)($_SESSION['member_login_mode'] ?? '');
-$incomingClaim=strtoupper(trim((string)($_GET['claim'] ?? '')));
-if($incomingClaim!=='') $_SESSION['member_prefill_claim']=$incomingClaim;
-$prefillClaim=(string)($_SESSION['member_prefill_claim'] ?? $incomingClaim);
-$csrf=mem_csrf();
+$prefillClaim=(string)($_SESSION['member_prefill_claim'] ?? '');
 $_GET['login'] = 1; // force login view rendering
 $member = null; // fix undefined variable
+$csrf=mem_csrf();
 require __DIR__ . '/views/layout.php';
